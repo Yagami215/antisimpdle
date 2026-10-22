@@ -12,6 +12,16 @@ start-editor.bat
 init_categories.py
 members.txt
 
+# Case Opening Raw Unencrypted Media (Keep private locally - only case opening/vault/ is uploaded)
+case opening/common/
+case opening/uncommon/
+case opening/rare/
+case opening/epic/
+case opening/legendary/
+case opening/mythic/
+case opening/divine/
+case opening/HELL/
+
 # Python cache & virtual environments
 __pycache__/
 *.py[cod]

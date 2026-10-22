@@ -80,25 +80,25 @@
           <div class="mode-card-body">
             <div class="mode-text-group">
               <h2 class="mode-title">Classic</h2>
-              <p class="mode-desc">Get clues on every try</p>
             </div>
             <div id="classicCardBadge" class="mode-ribbon-tag">DAILY #1</div>
           </div>
         </div>
 
-        <!-- Mode 2: Quote (Coming Soon) -->
-        <div class="mode-card card-quote disabled-mode" title="Quote mode coming soon!">
+        <!-- Mode 2: Quote (Active) -->
+        <div id="playQuoteCard" class="mode-card card-quote active-mode" role="button" tabindex="0">
           <div class="mode-medal">
             <div class="medal-ring">
-              <span class="medal-glyph quote-glyph">❝</span>
+              <svg class="medal-glyph-svg" viewBox="0 0 24 24" width="28" height="28" fill="#f7d57f" aria-hidden="true">
+                <path d="M6 17h3l2-4V7H5v6h3zm8 0h3l2-4V7h-6v6h3z"/>
+              </svg>
             </div>
           </div>
           <div class="mode-card-body">
             <div class="mode-text-group">
               <h2 class="mode-title">Quote</h2>
-              <p class="mode-desc">Guess with server chat quotes</p>
             </div>
-            <div class="mode-badge-soon">SOON</div>
+            <div id="quoteCardBadge" class="mode-ribbon-tag">DAILY #1</div>
           </div>
         </div>
 
@@ -112,14 +112,13 @@
           <div class="mode-card-body">
             <div class="mode-text-group">
               <h2 class="mode-title">Voice Clip</h2>
-              <p class="mode-desc">Guess from sound clips & catchphrases</p>
             </div>
             <div class="mode-badge-soon">SOON</div>
           </div>
         </div>
 
-        <!-- Mode 4: Emoji (Coming Soon) -->
-        <div class="mode-card card-emoji disabled-mode" title="Emoji mode coming soon!">
+        <!-- Mode 4: Emoji (Active) -->
+        <div id="playEmojiCard" class="mode-card card-emoji active-mode" role="button" tabindex="0">
           <div class="mode-medal">
             <div class="medal-ring">
               <span class="medal-glyph">😀</span>
@@ -128,25 +127,40 @@
           <div class="mode-card-body">
             <div class="mode-text-group">
               <h2 class="mode-title">Emoji</h2>
-              <p class="mode-desc">Guess with a set of emojis</p>
             </div>
-            <div class="mode-badge-soon">SOON</div>
+            <div id="emojiCardBadge" class="mode-ribbon-tag">DAILY #1</div>
           </div>
         </div>
 
-        <!-- Mode 5: Picture / Splash (Coming Soon) -->
-        <div class="mode-card card-splash disabled-mode" title="Picture mode coming soon!">
+        <!-- Mode 5: Picture / Splash (Active) -->
+        <div id="playPictureCard" class="mode-card card-splash active-mode" role="button" tabindex="0">
           <div class="mode-medal">
             <div class="medal-ring">
-              <span class="medal-glyph">🕵️</span>
+              <svg class="medal-glyph-svg" viewBox="0 0 24 24" width="28" height="28" fill="#f7d57f" aria-hidden="true">
+                <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+              </svg>
             </div>
           </div>
           <div class="mode-card-body">
             <div class="mode-text-group">
               <h2 class="mode-title">Picture</h2>
-              <p class="mode-desc">Guess from an avatar or photo section</p>
             </div>
-            <div class="mode-badge-soon">SOON</div>
+            <div id="pictureCardBadge" class="mode-ribbon-tag">DAILY #1</div>
+          </div>
+        </div>
+
+        <!-- Mode 6: Open Cases (Active) -->
+        <div id="playCasesCard" class="mode-card card-cases active-mode" role="button" tabindex="0">
+          <div class="mode-medal">
+            <div class="medal-ring">
+              <img src="case opening/lootbox design.png" alt="Antisimp Case" class="cases-home-logo-img" />
+            </div>
+          </div>
+          <div class="mode-card-body">
+            <div class="mode-text-group">
+              <h2 class="mode-title">Open Cases</h2>
+            </div>
+            <div id="casesCardBadge" class="mode-ribbon-tag badge-cases-gold">0/25 UNLOCKED</div>
           </div>
         </div>
 
@@ -160,6 +174,7 @@
       </div>
     </section>
 
+    
 
     <!-- ========================================================
          VIEW 2: CLASSIC GAME (Search Input & Guesses Board)
@@ -208,6 +223,22 @@
           </button>
           <button id="switchPracticeBtn" class="practice-action-btn small-btn">
             <span>🎲 PLAY PRACTICE</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Solved Practice Banner (Visible when current practice target is solved) -->
+      <div id="practiceSolvedBanner" class="solved-today-banner practice-solved-banner" style="display: none;">
+        <div class="solved-banner-left">
+          <span class="solved-trophy">🎉</span>
+          <div class="solved-banner-text">
+            <h4>PRACTICE MEMBER SOLVED!</h4>
+            <p>You guessed correctly! Ready for another random member?</p>
+          </div>
+        </div>
+        <div class="solved-banner-right">
+          <button id="nextPracticeBtn" class="practice-action-btn small-btn">
+            <span>🔄 NEXT PRACTICE MEMBER</span>
           </button>
         </div>
       </div>
@@ -310,6 +341,575 @@
 
     </section>
 
+    
+
+    <!-- ========================================================
+         VIEW 3: QUOTE GAME (Server Quotes & Conversations)
+         ======================================================== -->
+    <section id="quoteView" class="view-section" style="display: none;">
+      
+      <!-- Quote Mode Header -->
+      <div class="game-header">
+        <div class="game-mode-banner">
+          <div class="mini-medal quote-mini-medal" title="Quote Mode">
+            <svg class="quote-medal-icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+              <path fill="currentColor" d="M6 17h3l2-4V7H5v6h3zm8 0h3l2-4V7h-6v6h3z"/>
+            </svg>
+          </div>
+          <div class="game-mode-meta">
+            <div class="mode-header-title-row">
+              <h2 id="quoteHeaderTitle" class="game-mode-name">QUOTE MODE</h2>
+              <span id="quoteDailyBadge" class="daily-tag-badge">DAILY #<span id="quoteDailyNum">1</span></span>
+            </div>
+            <div class="mode-header-sub-row">
+              <span id="quoteHeaderHint" class="game-mode-hint">Who said this quote?</span>
+              <span id="quoteCountdownWrap" class="daily-timer-badge">⏳ Next quote in <strong id="quoteCountdown">00:00:00</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="header-right-actions">
+          <button id="quotePracticeToggleBtn" class="mode-pill-btn" title="Toggle Practice Mode (Play unlimited random quotes)">
+            <span id="quotePracticeToggleIcon">🎲</span>
+            <span id="quotePracticeToggleText">Practice Mode</span>
+          </button>
+          <button id="backToHomeFromQuoteBtn" class="back-modes-btn">
+            <span>‹ All Game Modes</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Solved Today Banner -->
+      <div id="alreadySolvedQuoteBanner" class="solved-today-banner" style="display: none;">
+        <div class="solved-banner-left">
+          <span class="solved-trophy">👑</span>
+          <div class="solved-banner-text">
+            <h4>TODAY'S DAILY QUOTE SOLVED!</h4>
+            <p>Next quote unlocks at midnight in <strong id="solvedQuoteCountdownClock">00:00:00</strong></p>
+          </div>
+        </div>
+        <div class="solved-banner-right">
+          <button id="viewSolvedQuoteSummaryBtn" class="gold-action-btn small-btn">
+            <span>📊 STATS & SHARE</span>
+          </button>
+          <button id="switchQuotePracticeBtn" class="practice-action-btn small-btn">
+            <span>🎲 PLAY PRACTICE</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Solved Practice Quote Banner (Visible when current practice quote is solved) -->
+      <div id="quotePracticeSolvedBanner" class="solved-today-banner practice-solved-banner" style="display: none;">
+        <div class="solved-banner-left">
+          <span class="solved-trophy">🎉</span>
+          <div class="solved-banner-text">
+            <h4>PRACTICE QUOTE SOLVED!</h4>
+            <p>You guessed correctly! Ready for another random quote?</p>
+          </div>
+        </div>
+        <div class="solved-banner-right">
+          <button id="nextQuotePracticeBtn" class="practice-action-btn small-btn">
+            <span>🔄 NEXT PRACTICE QUOTE</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Quote Presentation Card -->
+      <div class="quote-display-card">
+        <!-- Conversation Speakers Tracker (visible if conversation) -->
+        <div id="convSpeakersTracker" class="conv-speakers-tracker" style="display: none;">
+          <div class="tracker-header">
+            <span class="tracker-title">SPEAKERS TO GUESS</span>
+            <span id="trackerProgress" class="tracker-count">0 / 2 FOUND</span>
+          </div>
+          <div id="trackerChips" class="tracker-chips-row">
+            <!-- Chips rendered dynamically -->
+          </div>
+        </div>
+
+        <!-- Quote Content Area -->
+        <div id="quoteContentArea" class="quote-content-area" style="width: 100%;">
+          <!-- Rendered dynamically -->
+        </div>
+
+        <!-- Solved Author Reveal Area (Single Quote) -->
+        <div id="quoteAuthorReveal" class="quote-author-reveal" style="display: none;">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+
+      <!-- Quote Clues Panel (Unlocks at 5, 7, and 10 guesses) -->
+      <div id="quoteCluesContainer" class="quote-clues-container">
+        <div class="quote-clues-header">
+          <span class="quote-clues-title">💡 HINTS & CLUES</span>
+          <span id="quoteCluesCounter" class="quote-clues-counter">0 / 3 Available</span>
+        </div>
+        <div class="quote-clues-grid">
+          <div id="quoteClue1" class="quote-clue-card locked" data-clue-index="1" role="button" tabindex="0" title="Clue 1: Location"></div>
+          <div id="quoteClue2" class="quote-clue-card locked" data-clue-index="2" role="button" tabindex="0" title="Clue 2: Joined Server"></div>
+          <div id="quoteClue3" class="quote-clue-card locked" data-clue-index="3" role="button" tabindex="0" title="Clue 3: First Letter"></div>
+        </div>
+      </div>
+
+      <!-- Search and Guess Box (LoLdle input style) -->
+      <div class="search-panel">
+        <div class="search-box-wrap">
+          <div class="search-input-container">
+            <span class="search-icon">🔍</span>
+            <input 
+              type="text" 
+              id="quoteMemberInput" 
+              class="loldle-input" 
+              placeholder="Guess who said it... (e.g. lara, vito, krof, lean)" 
+              autocomplete="off" 
+              spellcheck="false"
+            />
+            <button id="quoteClearInputBtn" class="clear-btn" aria-label="Clear input" style="display: none;">✕</button>
+
+            <!-- Autocomplete Dropdown List -->
+            <div id="quoteAutocompleteDropdown" class="loldle-dropdown" style="display: none;"></div>
+          </div>
+
+          <button id="quoteGuessBtn" class="gold-action-btn">
+            <span>GUESS</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Guesses Log Section -->
+      <div class="guesses-container">
+        <div class="guesses-header-bar">
+          <div class="guesses-title-wrap">
+            <h3 class="guesses-title">GUESS HISTORY</h3>
+            <span id="quoteGuessCountBadge" class="gold-counter-badge">0 Guesses</span>
+          </div>
+          <span id="quoteHistorySubtext" class="categories-note">Guess member names to solve</span>
+        </div>
+
+        <div id="quoteGuessesList" class="quote-guesses-list">
+          <!-- Empty State -->
+          <div id="quoteEmptyGuessesState" class="loldle-empty-card">
+            <div class="empty-crest">❝</div>
+            <h4>NO GUESSES YET</h4>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    
+
+    <!-- ========================================================
+         VIEW 4: EMOJI GAME (Set of Emojis Representation)
+         ======================================================== -->
+    <section id="emojiView" class="view-section" style="display: none;">
+      
+      <!-- Emoji Mode Header -->
+      <div class="game-header">
+        <div class="game-mode-banner">
+          <div class="mini-medal emoji-mini-medal" title="Emoji Mode">
+            <span class="emoji-medal-icon">😀</span>
+          </div>
+          <div class="game-mode-meta">
+            <div class="mode-header-title-row">
+              <h2 id="emojiHeaderTitle" class="game-mode-name">EMOJI MODE</h2>
+              <span id="emojiDailyBadge" class="daily-tag-badge">DAILY #<span id="emojiDailyNum">1</span></span>
+            </div>
+            <div class="mode-header-sub-row">
+              <span id="emojiHeaderHint" class="game-mode-hint">Who does this set of emojis represent?</span>
+              <span id="emojiCountdownWrap" class="daily-timer-badge">⏳ Next emoji in <strong id="emojiCountdown">00:00:00</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="header-right-actions">
+          <button id="emojiPracticeToggleBtn" class="mode-pill-btn" title="Toggle Practice Mode (Play unlimited random emoji puzzles)">
+            <span id="emojiPracticeToggleIcon">🎲</span>
+            <span id="emojiPracticeToggleText">Practice Mode</span>
+          </button>
+          <button id="backToHomeFromEmojiBtn" class="back-modes-btn">
+            <span>‹ All Game Modes</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Solved Today Banner -->
+      <div id="alreadySolvedEmojiBanner" class="solved-today-banner" style="display: none;">
+        <div class="solved-banner-left">
+          <span class="solved-trophy">👑</span>
+          <div class="solved-banner-text">
+            <h4>TODAY'S DAILY EMOJI SOLVED!</h4>
+            <p>Next emoji unlocks at midnight in <strong id="solvedEmojiCountdownClock">00:00:00</strong></p>
+          </div>
+        </div>
+        <div class="solved-banner-right">
+          <button id="viewSolvedEmojiSummaryBtn" class="gold-action-btn small-btn">
+            <span>📊 STATS & SHARE</span>
+          </button>
+          <button id="switchEmojiPracticeBtn" class="practice-action-btn small-btn">
+            <span>🎲 PLAY PRACTICE</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Solved Practice Emoji Banner -->
+      <div id="emojiPracticeSolvedBanner" class="solved-today-banner practice-solved-banner" style="display: none;">
+        <div class="solved-banner-left">
+          <span class="solved-trophy">🎉</span>
+          <div class="solved-banner-text">
+            <h4>PRACTICE EMOJI SOLVED!</h4>
+            <p>You guessed correctly! Ready for another random member?</p>
+          </div>
+        </div>
+        <div class="solved-banner-right">
+          <button id="nextEmojiPracticeBtn" class="practice-action-btn small-btn">
+            <span>🔄 NEXT PRACTICE EMOJI</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Emoji Presentation Card -->
+      <div class="emoji-display-card">
+        <!-- Emojis Presentation Grid/Row -->
+        <div id="emojiTokensContainer" class="emoji-tokens-container">
+          <!-- Dynamically rendered emoji tokens -->
+        </div>
+
+        <!-- Solved Author Reveal Area -->
+        <div id="emojiAuthorReveal" class="quote-author-reveal" style="display: none;">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+
+      <!-- Emoji Clues Panel (Only shows after all emojis are revealed!) -->
+      <div id="emojiCluesContainer" class="quote-clues-container" style="display: none;">
+        <div class="quote-clues-header">
+          <span class="quote-clues-title">💡 HINTS & CLUES</span>
+          <span id="emojiCluesCounter" class="quote-clues-counter">0 / 3 Available</span>
+        </div>
+        <div class="quote-clues-grid">
+          <div id="emojiClue1" class="quote-clue-card locked" data-clue-index="1" role="button" tabindex="0" title="Clue 1: Location"></div>
+          <div id="emojiClue2" class="quote-clue-card locked" data-clue-index="2" role="button" tabindex="0" title="Clue 2: Joined Server"></div>
+          <div id="emojiClue3" class="quote-clue-card locked" data-clue-index="3" role="button" tabindex="0" title="Clue 3: First Letter"></div>
+        </div>
+      </div>
+
+      <!-- Search and Guess Box (LoLdle input style) -->
+      <div class="search-panel">
+        <div class="search-box-wrap">
+          <div class="search-input-container">
+            <span class="search-icon">🔍</span>
+            <input 
+              type="text" 
+              id="emojiMemberInput" 
+              class="loldle-input" 
+              placeholder="Guess who this represents... (e.g. lara, vito, krof, dineks)" 
+              autocomplete="off" 
+              spellcheck="false"
+            />
+            <button id="emojiClearInputBtn" class="clear-btn" aria-label="Clear input" style="display: none;">✕</button>
+
+            <!-- Autocomplete Dropdown List -->
+            <div id="emojiAutocompleteDropdown" class="loldle-dropdown" style="display: none;"></div>
+          </div>
+
+          <button id="emojiGuessBtn" class="gold-action-btn">
+            <span>GUESS</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Guesses Log Section -->
+      <div class="guesses-container">
+        <div class="guesses-header-bar">
+          <div class="guesses-title-wrap">
+            <h3 class="guesses-title">GUESS HISTORY</h3>
+            <span id="emojiGuessCountBadge" class="gold-counter-badge">0 Guesses</span>
+          </div>
+          <span id="emojiHistorySubtext" class="categories-note">Guess member names to unlock extra emojis and clues</span>
+        </div>
+
+        <div id="emojiGuessesList" class="quote-guesses-list">
+          <!-- Empty State -->
+          <div id="emojiEmptyGuessesState" class="loldle-empty-card">
+            <div class="empty-crest">😀</div>
+            <h4>NO GUESSES YET</h4>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ========================================================
+         VIEW 5: PICTURE / SPLASH GAME (Zoomed-in Member Photos)
+         ======================================================== -->
+    <section id="pictureView" class="view-section" style="display: none;">
+      
+      <!-- Picture Mode Header -->
+      <div class="game-header">
+        <div class="game-mode-banner">
+          <div class="mini-medal picture-mini-medal" title="Picture Mode">
+            <svg class="picture-medal-icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+              <path fill="#120308" d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+            </svg>
+          </div>
+          <div class="game-mode-meta">
+            <div class="mode-header-title-row">
+              <h2 id="pictureHeaderTitle" class="game-mode-name">PICTURE MODE</h2>
+              <span id="pictureDailyBadge" class="daily-tag-badge">DAILY #<span id="pictureDailyNum">1</span></span>
+            </div>
+            <div class="mode-header-sub-row">
+              <span id="pictureHeaderHint" class="game-mode-hint">Who is in this picture? Guess the member!</span>
+              <span id="pictureCountdownWrap" class="daily-timer-badge">⏳ Next picture in <strong id="pictureCountdown">00:00:00</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="header-right-actions">
+          <button id="picturePracticeToggleBtn" class="mode-pill-btn" title="Toggle Practice Mode (Play unlimited random pictures)">
+            <span id="picturePracticeToggleIcon">🎲</span>
+            <span id="picturePracticeToggleText">Practice Mode</span>
+          </button>
+          <button id="backToHomeFromPictureBtn" class="back-modes-btn">
+            <span>‹ All Game Modes</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Solved Today Banner -->
+      <div id="alreadySolvedPictureBanner" class="solved-today-banner" style="display: none;">
+        <div class="solved-banner-left">
+          <span class="solved-trophy">👑</span>
+          <div class="solved-banner-text">
+            <h4>TODAY'S DAILY PICTURE SOLVED!</h4>
+            <p>Next picture unlocks at midnight in <strong id="solvedPictureCountdownClock">00:00:00</strong></p>
+          </div>
+        </div>
+        <div class="solved-banner-right">
+          <button id="viewSolvedPictureSummaryBtn" class="gold-action-btn small-btn">
+            <span>📊 STATS & SHARE</span>
+          </button>
+          <button id="switchPicturePracticeBtn" class="practice-action-btn small-btn">
+            <span>🎲 PLAY PRACTICE</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Solved Practice Picture Banner -->
+      <div id="picturePracticeSolvedBanner" class="solved-today-banner practice-solved-banner" style="display: none;">
+        <div class="solved-banner-left">
+          <span class="solved-trophy">🎉</span>
+          <div class="solved-banner-text">
+            <h4>PRACTICE PICTURE SOLVED!</h4>
+            <p>You guessed correctly! Ready for another random picture?</p>
+          </div>
+        </div>
+        <div class="solved-banner-right">
+          <button id="nextPicturePracticeBtn" class="practice-action-btn small-btn">
+            <span>🔄 NEXT PRACTICE PICTURE</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Picture Presentation Card -->
+      <div class="picture-display-card">
+        
+        <!-- Multi-Member Tracker (for Pictures with >1 Member) -->
+        <div id="pictureMembersTracker" class="conv-speakers-tracker" style="display: none;">
+          <div class="tracker-header">
+            <span class="tracker-title">👥 MEMBERS IN THIS PICTURE</span>
+            <span id="pictureTrackerCount" class="tracker-count">0 / 2 FOUND</span>
+          </div>
+          <div id="pictureTrackerChips" class="tracker-chips-row">
+            <!-- Chips rendered dynamically -->
+          </div>
+        </div>
+
+        <!-- Zoomed Viewport Frame -->
+        <div id="pictureViewport" class="picture-viewport">
+          <img id="pictureImg" class="picture-zoom-img" alt="Zoomed member picture" />
+          <div id="pictureZoomBadge" class="picture-zoom-badge">🔍 ZOOM 5.0x</div>
+          <div class="picture-zoom-bar-wrap">
+            <div id="pictureZoomBar" class="picture-zoom-bar" style="width: 14%;"></div>
+          </div>
+        </div>
+
+        <!-- Solved Author / Members Reveal Area -->
+        <div id="pictureAuthorReveal" class="quote-author-reveal" style="display: none;">
+          <!-- Rendered dynamically -->
+        </div>
+
+      </div>
+
+      <!-- Search and Guess Box (LoLdle input style) -->
+      <div class="search-panel">
+        <div class="search-box-wrap">
+          <div class="search-input-container">
+            <span class="search-icon">🔍</span>
+            <input 
+              type="text" 
+              id="pictureMemberInput" 
+              class="loldle-input" 
+              placeholder="Guess who is in this picture... (e.g. krof, bindi, lean, dineks)" 
+              autocomplete="off" 
+              spellcheck="false"
+            />
+            <button id="pictureClearInputBtn" class="clear-btn" aria-label="Clear input" style="display: none;">✕</button>
+
+            <!-- Autocomplete Dropdown List -->
+            <div id="pictureAutocompleteDropdown" class="loldle-dropdown" style="display: none;"></div>
+          </div>
+
+          <button id="pictureGuessBtn" class="gold-action-btn">
+            <span>GUESS</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Guesses Log Section -->
+      <div class="guesses-container">
+        <div class="guesses-header-bar">
+          <div class="guesses-title-wrap">
+            <h3 class="guesses-title">GUESS HISTORY</h3>
+            <span id="pictureGuessCountBadge" class="gold-counter-badge">0 Guesses</span>
+          </div>
+          <span class="categories-note">Each wrong guess zooms out the picture a bit</span>
+        </div>
+
+        <div id="pictureGuessesList" class="quote-guesses-list">
+          <!-- Empty State -->
+          <div id="pictureEmptyGuessesState" class="loldle-empty-card">
+            <div class="empty-crest">🖼️</div>
+            <h4>NO GUESSES YET</h4>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ========================================================
+         VIEW 6: OPEN CASES (CS:GO Lootbox Unboxing & Collection)
+         ======================================================== -->
+    <section id="casesView" class="view-section" style="display: none;">
+      
+      <!-- Cases Mode Header -->
+      <div class="game-header">
+        <div class="game-mode-banner">
+          <div class="mini-medal cases-mini-medal" title="Open Cases">
+            <img src="case opening/lootbox design.png" alt="Antisimp Case" class="cases-header-logo-img" />
+          </div>
+          <div class="game-mode-meta">
+            <h3 class="game-mode-label">CASE OPENING</h3>
+            <p id="casesHeaderHint" class="game-mode-hint">Open cases to unlock rare member loot!</p>
+          </div>
+        </div>
+
+        <div class="game-header-actions">
+          <button id="casesTabOpenBtn" class="gold-action-btn small-btn active-tab-btn" title="Open Cases">
+            <span>📦 Open Case</span>
+          </button>
+          <button id="casesTabCollectionBtn" class="gold-outline-btn small-btn" title="View Collection">
+            <span>🏆 Collection (<span id="casesNavUnlockedCount">0</span>/25)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Tab 1: Unboxing Panel -->
+      <div id="casesUnboxPanel" class="cases-panel">
+        
+        <!-- Unified Case Opening Stage -->
+        <div class="case-stage-area" id="caseStageArea">
+          
+          <!-- Crate Media Wrap (Static PNG or Video) -->
+          <div class="case-media-stage" id="caseMediaStage">
+            <img id="caseStaticBoxImg" src="case opening/lootbox design.png" alt="Antisimpdle Lootbox" class="crate-graphic-img" />
+            <video id="caseOpenVideo" src="case opening/case open.mov" playsinline preload="auto" class="crate-video-player" style="display: none;"></video>
+            <div class="crate-glow-ring"></div>
+          </div>
+
+          <!-- CS:GO Roulette Reel Viewport (Positioned over the box) -->
+          <div class="cases-roulette-viewport" id="casesRouletteViewport">
+            <!-- Glass reflection glare -->
+            <div class="roulette-glare-overlay"></div>
+            <!-- Center Needles (top and bottom) -->
+            <div class="roulette-needle roulette-needle-top"></div>
+            <div class="roulette-needle roulette-needle-bottom"></div>
+            <div class="roulette-center-line"></div>
+            
+            <!-- Moving Track -->
+            <div class="cases-roulette-track" id="casesRouletteTrack">
+              <!-- Cards rendered dynamically -->
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Case Title & Subtitle Info (Outside just under the box) -->
+        <div class="crate-meta-info" id="crateMetaInfo">
+          <h2 class="crate-title">ANTISIMP CASE</h2>
+          <p class="crate-subtitle">Contains 1 of 25 rare member photos, clips & incidents</p>
+        </div>
+
+        <!-- Action Controls -->
+        <div class="cases-action-row">
+          <button id="openCaseBtn" class="loldle-btn neon-primary-btn open-case-btn">
+            <span class="btn-icon">🔓</span>
+            <span class="btn-text">OPEN CASE</span>
+          </button>
+          <button id="quickOpenCaseBtn" class="gold-outline-btn quick-open-btn" title="Instant unbox with no animation">
+            <span>⚡ Fast Open</span>
+          </button>
+        </div>
+
+        <!-- Drop Rates Legend Bar -->
+        <div class="cases-odds-container">
+          <h4 class="odds-title">CHEST DROP PROBABILITIES</h4>
+          <div class="odds-grid" id="casesOddsGrid">
+            <!-- Rendered from CASES_DATA -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Tab 2: Collection Panel -->
+      <div id="casesCollectionPanel" class="cases-panel" style="display: none;">
+        
+        <!-- Collection Stats Header -->
+        <div class="collection-stats-bar">
+          <div class="collection-stat-item">
+            <span class="cstat-num" id="cstatTotalOpened">0</span>
+            <span class="cstat-label">CASES OPENED</span>
+          </div>
+          <div class="collection-stat-item">
+            <span class="cstat-num"><span id="cstatUniqueUnlocked">0</span> / 25</span>
+            <span class="cstat-label">UNIQUE UNLOCKED</span>
+          </div>
+          <div class="collection-stat-item">
+            <span class="cstat-num" id="cstatPercent">0%</span>
+            <span class="cstat-label">COMPLETION</span>
+          </div>
+        </div>
+
+        <!-- Rarity Filters -->
+        <div class="collection-filters" id="collectionFilters">
+          <button class="cfilter-pill active" data-rarity="all">ALL (25)</button>
+          <!-- Dynamic rarity pills -->
+        </div>
+
+        <!-- Collection Grid -->
+        <div class="collection-grid" id="casesCollectionGrid">
+          <!-- 25 cards (unlocked / locked) -->
+        </div>
+
+        <!-- Collection Footer -->
+        <div class="collection-footer-actions">
+          <button id="resetCollectionBtn" class="reset-link-btn" style="opacity:0.6;">Reset Collection</button>
+        </div>
+
+      </div>
+
+    </section>
+
   </div>
 
   <!-- VICTORY SCREEN FLASH & CELEBRATION CANVAS -->
@@ -328,7 +928,7 @@
         <p id="victorySubtitle" class="victory-sub">You correctly guessed today's secret Discord member!</p>
       </div>
 
-      <div class="victory-member-card">
+      <div class="victory-member-card" id="victoryMemberCard">
         <div class="victory-avatar-wrap">
           <div id="victoryAvatar" class="victory-avatar">??</div>
           <div class="avatar-ring-pulse"></div>
@@ -338,10 +938,22 @@
           <p id="victoryAliases" class="victory-aliases">Aliases: None</p>
           <div class="victory-stats-row">
             <span id="victoryGuessCount" class="victory-tries-badge">Guessed in 1 try</span>
-            <span class="victory-accuracy-badge">100% Match</span>
+            <span id="victoryAccuracyBadge" class="victory-accuracy-badge">100% Match</span>
           </div>
         </div>
       </div>
+
+      <!-- Multiple Speakers Container (for Conversation Quotes) -->
+      <div id="victoryMultiMembers" class="victory-multi-members" style="display: none;"></div>
+
+      <!-- Solved Quote Box -->
+      <div id="victoryQuoteBox" class="victory-quote-box" style="display: none;"></div>
+
+      <!-- Solved Emoji Box -->
+      <div id="victoryEmojiBox" class="victory-emoji-box" style="display: none;"></div>
+
+      <!-- Solved Picture Box -->
+      <div id="victoryPictureBox" class="victory-picture-box" style="display: none;"></div>
 
       <!-- Wordle Next Daily Member Countdown Box -->
       <div id="victoryCountdownCard" class="victory-countdown-card">
@@ -393,6 +1005,14 @@
           <p>Your Antisimpdle performance & streaks</p>
         </div>
         <button id="closeStatsModalBtn" class="modal-x-btn" aria-label="Close stats">✕</button>
+      </div>
+
+      <!-- Mode Selector Tabs for Statistics -->
+      <div class="stats-tabs-bar">
+        <button id="statsTabClassic" class="stats-tab-btn active">CLASSIC MODE</button>
+        <button id="statsTabQuote" class="stats-tab-btn">QUOTE MODE</button>
+        <button id="statsTabEmoji" class="stats-tab-btn">EMOJI MODE</button>
+        <button id="statsTabPicture" class="stats-tab-btn">PICTURE MODE</button>
       </div>
 
       <div class="stats-modal-body">
@@ -470,11 +1090,79 @@
     </div>
   </div>
 
+  <!-- UNBOXING REVEAL MODAL (CS:GO Fanfare & Rarity Animations) -->
+  <div id="casesRevealModal" class="modal-backdrop cases-reveal-backdrop" style="display: none;">
+    <!-- Rarity Dynamic Animation FX Container -->
+    <div id="casesRarityFxContainer" class="cases-rarity-fx"></div>
+
+    <div id="casesRevealCardBox" class="cases-reveal-box">
+      <!-- Glow rays behind card -->
+      <div id="casesRevealRays" class="cases-reveal-rays"></div>
+
+      <div class="reveal-header">
+        <span id="casesRevealNewBadge" class="reveal-new-badge">✨ NEW UNLOCK! ✨</span>
+        <div id="casesRevealRarityTag" class="reveal-rarity-tag">LEGENDARY</div>
+      </div>
+
+      <!-- Media frame (Image or Video) -->
+      <div id="casesRevealMediaWrap" class="cases-reveal-media-wrap">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <div class="reveal-details">
+        <h2 id="casesRevealTitle" class="reveal-item-title">Item Title</h2>
+        <p id="casesRevealMeta" class="reveal-item-meta">Rarity • Drop Rate: 1.0%</p>
+        <span id="casesRevealCountBadge" class="reveal-count-badge">Owned: 1</span>
+      </div>
+
+      <div class="reveal-actions">
+        <button id="casesOpenAnotherBtn" class="loldle-btn neon-primary-btn">
+          <span>📦 Open Another</span>
+        </button>
+        <button id="casesViewInCollectionBtn" class="gold-action-btn">
+          <span>🏆 View Collection</span>
+        </button>
+        <button id="casesCloseRevealBtn" class="gold-outline-btn">
+          <span>Close</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- COLLECTION LIGHTBOX MODAL (Full inspection of picture/video) -->
+  <div id="casesLightboxModal" class="modal-backdrop" style="display: none;">
+    <div class="modal-box cases-lightbox-box">
+      <div class="lightbox-header">
+        <div class="lightbox-title-wrap">
+          <span id="lightboxRarityBadge" class="reveal-rarity-tag">RARE</span>
+          <h3 id="lightboxItemTitle" class="lightbox-title">Item Title</h3>
+        </div>
+        <button id="closeLightboxBtn" class="modal-x-btn" aria-label="Close modal">✕</button>
+      </div>
+      <div id="lightboxMediaWrap" class="lightbox-media-wrap">
+        <!-- Image or Video -->
+      </div>
+      <div class="lightbox-footer">
+        <div id="lightboxMetaText" class="lightbox-meta-text">Unboxed: 3 times</div>
+        <button id="lightboxDoneBtn" class="gold-action-btn small-btn">CLOSE</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Floating Toast Notification -->
   <div id="gameToast" class="game-toast"></div>
 
+  <!-- Audio source for CS:GO case unboxing sound -->
+  <audio id="csgoUnboxAudio" preload="auto" src="case%20opening/CSGO%20Case%20Opening%20Sound%20Effect%20-%20jeansRig%20CS2%20(1080p).mp4"></audio>
+  <!-- Audio source for item obtain sound -->
+  <audio id="itemObtainAudio" preload="auto" src="case%20opening/item%20obtain.mp3"></audio>
+
   <!-- Scripts -->
   <script src="members.js"></script>
+  <script src="quotes.js"></script>
+  <script src="emojis.js"></script>
+  <script src="pictures.js"></script>
+  <script src="cases.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

@@ -74,6 +74,13 @@
       setTimeout(() => this.playTone(660, 'triangle', 0.14, 0.08), 70);
     },
 
+    playClueReveal() {
+      if (!this.enabled) return;
+      this.playTone(523.25, 'triangle', 0.09, 0.07); // C5
+      setTimeout(() => this.playTone(659.25, 'triangle', 0.09, 0.07), 65); // E5
+      setTimeout(() => this.playTone(783.99, 'triangle', 0.16, 0.09), 130); // G5
+    },
+
     playSelect() {
       this.playTone(580, 'sine', 0.05, 0.04);
     },
@@ -190,6 +197,41 @@
 
       } catch (e) {
         // Audio error or not permitted
+      }
+    },
+
+    playNeedleTick() {
+      if (!this.enabled) return;
+      this.playTone(850, 'triangle', 0.03, 0.04);
+    },
+
+    playCaseUnlock() {
+      if (!this.enabled) return;
+      this.playTone(320, 'sine', 0.08, 0.06);
+      setTimeout(() => this.playTone(480, 'triangle', 0.12, 0.07), 80);
+    },
+
+    playRarityReveal(rarity) {
+      if (!this.enabled) return;
+      if (rarity === 'hell') {
+        this.playTone(110, 'sawtooth', 0.8, 0.18);
+        setTimeout(() => this.playTone(85, 'sawtooth', 1.2, 0.22), 200);
+      } else if (rarity === 'divine') {
+        this.playTone(587.33, 'sine', 0.3, 0.1);
+        setTimeout(() => this.playTone(880, 'triangle', 0.4, 0.12), 150);
+        setTimeout(() => this.playTone(1174.66, 'sine', 0.6, 0.14), 300);
+      } else if (rarity === 'mythic') {
+        this.playTone(440, 'triangle', 0.2, 0.09);
+        setTimeout(() => this.playTone(659.25, 'triangle', 0.25, 0.1), 120);
+        setTimeout(() => this.playTone(880, 'sawtooth', 0.4, 0.12), 240);
+      } else if (rarity === 'legendary') {
+        this.playWin();
+      } else if (rarity === 'epic') {
+        this.playTone(440, 'triangle', 0.12, 0.08);
+        setTimeout(() => this.playTone(554.37, 'triangle', 0.14, 0.08), 80);
+        setTimeout(() => this.playTone(659.25, 'triangle', 0.22, 0.1), 160);
+      } else {
+        this.playGuessSuccess();
       }
     }
   };
@@ -624,6 +666,63 @@
     }
   };
 
+  // --- Quote Statistics Persistence ---
+  const QuoteStatsManager = {
+    KEY: 'antisimpdle_quote_stats',
+
+    get() {
+      try {
+        const raw = localStorage.getItem(this.KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && typeof parsed.played === 'number') {
+            return parsed;
+          }
+        }
+      } catch (e) {}
+      return {
+        played: 0,
+        won: 0,
+        currentStreak: 0,
+        maxStreak: 0,
+        lastWonDateKey: null,
+        distribution: { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0, '7+': 0 }
+      };
+    },
+
+    recordWin(guessCount, dateKey) {
+      const stats = this.get();
+      if (stats.lastWonDateKey === dateKey) return stats;
+
+      stats.played += 1;
+      stats.won += 1;
+
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yKey = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+
+      if (stats.lastWonDateKey === yKey) {
+        stats.currentStreak += 1;
+      } else {
+        stats.currentStreak = 1;
+      }
+
+      stats.lastWonDateKey = dateKey;
+      if (stats.currentStreak > stats.maxStreak) {
+        stats.maxStreak = stats.currentStreak;
+      }
+
+      const bucket = guessCount >= 7 ? '7+' : String(guessCount);
+      stats.distribution[bucket] = (stats.distribution[bucket] || 0) + 1;
+
+      try {
+        localStorage.setItem(this.KEY, JSON.stringify(stats));
+      } catch (e) {}
+
+      return stats;
+    }
+  };
+
   // --- Daily Save Persistence ---
   const DailyStateManager = {
     KEY: 'antisimpdle_daily_save',
@@ -661,6 +760,288 @@
     }
   };
 
+  // --- Quote Daily Save Persistence ---
+  const QuoteDailyStateManager = {
+    KEY: 'antisimpdle_quote_daily_save',
+
+    load(currentDateKey) {
+      try {
+        const raw = localStorage.getItem(this.KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && parsed.dateKey === currentDateKey) {
+            return parsed;
+          }
+        }
+      } catch (e) {}
+      return null;
+    },
+
+    save(dateKey, gameNumber, quoteId, guesses, foundMemberIds, isWon, revealedClues) {
+      try {
+        const data = {
+          dateKey,
+          gameNumber,
+          quoteId,
+          guesses,
+          foundMemberIds: Array.from(foundMemberIds || []),
+          isWon: !!isWon,
+          revealedClues: Array.from(revealedClues || [])
+        };
+        localStorage.setItem(this.KEY, JSON.stringify(data));
+      } catch (e) {}
+    },
+
+    clear() {
+      try {
+        localStorage.removeItem(this.KEY);
+      } catch (e) {}
+    }
+  };
+
+  // Deterministically selects today's quote from quotes list
+  function getDailyQuote(dayIndex, quotes) {
+    if (!quotes || quotes.length === 0) return null;
+    const N = quotes.length;
+    const cycle = Math.floor(dayIndex / N);
+    const cycleSeed = 67891 + cycle * 4397;
+    const perm = getDeterministicPermutation(N, cycleSeed);
+    const quoteIndex = perm[dayIndex % N];
+    return quotes[quoteIndex];
+  }
+
+  // --- Emoji Statistics Persistence ---
+  const EmojiStatsManager = {
+    KEY: 'antisimpdle_emoji_stats',
+
+    get() {
+      try {
+        const raw = localStorage.getItem(this.KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && typeof parsed.played === 'number') {
+            return parsed;
+          }
+        }
+      } catch (e) {}
+      return {
+        played: 0,
+        won: 0,
+        currentStreak: 0,
+        maxStreak: 0,
+        lastWonDateKey: null,
+        distribution: { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0, '7+': 0 }
+      };
+    },
+
+    recordWin(guessCount, dateKey) {
+      const stats = this.get();
+      if (stats.lastWonDateKey === dateKey) return stats;
+
+      stats.played += 1;
+      stats.won += 1;
+
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yKey = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+
+      if (stats.lastWonDateKey === yKey) {
+        stats.currentStreak += 1;
+      } else {
+        stats.currentStreak = 1;
+      }
+
+      stats.lastWonDateKey = dateKey;
+      if (stats.currentStreak > stats.maxStreak) {
+        stats.maxStreak = stats.currentStreak;
+      }
+
+      const bucket = guessCount >= 7 ? '7+' : String(guessCount);
+      stats.distribution[bucket] = (stats.distribution[bucket] || 0) + 1;
+
+      try {
+        localStorage.setItem(this.KEY, JSON.stringify(stats));
+      } catch (e) {}
+
+      return stats;
+    }
+  };
+
+  // --- Emoji Daily Save Persistence ---
+  const EmojiDailyStateManager = {
+    KEY: 'antisimpdle_emoji_daily_save',
+
+    load(currentDateKey) {
+      try {
+        const raw = localStorage.getItem(this.KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && parsed.dateKey === currentDateKey) {
+            return parsed;
+          }
+        }
+      } catch (e) {}
+      return null;
+    },
+
+    save(dateKey, gameNumber, emojiId, guesses, isWon, revealedClues) {
+      try {
+        const data = {
+          dateKey,
+          gameNumber,
+          emojiId,
+          guesses,
+          isWon: !!isWon,
+          revealedClues: Array.from(revealedClues || [])
+        };
+        localStorage.setItem(this.KEY, JSON.stringify(data));
+      } catch (e) {}
+    },
+
+    clear() {
+      try {
+        localStorage.removeItem(this.KEY);
+      } catch (e) {}
+    }
+  };
+
+  // --- Picture Statistics Persistence ---
+  const PictureStatsManager = {
+    KEY: 'antisimpdle_picture_stats',
+
+    get() {
+      try {
+        const raw = localStorage.getItem(this.KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && typeof parsed.played === 'number') {
+            return parsed;
+          }
+        }
+      } catch (e) {}
+      return {
+        played: 0,
+        won: 0,
+        currentStreak: 0,
+        maxStreak: 0,
+        distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, '7+': 0 },
+        lastWonDateKey: null
+      };
+    },
+
+    save(stats) {
+      try {
+        localStorage.setItem(this.KEY, JSON.stringify(stats));
+      } catch (e) {}
+    },
+
+    recordWin(guessCount, dateKey) {
+      const stats = this.get();
+      if (stats.lastWonDateKey === dateKey) return stats;
+
+      stats.played += 1;
+      stats.won += 1;
+
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yKey = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+
+      if (stats.lastWonDateKey === yKey) {
+        stats.currentStreak += 1;
+      } else {
+        stats.currentStreak = 1;
+      }
+
+      stats.lastWonDateKey = dateKey;
+      if (stats.currentStreak > stats.maxStreak) {
+        stats.maxStreak = stats.currentStreak;
+      }
+
+      const bucket = guessCount >= 7 ? '7+' : String(guessCount);
+      stats.distribution[bucket] = (stats.distribution[bucket] || 0) + 1;
+
+      try {
+        localStorage.setItem(this.KEY, JSON.stringify(stats));
+      } catch (e) {}
+
+      return stats;
+    }
+  };
+
+  // --- Picture Daily Save Persistence ---
+  const PictureDailyStateManager = {
+    KEY: 'antisimpdle_picture_daily_save',
+
+    load(currentDateKey) {
+      try {
+        const raw = localStorage.getItem(this.KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && parsed.dateKey === currentDateKey) {
+            return parsed;
+          }
+        }
+      } catch (e) {}
+      return null;
+    },
+
+    save(dateKey, gameNumber, pictureId, guesses, foundMemberIds, isWon) {
+      try {
+        const data = {
+          dateKey,
+          gameNumber,
+          pictureId,
+          guesses,
+          foundMemberIds: Array.from(foundMemberIds || []),
+          isWon: !!isWon
+        };
+        localStorage.setItem(this.KEY, JSON.stringify(data));
+      } catch (e) {}
+    },
+
+    clear() {
+      try {
+        localStorage.removeItem(this.KEY);
+      } catch (e) {}
+    }
+  };
+
+  // Deterministically selects today's emoji puzzle from emojis list
+  function getDailyEmoji(dayIndex, emojis) {
+    if (!emojis || emojis.length === 0) return null;
+    const N = emojis.length;
+    const cycle = Math.floor(dayIndex / N);
+    const cycleSeed = 83921 + cycle * 5147;
+    const perm = getDeterministicPermutation(N, cycleSeed);
+    const emojiIndex = perm[dayIndex % N];
+    return emojis[emojiIndex];
+  }
+
+  // Deterministically selects today's picture puzzle from pictures list
+  function getDailyPicture(dayIndex, pictures) {
+    if (!pictures || pictures.length === 0) return null;
+    const N = pictures.length;
+    const cycle = Math.floor(dayIndex / N);
+    const cycleSeed = 67291 + cycle * 4129;
+    const perm = getDeterministicPermutation(N, cycleSeed);
+    const picIndex = perm[dayIndex % N];
+    return pictures[picIndex];
+  }
+
+  // Deterministic focus point near vertical center, not too much to the edges
+  function getDailyPictureFocusPoint(dayIndex, pictureId) {
+    const seed = (dayIndex * 9301 + pictureId * 49297 + 233280) % 1000;
+    const fx = 32 + (seed % 37); // 32% to 68%
+    const fy = 38 + (Math.floor(seed / 37) % 23); // 38% to 60%
+    return { fx, fy };
+  }
+
+  function getRandomPictureFocusPoint() {
+    const fx = 32 + Math.floor(Math.random() * 37); // 32% to 68%
+    const fy = 38 + Math.floor(Math.random() * 23); // 38% to 60%
+    return { fx, fy };
+  }
+
   // --- Game State ---
   const state = {
     members: [],
@@ -679,7 +1060,69 @@
     practiceIsWon: false,
     selectedDropdownIndex: -1,
     currentMatches: [],
-    activeView: 'home' // 'home' | 'classic'
+    activeView: 'home', // 'home' | 'classic' | 'quote' | 'emoji' | 'picture'
+
+    // Quote Mode state
+    quotes: [],
+    quoteTarget: null,
+    quoteDailyTarget: null,
+    quotePracticeTarget: null,
+    quoteGameMode: 'daily', // 'daily' | 'practice'
+    quoteDailyGuesses: [],
+    quoteDailyGuessedIds: new Set(),
+    quoteDailyFoundMemberIds: new Set(),
+    quoteDailyIsWon: false,
+    quotePracticeGuesses: [],
+    quotePracticeGuessedIds: new Set(),
+    quotePracticeFoundMemberIds: new Set(),
+    quotePracticeIsWon: false,
+    quoteDailyRevealedClues: new Set(),
+    quotePracticeRevealedClues: new Set(),
+    quoteCurrentMatches: [],
+    quoteSelectedDropdownIndex: -1,
+
+    // Emoji Mode state
+    emojis: [],
+    emojiTarget: null,
+    emojiDailyTarget: null,
+    emojiPracticeTarget: null,
+    emojiGameMode: 'daily', // 'daily' | 'practice'
+    emojiDailyGuesses: [],
+    emojiDailyGuessedIds: new Set(),
+    emojiDailyIsWon: false,
+    emojiPracticeGuesses: [],
+    emojiPracticeGuessedIds: new Set(),
+    emojiPracticeIsWon: false,
+    emojiDailyRevealedClues: new Set(),
+    emojiPracticeRevealedClues: new Set(),
+    emojiCurrentMatches: [],
+    emojiSelectedDropdownIndex: -1,
+
+    // Picture Mode state
+    pictures: [],
+    pictureTarget: null,
+    pictureDailyTarget: null,
+    picturePracticeTarget: null,
+    pictureGameMode: 'daily', // 'daily' | 'practice'
+    pictureDailyGuesses: [],
+    pictureDailyGuessedIds: new Set(),
+    pictureDailyFoundMemberIds: new Set(),
+    pictureDailyIsWon: false,
+    picturePracticeGuesses: [],
+    picturePracticeGuessedIds: new Set(),
+    picturePracticeFoundMemberIds: new Set(),
+    picturePracticeIsWon: false,
+    pictureDailyFocusPoint: { fx: 50, fy: 50 },
+    picturePracticeFocusPoint: { fx: 50, fy: 50 },
+    pictureCurrentMatches: [],
+    pictureSelectedDropdownIndex: -1,
+
+    lastVictoryMode: 'classic', // 'classic' | 'quote' | 'emoji' | 'picture'
+    statsActiveTab: 'classic', // 'classic' | 'quote' | 'emoji' | 'picture'
+
+    // Case Opening State
+    caseIsSpinning: false,
+    caseActiveFilter: 'all'
   };
 
   // --- Active Mode Helpers (Scoping Guesses to Daily vs Practice) ---
@@ -689,6 +1132,46 @@
 
   function getActiveHistory() {
     return state.gameMode === 'daily' ? state.guessesHistory : state.practiceHistory;
+  }
+
+  function getActiveQuoteGuessedIds() {
+    return state.quoteGameMode === 'daily' ? state.quoteDailyGuessedIds : state.quotePracticeGuessedIds;
+  }
+
+  function getActiveQuoteHistory() {
+    return state.quoteGameMode === 'daily' ? state.quoteDailyGuesses : state.quotePracticeGuesses;
+  }
+
+  function getActiveQuoteFoundIds() {
+    return state.quoteGameMode === 'daily' ? state.quoteDailyFoundMemberIds : state.quotePracticeFoundMemberIds;
+  }
+
+  function getActiveQuoteRevealedClues() {
+    return state.quoteGameMode === 'daily' ? state.quoteDailyRevealedClues : state.quotePracticeRevealedClues;
+  }
+
+  function getActiveEmojiGuessedIds() {
+    return state.emojiGameMode === 'daily' ? state.emojiDailyGuessedIds : state.emojiPracticeGuessedIds;
+  }
+
+  function getActiveEmojiHistory() {
+    return state.emojiGameMode === 'daily' ? state.emojiDailyGuesses : state.emojiPracticeGuesses;
+  }
+
+  function getActiveEmojiRevealedClues() {
+    return state.emojiGameMode === 'daily' ? state.emojiDailyRevealedClues : state.emojiPracticeRevealedClues;
+  }
+
+  function getActivePictureGuessedIds() {
+    return state.pictureGameMode === 'daily' ? state.pictureDailyGuessedIds : state.picturePracticeGuessedIds;
+  }
+
+  function getActivePictureHistory() {
+    return state.pictureGameMode === 'daily' ? state.pictureDailyGuesses : state.picturePracticeGuesses;
+  }
+
+  function getActivePictureFoundMemberIds() {
+    return state.pictureGameMode === 'daily' ? state.pictureDailyFoundMemberIds : state.picturePracticeFoundMemberIds;
   }
 
   // --- Member Image Helper ---
@@ -711,6 +1194,187 @@
     homeLogoBtn: document.getElementById('homeLogoBtn'),
     browseRosterBtn: document.getElementById('browseRosterBtn'),
 
+    // Quote Mode Elements
+    playQuoteCard: document.getElementById('playQuoteCard'),
+    quoteCardBadge: document.getElementById('quoteCardBadge'),
+    quoteView: document.getElementById('quoteView'),
+    quoteHeaderTitle: document.getElementById('quoteHeaderTitle'),
+    quoteDailyBadge: document.getElementById('quoteDailyBadge'),
+    quoteDailyNum: document.getElementById('quoteDailyNum'),
+    quoteHeaderHint: document.getElementById('quoteHeaderHint'),
+    quoteCountdownWrap: document.getElementById('quoteCountdownWrap'),
+    quoteCountdown: document.getElementById('quoteCountdown'),
+    quotePracticeToggleBtn: document.getElementById('quotePracticeToggleBtn'),
+    quotePracticeToggleIcon: document.getElementById('quotePracticeToggleIcon'),
+    quotePracticeToggleText: document.getElementById('quotePracticeToggleText'),
+    backToHomeFromQuoteBtn: document.getElementById('backToHomeFromQuoteBtn'),
+
+    alreadySolvedQuoteBanner: document.getElementById('alreadySolvedQuoteBanner'),
+    quotePracticeSolvedBanner: document.getElementById('quotePracticeSolvedBanner'),
+    solvedQuoteCountdownClock: document.getElementById('solvedQuoteCountdownClock'),
+    viewSolvedQuoteSummaryBtn: document.getElementById('viewSolvedQuoteSummaryBtn'),
+    switchQuotePracticeBtn: document.getElementById('switchQuotePracticeBtn'),
+    nextQuotePracticeBtn: document.getElementById('nextQuotePracticeBtn'),
+
+    quoteTypePill: document.getElementById('quoteTypePill'),
+    quoteTypeIcon: document.getElementById('quoteTypeIcon'),
+    quoteTypeLabel: document.getElementById('quoteTypeLabel'),
+    convSpeakersTracker: document.getElementById('convSpeakersTracker'),
+    trackerProgress: document.getElementById('trackerProgress'),
+    trackerChips: document.getElementById('trackerChips'),
+    quoteContentArea: document.getElementById('quoteContentArea'),
+    quoteAuthorReveal: document.getElementById('quoteAuthorReveal'),
+    quoteCluesContainer: document.getElementById('quoteCluesContainer'),
+    quoteCluesCounter: document.getElementById('quoteCluesCounter'),
+    quoteClue1: document.getElementById('quoteClue1'),
+    quoteClue2: document.getElementById('quoteClue2'),
+    quoteClue3: document.getElementById('quoteClue3'),
+
+    quoteMemberInput: document.getElementById('quoteMemberInput'),
+    quoteClearInputBtn: document.getElementById('quoteClearInputBtn'),
+    quoteAutocompleteDropdown: document.getElementById('quoteAutocompleteDropdown'),
+    quoteGuessBtn: document.getElementById('quoteGuessBtn'),
+    quoteGuessCountBadge: document.getElementById('quoteGuessCountBadge'),
+    quoteGuessesList: document.getElementById('quoteGuessesList'),
+    quoteEmptyGuessesState: document.getElementById('quoteEmptyGuessesState'),
+    victoryMultiMembers: document.getElementById('victoryMultiMembers'),
+    victoryQuoteBox: document.getElementById('victoryQuoteBox'),
+    victoryMemberCard: document.getElementById('victoryMemberCard'),
+    victoryAccuracyBadge: document.getElementById('victoryAccuracyBadge'),
+    statsTabClassic: document.getElementById('statsTabClassic'),
+    statsTabQuote: document.getElementById('statsTabQuote'),
+    statsTabEmoji: document.getElementById('statsTabEmoji'),
+
+    // Emoji Mode Elements
+    playEmojiCard: document.getElementById('playEmojiCard'),
+    emojiCardBadge: document.getElementById('emojiCardBadge'),
+    emojiView: document.getElementById('emojiView'),
+    emojiHeaderTitle: document.getElementById('emojiHeaderTitle'),
+    emojiDailyBadge: document.getElementById('emojiDailyBadge'),
+    emojiDailyNum: document.getElementById('emojiDailyNum'),
+    emojiHeaderHint: document.getElementById('emojiHeaderHint'),
+    emojiCountdownWrap: document.getElementById('emojiCountdownWrap'),
+    emojiCountdown: document.getElementById('emojiCountdown'),
+    emojiPracticeToggleBtn: document.getElementById('emojiPracticeToggleBtn'),
+    emojiPracticeToggleIcon: document.getElementById('emojiPracticeToggleIcon'),
+    emojiPracticeToggleText: document.getElementById('emojiPracticeToggleText'),
+    backToHomeFromEmojiBtn: document.getElementById('backToHomeFromEmojiBtn'),
+
+    alreadySolvedEmojiBanner: document.getElementById('alreadySolvedEmojiBanner'),
+    emojiPracticeSolvedBanner: document.getElementById('emojiPracticeSolvedBanner'),
+    solvedEmojiCountdownClock: document.getElementById('solvedEmojiCountdownClock'),
+    viewSolvedEmojiSummaryBtn: document.getElementById('viewSolvedEmojiSummaryBtn'),
+    switchEmojiPracticeBtn: document.getElementById('switchEmojiPracticeBtn'),
+    nextEmojiPracticeBtn: document.getElementById('nextEmojiPracticeBtn'),
+
+    emojiRevealProgress: document.getElementById('emojiRevealProgress'),
+    emojiTokensContainer: document.getElementById('emojiTokensContainer'),
+    emojiAuthorReveal: document.getElementById('emojiAuthorReveal'),
+    emojiCluesContainer: document.getElementById('emojiCluesContainer'),
+    emojiCluesCounter: document.getElementById('emojiCluesCounter'),
+    emojiClue1: document.getElementById('emojiClue1'),
+    emojiClue2: document.getElementById('emojiClue2'),
+    emojiClue3: document.getElementById('emojiClue3'),
+
+    emojiMemberInput: document.getElementById('emojiMemberInput'),
+    emojiClearInputBtn: document.getElementById('emojiClearInputBtn'),
+    emojiAutocompleteDropdown: document.getElementById('emojiAutocompleteDropdown'),
+    emojiGuessBtn: document.getElementById('emojiGuessBtn'),
+    emojiGuessCountBadge: document.getElementById('emojiGuessCountBadge'),
+    emojiGuessesList: document.getElementById('emojiGuessesList'),
+    emojiEmptyGuessesState: document.getElementById('emojiEmptyGuessesState'),
+    victoryEmojiBox: document.getElementById('victoryEmojiBox'),
+
+    // Picture Mode Elements
+    playPictureCard: document.getElementById('playPictureCard'),
+    pictureCardBadge: document.getElementById('pictureCardBadge'),
+    pictureView: document.getElementById('pictureView'),
+    pictureHeaderTitle: document.getElementById('pictureHeaderTitle'),
+    pictureDailyBadge: document.getElementById('pictureDailyBadge'),
+    pictureDailyNum: document.getElementById('pictureDailyNum'),
+    pictureHeaderHint: document.getElementById('pictureHeaderHint'),
+    pictureCountdownWrap: document.getElementById('pictureCountdownWrap'),
+    pictureCountdown: document.getElementById('pictureCountdown'),
+    picturePracticeToggleBtn: document.getElementById('picturePracticeToggleBtn'),
+    picturePracticeToggleIcon: document.getElementById('picturePracticeToggleIcon'),
+    picturePracticeToggleText: document.getElementById('picturePracticeToggleText'),
+    backToHomeFromPictureBtn: document.getElementById('backToHomeFromPictureBtn'),
+
+    alreadySolvedPictureBanner: document.getElementById('alreadySolvedPictureBanner'),
+    picturePracticeSolvedBanner: document.getElementById('picturePracticeSolvedBanner'),
+    solvedPictureCountdownClock: document.getElementById('solvedPictureCountdownClock'),
+    viewSolvedPictureSummaryBtn: document.getElementById('viewSolvedPictureSummaryBtn'),
+    switchPicturePracticeBtn: document.getElementById('switchPicturePracticeBtn'),
+    nextPicturePracticeBtn: document.getElementById('nextPicturePracticeBtn'),
+
+    pictureMembersTracker: document.getElementById('pictureMembersTracker'),
+    pictureTrackerCount: document.getElementById('pictureTrackerCount'),
+    pictureTrackerChips: document.getElementById('pictureTrackerChips'),
+    pictureViewport: document.getElementById('pictureViewport'),
+    pictureImg: document.getElementById('pictureImg'),
+    pictureZoomBadge: document.getElementById('pictureZoomBadge'),
+    pictureZoomBar: document.getElementById('pictureZoomBar'),
+    pictureAuthorReveal: document.getElementById('pictureAuthorReveal'),
+
+    pictureMemberInput: document.getElementById('pictureMemberInput'),
+    pictureClearInputBtn: document.getElementById('pictureClearInputBtn'),
+    pictureAutocompleteDropdown: document.getElementById('pictureAutocompleteDropdown'),
+    pictureGuessBtn: document.getElementById('pictureGuessBtn'),
+    pictureGuessCountBadge: document.getElementById('pictureGuessCountBadge'),
+    pictureGuessesList: document.getElementById('pictureGuessesList'),
+    pictureEmptyGuessesState: document.getElementById('pictureEmptyGuessesState'),
+    victoryPictureBox: document.getElementById('victoryPictureBox'),
+    statsTabPicture: document.getElementById('statsTabPicture'),
+
+    // Cases Mode Elements
+    playCasesCard: document.getElementById('playCasesCard'),
+    casesCardBadge: document.getElementById('casesCardBadge'),
+    casesView: document.getElementById('casesView'),
+    casesHeaderHint: document.getElementById('casesHeaderHint'),
+    casesTabOpenBtn: document.getElementById('casesTabOpenBtn'),
+    casesTabCollectionBtn: document.getElementById('casesTabCollectionBtn'),
+    backToHomeFromCasesBtn: document.getElementById('backToHomeFromCasesBtn'),
+    casesNavUnlockedCount: document.getElementById('casesNavUnlockedCount'),
+    casesUnboxPanel: document.getElementById('casesUnboxPanel'),
+    casesCollectionPanel: document.getElementById('casesCollectionPanel'),
+    casesRouletteViewport: document.getElementById('casesRouletteViewport'),
+    casesRouletteTrack: document.getElementById('casesRouletteTrack'),
+    openCaseBtn: document.getElementById('openCaseBtn'),
+    quickOpenCaseBtn: document.getElementById('quickOpenCaseBtn'),
+    casesOddsGrid: document.getElementById('casesOddsGrid'),
+    cstatTotalOpened: document.getElementById('cstatTotalOpened'),
+    cstatUniqueUnlocked: document.getElementById('cstatUniqueUnlocked'),
+    cstatPercent: document.getElementById('cstatPercent'),
+    collectionFilters: document.getElementById('collectionFilters'),
+    casesCollectionGrid: document.getElementById('casesCollectionGrid'),
+    resetCollectionBtn: document.getElementById('resetCollectionBtn'),
+    casesRevealModal: document.getElementById('casesRevealModal'),
+    casesRevealCardBox: document.getElementById('casesRevealCardBox'),
+    casesRarityFxContainer: document.getElementById('casesRarityFxContainer'),
+    casesRevealRays: document.getElementById('casesRevealRays'),
+    casesRevealNewBadge: document.getElementById('casesRevealNewBadge'),
+    casesRevealRarityTag: document.getElementById('casesRevealRarityTag'),
+    casesRevealMediaWrap: document.getElementById('casesRevealMediaWrap'),
+    casesRevealTitle: document.getElementById('casesRevealTitle'),
+    casesRevealMeta: document.getElementById('casesRevealMeta'),
+    casesRevealCountBadge: document.getElementById('casesRevealCountBadge'),
+    casesOpenAnotherBtn: document.getElementById('casesOpenAnotherBtn'),
+    casesViewInCollectionBtn: document.getElementById('casesViewInCollectionBtn'),
+    casesCloseRevealBtn: document.getElementById('casesCloseRevealBtn'),
+    casesLightboxModal: document.getElementById('casesLightboxModal'),
+    lightboxRarityBadge: document.getElementById('lightboxRarityBadge'),
+    lightboxItemTitle: document.getElementById('lightboxItemTitle'),
+    closeLightboxBtn: document.getElementById('closeLightboxBtn'),
+    lightboxMediaWrap: document.getElementById('lightboxMediaWrap'),
+    lightboxMetaText: document.getElementById('lightboxMetaText'),
+    lightboxDoneBtn: document.getElementById('lightboxDoneBtn'),
+    csgoUnboxAudio: document.getElementById('csgoUnboxAudio'),
+    itemObtainAudio: document.getElementById('itemObtainAudio'),
+    caseStageArea: document.getElementById('caseStageArea'),
+    caseStaticBoxImg: document.getElementById('caseStaticBoxImg'),
+    caseOpenVideo: document.getElementById('caseOpenVideo'),
+    crateMetaInfo: document.getElementById('crateMetaInfo'),
+
     // Classic Header & Mode elements
     classicHeaderTitle: document.getElementById('classicHeaderTitle'),
     classicDailyBadge: document.getElementById('classicDailyBadge'),
@@ -724,9 +1388,11 @@
 
     // Solved Today Banner
     alreadySolvedBanner: document.getElementById('alreadySolvedBanner'),
+    practiceSolvedBanner: document.getElementById('practiceSolvedBanner'),
     solvedCountdownClock: document.getElementById('solvedCountdownClock'),
     viewSolvedSummaryBtn: document.getElementById('viewSolvedSummaryBtn'),
     switchPracticeBtn: document.getElementById('switchPracticeBtn'),
+    nextPracticeBtn: document.getElementById('nextPracticeBtn'),
 
     // Search and guess inputs
     input: document.getElementById('memberInput'),
@@ -796,7 +1462,11 @@
     SoundFX.init();
     VictoryCelebration.init();
     loadMembersData();
+    loadQuotesData();
+    loadEmojisData();
+    loadPicturesData();
     bindEvents();
+    updateCasesHomeBadge();
 
     // Start 1-second midnight timer
     setInterval(handleSecondTick, 1000);
@@ -805,26 +1475,93 @@
     // Check hash for direct mode linking
     if (window.location.hash === '#classic') {
       showView('classic', false);
+    } else if (window.location.hash === '#quote') {
+      showView('quote', false);
+    } else if (window.location.hash === '#emoji') {
+      showView('emoji', false);
+    } else if (window.location.hash === '#picture') {
+      showView('picture', false);
+    } else if (window.location.hash === '#cases') {
+      showView('cases', false);
     } else {
       showView('home', false);
     }
+
+    updateCasesCollectionUI();
   }
 
   // --- View Switcher ---
   function showView(viewName, playSound = true) {
     state.activeView = viewName;
+    if (viewName !== 'cases' && typeof resetCaseOpeningStage === 'function') {
+      resetCaseOpeningStage();
+    }
 
     if (viewName === 'classic') {
       DOM.homeView.style.display = 'none';
       DOM.classicView.style.display = 'flex';
+      if (DOM.quoteView) DOM.quoteView.style.display = 'none';
+      if (DOM.emojiView) DOM.emojiView.style.display = 'none';
+      if (DOM.pictureView) DOM.pictureView.style.display = 'none';
+      if (DOM.casesView) DOM.casesView.style.display = 'none';
       window.location.hash = '#classic';
       setTimeout(() => {
         if (DOM.input && !DOM.input.disabled) DOM.input.focus();
       }, 50);
+    } else if (viewName === 'quote') {
+      DOM.homeView.style.display = 'none';
+      DOM.classicView.style.display = 'none';
+      if (DOM.quoteView) DOM.quoteView.style.display = 'flex';
+      if (DOM.emojiView) DOM.emojiView.style.display = 'none';
+      if (DOM.pictureView) DOM.pictureView.style.display = 'none';
+      if (DOM.casesView) DOM.casesView.style.display = 'none';
+      window.location.hash = '#quote';
+      renderQuoteClues();
+      setTimeout(() => {
+        if (DOM.quoteMemberInput && !DOM.quoteMemberInput.disabled) DOM.quoteMemberInput.focus();
+      }, 50);
+    } else if (viewName === 'emoji') {
+      DOM.homeView.style.display = 'none';
+      DOM.classicView.style.display = 'none';
+      if (DOM.quoteView) DOM.quoteView.style.display = 'none';
+      if (DOM.emojiView) DOM.emojiView.style.display = 'flex';
+      if (DOM.pictureView) DOM.pictureView.style.display = 'none';
+      if (DOM.casesView) DOM.casesView.style.display = 'none';
+      window.location.hash = '#emoji';
+      renderEmojiClues();
+      setTimeout(() => {
+        if (DOM.emojiMemberInput && !DOM.emojiMemberInput.disabled) DOM.emojiMemberInput.focus();
+      }, 50);
+    } else if (viewName === 'picture') {
+      DOM.homeView.style.display = 'none';
+      DOM.classicView.style.display = 'none';
+      if (DOM.quoteView) DOM.quoteView.style.display = 'none';
+      if (DOM.emojiView) DOM.emojiView.style.display = 'none';
+      if (DOM.pictureView) DOM.pictureView.style.display = 'flex';
+      if (DOM.casesView) DOM.casesView.style.display = 'none';
+      window.location.hash = '#picture';
+      setTimeout(() => {
+        if (DOM.pictureMemberInput && !DOM.pictureMemberInput.disabled) DOM.pictureMemberInput.focus();
+      }, 50);
+    } else if (viewName === 'cases') {
+      DOM.homeView.style.display = 'none';
+      DOM.classicView.style.display = 'none';
+      if (DOM.quoteView) DOM.quoteView.style.display = 'none';
+      if (DOM.emojiView) DOM.emojiView.style.display = 'none';
+      if (DOM.pictureView) DOM.pictureView.style.display = 'none';
+      if (DOM.casesView) DOM.casesView.style.display = 'block';
+      window.location.hash = '#cases';
+      renderCasesOddsGrid();
+      initCasesRoulette();
+      updateCasesCollectionUI(state.caseActiveFilter || 'all');
     } else {
       DOM.homeView.style.display = 'flex';
       DOM.classicView.style.display = 'none';
-      if (window.location.hash === '#classic') {
+      if (DOM.quoteView) DOM.quoteView.style.display = 'none';
+      if (DOM.emojiView) DOM.emojiView.style.display = 'none';
+      if (DOM.pictureView) DOM.pictureView.style.display = 'none';
+      if (DOM.casesView) DOM.casesView.style.display = 'none';
+      if (window.location.hash === '#classic' || window.location.hash === '#quote' || window.location.hash === '#emoji' || window.location.hash === '#picture' || window.location.hash === '#cases') {
         history.replaceState(null, '', ' ');
       }
     }
@@ -932,7 +1669,13 @@
     // 1. Update countdown timer displays
     if (DOM.homeCountdown) DOM.homeCountdown.textContent = dayInfo.countdownStr;
     if (DOM.classicCountdown) DOM.classicCountdown.textContent = dayInfo.countdownStr;
+    if (DOM.quoteCountdown) DOM.quoteCountdown.textContent = dayInfo.countdownStr;
+    if (DOM.emojiCountdown) DOM.emojiCountdown.textContent = dayInfo.countdownStr;
+    if (DOM.pictureCountdown) DOM.pictureCountdown.textContent = dayInfo.countdownStr;
     if (DOM.solvedCountdownClock) DOM.solvedCountdownClock.textContent = dayInfo.countdownStr;
+    if (DOM.solvedQuoteCountdownClock) DOM.solvedQuoteCountdownClock.textContent = dayInfo.countdownStr;
+    if (DOM.solvedEmojiCountdownClock) DOM.solvedEmojiCountdownClock.textContent = dayInfo.countdownStr;
+    if (DOM.solvedPictureCountdownClock) DOM.solvedPictureCountdownClock.textContent = dayInfo.countdownStr;
     if (DOM.victoryCountdownClock) DOM.victoryCountdownClock.textContent = dayInfo.countdownStr;
     if (DOM.statsCountdownClock) DOM.statsCountdownClock.textContent = dayInfo.countdownStr;
 
@@ -976,6 +1719,9 @@
     }
 
     updateStatsUI(StatsManager.get());
+    handleQuoteMidnightRollover(dayInfo);
+    handleEmojiMidnightRollover(dayInfo);
+    handlePictureMidnightRollover(dayInfo);
   }
 
   // --- Board Renderer & Solved UI ---
@@ -1043,7 +1789,7 @@
   function switchToPracticeMode() {
     state.gameMode = 'practice';
 
-    if (!state.practiceTargetMember) {
+    if (!state.practiceTargetMember || state.practiceIsWon) {
       pickNewPracticeTarget();
     } else {
       state.targetMember = state.practiceTargetMember;
@@ -1070,11 +1816,8 @@
     renderBoardFromState([]);
     updatePracticeUI();
 
-    DOM.input.disabled = false;
-    DOM.input.placeholder = 'Type member name or alias... (Practice Mode)';
-    DOM.guessBtn.disabled = false;
-
     if (DOM.alreadySolvedBanner) DOM.alreadySolvedBanner.style.display = 'none';
+    if (DOM.practiceSolvedBanner) DOM.practiceSolvedBanner.style.display = 'none';
     if (DOM.victoryModal) DOM.victoryModal.style.display = 'none';
     VictoryCelebration.stop();
   }
@@ -1095,6 +1838,7 @@
     if (DOM.classicCountdownWrap) DOM.classicCountdownWrap.style.display = 'inline-block';
     if (DOM.practiceToggleText) DOM.practiceToggleText.textContent = 'Practice Mode';
     if (DOM.practiceToggleIcon) DOM.practiceToggleIcon.textContent = '🎲';
+    if (DOM.practiceSolvedBanner) DOM.practiceSolvedBanner.style.display = 'none';
 
     setDailySolvedUI(state.isWon);
     SoundFX.playSelect();
@@ -1113,12 +1857,40 @@
     if (DOM.practiceToggleIcon) DOM.practiceToggleIcon.textContent = '🎯';
     if (DOM.alreadySolvedBanner) DOM.alreadySolvedBanner.style.display = 'none';
 
-    DOM.input.disabled = false;
-    DOM.input.placeholder = 'Type member name or alias... (Practice Mode)';
-    DOM.guessBtn.disabled = false;
+    if (state.practiceIsWon) {
+      if (DOM.input) {
+        DOM.input.disabled = true;
+        DOM.input.placeholder = '🎉 Practice member solved! Click Next Practice to play again.';
+      }
+      if (DOM.guessBtn) DOM.guessBtn.disabled = true;
+      if (DOM.practiceSolvedBanner) DOM.practiceSolvedBanner.style.display = 'flex';
+    } else {
+      if (DOM.input) {
+        DOM.input.disabled = false;
+        DOM.input.placeholder = 'Type member name or alias... (Practice Mode)';
+        setTimeout(() => {
+          if (DOM.input && !DOM.input.disabled) DOM.input.focus();
+        }, 50);
+      }
+      if (DOM.guessBtn) DOM.guessBtn.disabled = false;
+      if (DOM.practiceSolvedBanner) DOM.practiceSolvedBanner.style.display = 'none';
+    }
   }
 
   function resetGame() {
+    if (state.activeView === 'picture') {
+      resetPictureGame();
+      return;
+    }
+    if (state.activeView === 'quote') {
+      resetQuoteGame();
+      return;
+    }
+    if (state.activeView === 'emoji') {
+      resetEmojiGame();
+      return;
+    }
+
     if (state.gameMode === 'daily') {
       if (state.isWon) {
         showToast('👑 You already solved today! Play Practice Mode to guess more.');
@@ -1145,12 +1917,73 @@
   // --- Statistics Modal ---
   function updateStatsUI(stats) {
     if (DOM.topStatsStreak) {
-      DOM.topStatsStreak.textContent = '🔥 ' + stats.currentStreak;
+      const activeStats = state.activeView === 'picture'
+        ? PictureStatsManager.get()
+        : (state.activeView === 'emoji'
+            ? EmojiStatsManager.get()
+            : (state.activeView === 'quote' ? QuoteStatsManager.get() : StatsManager.get()));
+      DOM.topStatsStreak.textContent = '🔥 ' + activeStats.currentStreak;
     }
   }
 
   function openStatsModal() {
-    const stats = StatsManager.get();
+    if (state.activeView === 'picture') {
+      state.statsActiveTab = 'picture';
+    } else if (state.activeView === 'emoji') {
+      state.statsActiveTab = 'emoji';
+    } else if (state.activeView === 'quote') {
+      state.statsActiveTab = 'quote';
+    } else {
+      state.statsActiveTab = 'classic';
+    }
+    renderStatsTab();
+    if (DOM.statsModal) DOM.statsModal.style.display = 'flex';
+    SoundFX.playSelect();
+  }
+
+  function setStatsActiveTab(tabName) {
+    state.statsActiveTab = tabName;
+    renderStatsTab();
+    SoundFX.playSelect();
+  }
+
+  function renderStatsTab() {
+    const isQuoteTab = state.statsActiveTab === 'quote';
+    const isEmojiTab = state.statsActiveTab === 'emoji';
+    const isPictureTab = state.statsActiveTab === 'picture';
+
+    if (DOM.statsTabClassic) {
+      DOM.statsTabClassic.classList.toggle('active', state.statsActiveTab === 'classic');
+    }
+    if (DOM.statsTabQuote) {
+      DOM.statsTabQuote.classList.toggle('active', isQuoteTab);
+    }
+    if (DOM.statsTabEmoji) {
+      DOM.statsTabEmoji.classList.toggle('active', isEmojiTab);
+    }
+    if (DOM.statsTabPicture) {
+      DOM.statsTabPicture.classList.toggle('active', isPictureTab);
+    }
+
+    let stats, isWon, history;
+    if (isPictureTab) {
+      stats = PictureStatsManager.get();
+      isWon = state.pictureDailyIsWon;
+      history = state.pictureDailyGuesses;
+    } else if (isEmojiTab) {
+      stats = EmojiStatsManager.get();
+      isWon = state.emojiDailyIsWon;
+      history = state.emojiDailyGuesses;
+    } else if (isQuoteTab) {
+      stats = QuoteStatsManager.get();
+      isWon = state.quoteDailyIsWon;
+      history = state.quoteDailyGuesses;
+    } else {
+      stats = StatsManager.get();
+      isWon = state.isWon;
+      history = state.guessesHistory;
+    }
+
     if (DOM.statsValPlayed) DOM.statsValPlayed.textContent = stats.played;
     if (DOM.statsValWinPct) {
       const pct = stats.played > 0 ? Math.round((stats.won / stats.played) * 100) : 0;
@@ -1159,34 +1992,43 @@
     if (DOM.statsValCurrentStreak) DOM.statsValCurrentStreak.textContent = stats.currentStreak;
     if (DOM.statsValMaxStreak) DOM.statsValMaxStreak.textContent = stats.maxStreak;
 
-    renderGuessDistribution(stats);
+    renderGuessDistribution(stats, isWon, history.length);
 
     if (DOM.statsShareBtn) {
-      DOM.statsShareBtn.style.display = state.isWon ? 'flex' : 'none';
+      DOM.statsShareBtn.style.display = isWon ? 'flex' : 'none';
+      const btnSpan = DOM.statsShareBtn.querySelector('span:last-child');
+      if (btnSpan) {
+        if (isPictureTab) {
+          btnSpan.textContent = "SHARE TODAY'S PICTURE RESULT";
+        } else if (isEmojiTab) {
+          btnSpan.textContent = "SHARE TODAY'S EMOJI RESULT";
+        } else if (isQuoteTab) {
+          btnSpan.textContent = "SHARE TODAY'S QUOTE RESULT";
+        } else {
+          btnSpan.textContent = "SHARE TODAY'S RESULT";
+        }
+      }
     }
-
-    if (DOM.statsModal) DOM.statsModal.style.display = 'flex';
-    SoundFX.playSelect();
   }
 
   function closeStatsModal() {
     if (DOM.statsModal) DOM.statsModal.style.display = 'none';
   }
 
-  function renderGuessDistribution(stats) {
+  function renderGuessDistribution(stats, isWon = false, guessCount = 0) {
     if (!DOM.guessDistributionContainer) return;
     const dist = stats.distribution || {};
     const maxVal = Math.max(...Object.values(dist), 1);
     const keys = ['1', '2', '3', '4', '5', '6', '7+'];
 
-    const todayTries = state.isWon ? state.guessesHistory.length : -1;
+    const todayTries = isWon ? guessCount : -1;
     const todayBucket = todayTries >= 7 ? '7+' : String(todayTries);
 
     let html = '';
     keys.forEach(k => {
       const count = dist[k] || 0;
       const widthPct = Math.max(8, Math.round((count / maxVal) * 100));
-      const isHighlight = state.isWon && todayBucket === k;
+      const isHighlight = isWon && todayBucket === k;
 
       html += `
         <div class="dist-row">
@@ -1273,8 +2115,115 @@
   }
 
   /**
-   * General Category Matcher:
-   * Returns: 'correct' (green), 'partial' (orange), or 'incorrect' (red)
+   * Spol Matcher: Strictly 'Muško' or 'Žensko' (exact match only, never partial)
+   */
+  function compareSpol(guessVal, targetVal) {
+    const g = String(guessVal || '').trim().toLowerCase();
+    const t = String(targetVal || '').trim().toLowerCase();
+    if (!g && !t) return { status: 'correct', arrow: null };
+    if (!g || !t) return { status: 'incorrect', arrow: null };
+    if (g === t) return { status: 'correct', arrow: null };
+    return { status: 'incorrect', arrow: null };
+  }
+
+  /**
+   * Status Matcher: Exact match only (e.g. "Nije na serveru" vs "Na serveru" is incorrect, never partial)
+   */
+  function compareStatus(guessVal, targetVal) {
+    const g = String(guessVal || '').trim().toLowerCase();
+    const t = String(targetVal || '').trim().toLowerCase();
+    if (!g && !t) return { status: 'correct', arrow: null };
+    if (!g || !t) return { status: 'incorrect', arrow: null };
+    if (g === t) return { status: 'correct', arrow: null };
+    return { status: 'incorrect', arrow: null };
+  }
+
+  /**
+   * Aktivnost Matcher: Discrete tiers ('Neaktivan', 'Niska', 'Srednja', 'Visoka', 'Vrlo visoka')
+   * "Vrlo visoka" and "Visoka" are distinct levels and must NEVER show as partial/yellow!
+   */
+  function compareAktivnost(guessVal, targetVal) {
+    const g = String(guessVal || '').trim().toLowerCase();
+    const t = String(targetVal || '').trim().toLowerCase();
+    if (!g && !t) return { status: 'correct', arrow: null };
+    if (!g || !t) return { status: 'incorrect', arrow: null };
+    if (g === t) return { status: 'correct', arrow: null };
+    return { status: 'incorrect', arrow: null };
+  }
+
+  /**
+   * Okupacija Matcher:
+   * Multi-tag matching (e.g. "Student, Zaposlen" vs "Zaposlen" is partial/yellow).
+   * "Nezaposlen" and "Zaposlen" are distinct opposites and must NEVER match (neither full nor partial)!
+   */
+  function compareOkupacija(guessVal, targetVal) {
+    const g = String(guessVal || '').trim().toLowerCase();
+    const t = String(targetVal || '').trim().toLowerCase();
+
+    if (!g && !t) return { status: 'correct', arrow: null };
+    if (!g || !t) return { status: 'incorrect', arrow: null };
+    if (g === t) return { status: 'correct', arrow: null };
+
+    const gParts = g.split(/[,/]+/).map(s => s.trim().toLowerCase()).filter(Boolean);
+    const tParts = t.split(/[,/]+/).map(s => s.trim().toLowerCase()).filter(Boolean);
+
+    const validG = gParts.filter(p => p !== '?' && p !== '-');
+    const validT = tParts.filter(p => p !== '?' && p !== '-');
+    if (validG.length === 0 || validT.length === 0) {
+      return { status: 'incorrect', arrow: null };
+    }
+
+    // Exact set match
+    if (validG.length === validT.length && validG.every(p => validT.includes(p))) {
+      return { status: 'correct', arrow: null };
+    }
+
+    // Check individual token overlap:
+    // Explicit rule: "nezaposlen" and "zaposlen" NEVER match each other!
+    const overlap = validG.filter(gp => {
+      return validT.some(tp => {
+        if ((gp === 'nezaposlen' && tp === 'zaposlen') || (gp === 'zaposlen' && tp === 'nezaposlen')) {
+          return false;
+        }
+        return gp === tp;
+      });
+    });
+
+    if (overlap.length > 0) {
+      return { status: 'partial', arrow: null };
+    }
+
+    return { status: 'incorrect', arrow: null };
+  }
+
+  /**
+   * Lokacija Matcher: Multi-location token matching (e.g. "Zagreb, Rijeka" vs "Zagreb" is partial)
+   */
+  function compareLokacija(guessVal, targetVal) {
+    const g = String(guessVal || '').trim().toLowerCase();
+    const t = String(targetVal || '').trim().toLowerCase();
+
+    if (!g && !t) return { status: 'correct', arrow: null };
+    if (!g || !t) return { status: 'incorrect', arrow: null };
+    if (g === t) return { status: 'correct', arrow: null };
+
+    const gParts = g.split(/[,/]+/).map(s => s.trim().toLowerCase()).filter(Boolean);
+    const tParts = t.split(/[,/]+/).map(s => s.trim().toLowerCase()).filter(Boolean);
+
+    if (gParts.length === tParts.length && gParts.every(p => tParts.includes(p))) {
+      return { status: 'correct', arrow: null };
+    }
+
+    const overlap = gParts.filter(gp => tParts.includes(gp));
+    if (overlap.length > 0) {
+      return { status: 'partial', arrow: null };
+    }
+
+    return { status: 'incorrect', arrow: null };
+  }
+
+  /**
+   * General Category Matcher: Safe fallback with exact token matching (no raw substring bugs)
    */
   function compareGeneral(guessVal, targetVal) {
     const g = String(guessVal || '').trim().toLowerCase();
@@ -1285,15 +2234,11 @@
     if (g === t) return { status: 'correct', arrow: null };
 
     // Split on comma or slash for multiple tags
-    const gParts = g.split(/[,/]+/).map(s => s.trim()).filter(Boolean);
-    const tParts = t.split(/[,/]+/).map(s => s.trim()).filter(Boolean);
+    const gParts = g.split(/[,/]+/).map(s => s.trim().toLowerCase()).filter(Boolean);
+    const tParts = t.split(/[,/]+/).map(s => s.trim().toLowerCase()).filter(Boolean);
 
     const overlap = gParts.filter(p => tParts.includes(p));
     if (overlap.length > 0) {
-      return { status: 'partial', arrow: null };
-    }
-
-    if (t.includes(g) || g.includes(t)) {
       return { status: 'partial', arrow: null };
     }
 
@@ -1313,8 +2258,64 @@
       });
     }
 
+    if (DOM.playQuoteCard) {
+      DOM.playQuoteCard.addEventListener('click', () => showView('quote'));
+      DOM.playQuoteCard.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          showView('quote');
+        }
+      });
+    }
+
+    if (DOM.playEmojiCard) {
+      DOM.playEmojiCard.addEventListener('click', () => showView('emoji'));
+      DOM.playEmojiCard.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          showView('emoji');
+        }
+      });
+    }
+
+    if (DOM.playPictureCard) {
+      DOM.playPictureCard.addEventListener('click', () => showView('picture'));
+      DOM.playPictureCard.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          showView('picture');
+        }
+      });
+    }
+
+    if (DOM.playCasesCard) {
+      DOM.playCasesCard.addEventListener('click', () => showView('cases'));
+      DOM.playCasesCard.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          showView('cases');
+        }
+      });
+    }
+
     if (DOM.backToHomeBtn) {
       DOM.backToHomeBtn.addEventListener('click', () => showView('home'));
+    }
+
+    if (DOM.backToHomeFromQuoteBtn) {
+      DOM.backToHomeFromQuoteBtn.addEventListener('click', () => showView('home'));
+    }
+
+    if (DOM.backToHomeFromEmojiBtn) {
+      DOM.backToHomeFromEmojiBtn.addEventListener('click', () => showView('home'));
+    }
+
+    if (DOM.backToHomeFromPictureBtn) {
+      DOM.backToHomeFromPictureBtn.addEventListener('click', () => showView('home'));
+    }
+
+    if (DOM.backToHomeFromCasesBtn) {
+      DOM.backToHomeFromCasesBtn.addEventListener('click', () => showView('home'));
     }
 
     if (DOM.homeLogoBtn) {
@@ -1325,7 +2326,7 @@
       DOM.browseRosterBtn.addEventListener('click', openMembersModal);
     }
 
-    // Input handling
+    // Classic Input handling
     DOM.input.addEventListener('input', handleInputChange);
     DOM.input.addEventListener('keydown', handleInputKeydown);
     DOM.input.addEventListener('focus', () => {
@@ -1345,12 +2346,195 @@
     // Guess button click
     DOM.guessBtn.addEventListener('click', handleGuessSubmit);
 
-    // Click outside to close dropdown
+    // Click outside to close dropdowns
     document.addEventListener('click', (e) => {
       if (!DOM.input.contains(e.target) && !DOM.dropdown.contains(e.target)) {
         closeDropdown();
       }
+      if (DOM.quoteMemberInput && DOM.quoteAutocompleteDropdown) {
+        if (!DOM.quoteMemberInput.contains(e.target) && !DOM.quoteAutocompleteDropdown.contains(e.target)) {
+          closeQuoteDropdown();
+        }
+      }
+      if (DOM.emojiMemberInput && DOM.emojiAutocompleteDropdown) {
+        if (!DOM.emojiMemberInput.contains(e.target) && !DOM.emojiAutocompleteDropdown.contains(e.target)) {
+          closeEmojiDropdown();
+        }
+      }
+      if (DOM.pictureMemberInput && DOM.pictureAutocompleteDropdown) {
+        if (!DOM.pictureMemberInput.contains(e.target) && !DOM.pictureAutocompleteDropdown.contains(e.target)) {
+          closePictureDropdown();
+        }
+      }
     });
+
+    // Quote Input handling
+    if (DOM.quoteMemberInput) {
+      DOM.quoteMemberInput.addEventListener('input', handleQuoteInputChange);
+      DOM.quoteMemberInput.addEventListener('keydown', handleQuoteInputKeydown);
+      DOM.quoteMemberInput.addEventListener('focus', () => {
+        if (DOM.quoteMemberInput.value.trim().length > 0) {
+          handleQuoteInputChange();
+        }
+      });
+    }
+
+    if (DOM.quoteClearInputBtn) {
+      DOM.quoteClearInputBtn.addEventListener('click', () => {
+        DOM.quoteMemberInput.value = '';
+        DOM.quoteClearInputBtn.style.display = 'none';
+        closeQuoteDropdown();
+        DOM.quoteMemberInput.focus();
+      });
+    }
+
+    if (DOM.quoteGuessBtn) {
+      DOM.quoteGuessBtn.addEventListener('click', handleQuoteGuessSubmit);
+    }
+
+    // Emoji Input handling
+    if (DOM.emojiMemberInput) {
+      DOM.emojiMemberInput.addEventListener('input', handleEmojiInputChange);
+      DOM.emojiMemberInput.addEventListener('keydown', handleEmojiInputKeydown);
+      DOM.emojiMemberInput.addEventListener('focus', () => {
+        if (DOM.emojiMemberInput.value.trim().length > 0) {
+          handleEmojiInputChange();
+        }
+      });
+    }
+
+    if (DOM.emojiClearInputBtn) {
+      DOM.emojiClearInputBtn.addEventListener('click', () => {
+        DOM.emojiMemberInput.value = '';
+        DOM.emojiClearInputBtn.style.display = 'none';
+        closeEmojiDropdown();
+        DOM.emojiMemberInput.focus();
+      });
+    }
+
+    if (DOM.emojiGuessBtn) {
+      DOM.emojiGuessBtn.addEventListener('click', handleEmojiGuessSubmit);
+    }
+
+    // Picture Input handling
+    if (DOM.pictureMemberInput) {
+      DOM.pictureMemberInput.addEventListener('input', handlePictureInputChange);
+      DOM.pictureMemberInput.addEventListener('keydown', handlePictureInputKeydown);
+      DOM.pictureMemberInput.addEventListener('focus', () => {
+        if (DOM.pictureMemberInput.value.trim().length > 0) {
+          handlePictureInputChange();
+        }
+      });
+    }
+
+    if (DOM.pictureClearInputBtn) {
+      DOM.pictureClearInputBtn.addEventListener('click', () => {
+        DOM.pictureMemberInput.value = '';
+        DOM.pictureClearInputBtn.style.display = 'none';
+        closePictureDropdown();
+        DOM.pictureMemberInput.focus();
+      });
+    }
+
+    if (DOM.pictureGuessBtn) {
+      DOM.pictureGuessBtn.addEventListener('click', handlePictureGuessSubmit);
+    }
+
+    // Quote Practice mode buttons
+    if (DOM.quotePracticeToggleBtn) {
+      DOM.quotePracticeToggleBtn.addEventListener('click', toggleQuotePracticeMode);
+    }
+    if (DOM.switchQuotePracticeBtn) {
+      DOM.switchQuotePracticeBtn.addEventListener('click', switchToQuotePracticeMode);
+    }
+    if (DOM.nextQuotePracticeBtn) {
+      DOM.nextQuotePracticeBtn.addEventListener('click', pickNewQuotePracticeTarget);
+    }
+    if (DOM.viewSolvedQuoteSummaryBtn) {
+      DOM.viewSolvedQuoteSummaryBtn.addEventListener('click', () => {
+        if (state.quoteDailyTarget) {
+          triggerQuoteVictory(state.quoteDailyTarget, state.quoteDailyGuesses.length, false);
+        }
+      });
+    }
+
+    // Emoji Practice mode buttons
+    if (DOM.emojiPracticeToggleBtn) {
+      DOM.emojiPracticeToggleBtn.addEventListener('click', toggleEmojiPracticeMode);
+    }
+    if (DOM.switchEmojiPracticeBtn) {
+      DOM.switchEmojiPracticeBtn.addEventListener('click', switchToEmojiPracticeMode);
+    }
+    if (DOM.nextEmojiPracticeBtn) {
+      DOM.nextEmojiPracticeBtn.addEventListener('click', pickNewEmojiPracticeTarget);
+    }
+    if (DOM.viewSolvedEmojiSummaryBtn) {
+      DOM.viewSolvedEmojiSummaryBtn.addEventListener('click', () => {
+        if (state.emojiDailyTarget) {
+          triggerEmojiVictory(state.emojiDailyTarget, state.emojiDailyGuesses.length, false);
+        }
+      });
+    }
+
+    // Picture Practice mode buttons
+    if (DOM.picturePracticeToggleBtn) {
+      DOM.picturePracticeToggleBtn.addEventListener('click', togglePicturePracticeMode);
+    }
+    if (DOM.switchPicturePracticeBtn) {
+      DOM.switchPicturePracticeBtn.addEventListener('click', switchToPicturePracticeMode);
+    }
+    if (DOM.nextPicturePracticeBtn) {
+      DOM.nextPicturePracticeBtn.addEventListener('click', pickNewPicturePracticeTarget);
+    }
+    if (DOM.viewSolvedPictureSummaryBtn) {
+      DOM.viewSolvedPictureSummaryBtn.addEventListener('click', () => {
+        if (state.pictureDailyTarget) {
+          triggerPictureVictory(state.pictureDailyTarget, state.pictureDailyGuesses.length, false);
+        }
+      });
+    }
+
+    // Quote Clue cards interactive click & keyboard navigation
+    [1, 2, 3].forEach(idx => {
+      const el = document.getElementById(`quoteClue${idx}`);
+      if (el) {
+        el.addEventListener('click', () => handleQuoteClueClick(idx));
+        el.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleQuoteClueClick(idx);
+          }
+        });
+      }
+    });
+
+    // Emoji Clue cards interactive click & keyboard navigation
+    [1, 2, 3].forEach(idx => {
+      const el = document.getElementById(`emojiClue${idx}`);
+      if (el) {
+        el.addEventListener('click', () => handleEmojiClueClick(idx));
+        el.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleEmojiClueClick(idx);
+          }
+        });
+      }
+    });
+
+    // Stats tab switching
+    if (DOM.statsTabClassic) {
+      DOM.statsTabClassic.addEventListener('click', () => setStatsActiveTab('classic'));
+    }
+    if (DOM.statsTabQuote) {
+      DOM.statsTabQuote.addEventListener('click', () => setStatsActiveTab('quote'));
+    }
+    if (DOM.statsTabEmoji) {
+      DOM.statsTabEmoji.addEventListener('click', () => setStatsActiveTab('emoji'));
+    }
+    if (DOM.statsTabPicture) {
+      DOM.statsTabPicture.addEventListener('click', () => setStatsActiveTab('picture'));
+    }
 
     // Sound toggle
     DOM.soundToggleBtn.addEventListener('click', () => SoundFX.toggle());
@@ -1389,6 +2573,9 @@
     if (DOM.switchPracticeBtn) {
       DOM.switchPracticeBtn.addEventListener('click', switchToPracticeMode);
     }
+    if (DOM.nextPracticeBtn) {
+      DOM.nextPracticeBtn.addEventListener('click', pickNewPracticeTarget);
+    }
     if (DOM.viewSolvedSummaryBtn) {
       DOM.viewSolvedSummaryBtn.addEventListener('click', () => {
         if (state.targetMember) {
@@ -1414,8 +2601,22 @@
     }
     if (DOM.statsShareBtn) {
       DOM.statsShareBtn.addEventListener('click', () => {
-        if (state.targetMember) {
-          shareResult(state.targetMember, state.guessesHistory.length, false);
+        if (state.statsActiveTab === 'picture') {
+          if (state.pictureDailyTarget) {
+            sharePictureResult(state.pictureDailyTarget, state.pictureDailyGuesses.length, false);
+          }
+        } else if (state.statsActiveTab === 'emoji') {
+          if (state.emojiDailyTarget) {
+            shareEmojiResult(state.emojiDailyTarget, state.emojiDailyGuesses.length, false);
+          }
+        } else if (state.statsActiveTab === 'quote') {
+          if (state.quoteDailyTarget) {
+            shareQuoteResult(state.quoteDailyTarget, state.quoteDailyGuesses.length, false);
+          }
+        } else {
+          if (state.targetMember) {
+            shareResult(state.targetMember, state.guessesHistory.length, false);
+          }
         }
       });
     }
@@ -1424,20 +2625,60 @@
     if (DOM.victoryPracticeBtn) {
       DOM.victoryPracticeBtn.addEventListener('click', () => {
         VictoryCelebration.stop();
-        if (state.gameMode === 'daily') {
-          switchToPracticeMode();
+        if (state.lastVictoryMode === 'picture') {
+          if (state.pictureGameMode === 'daily') {
+            switchToPicturePracticeMode();
+          } else {
+            pickNewPicturePracticeTarget();
+          }
+        } else if (state.lastVictoryMode === 'emoji') {
+          if (state.emojiGameMode === 'daily') {
+            switchToEmojiPracticeMode();
+          } else {
+            pickNewEmojiPracticeTarget();
+          }
+        } else if (state.lastVictoryMode === 'quote') {
+          if (state.quoteGameMode === 'daily') {
+            switchToQuotePracticeMode();
+          } else {
+            pickNewQuotePracticeTarget();
+          }
         } else {
-          pickNewPracticeTarget();
+          if (state.gameMode === 'daily') {
+            switchToPracticeMode();
+          } else {
+            pickNewPracticeTarget();
+          }
         }
       });
     }
 
     if (DOM.shareResultBtn) {
       DOM.shareResultBtn.addEventListener('click', () => {
-        const lastMember = state.targetMember;
-        const tries = getActiveHistory().length;
-        if (lastMember) {
-          shareResult(lastMember, tries, state.gameMode === 'practice');
+        if (state.lastVictoryMode === 'picture') {
+          const lastPic = state.pictureTarget;
+          const tries = getActivePictureHistory().length;
+          if (lastPic) {
+            sharePictureResult(lastPic, tries, state.pictureGameMode === 'practice');
+          }
+        } else if (state.lastVictoryMode === 'emoji') {
+          const lastEmoji = state.emojiTarget;
+          const tries = getActiveEmojiHistory().length;
+          if (lastEmoji) {
+            shareEmojiResult(lastEmoji, tries, state.emojiGameMode === 'practice');
+          }
+        } else if (state.lastVictoryMode === 'quote') {
+          const lastQuote = state.quoteTarget;
+          const tries = getActiveQuoteHistory().length;
+          if (lastQuote) {
+            shareQuoteResult(lastQuote, tries, state.quoteGameMode === 'practice');
+          }
+        } else {
+          const lastMember = state.targetMember;
+          const tries = getActiveHistory().length;
+          if (lastMember) {
+            shareResult(lastMember, tries, state.gameMode === 'practice');
+          }
         }
       });
     }
@@ -1452,11 +2693,86 @@
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         closeDropdown();
+        closeQuoteDropdown();
+        closeEmojiDropdown();
+        closePictureDropdown();
         closeMembersModal();
         closeStatsModal();
         if (DOM.victoryModal) DOM.victoryModal.style.display = 'none';
+        if (DOM.casesRevealModal) closeCasesRevealModal();
+        if (DOM.casesLightboxModal) closeCasesLightbox();
       }
     });
+
+    // Cases Tab Switchers
+    if (DOM.casesTabOpenBtn) {
+      DOM.casesTabOpenBtn.addEventListener('click', () => {
+        DOM.casesTabOpenBtn.classList.add('active-tab-btn');
+        DOM.casesTabCollectionBtn.classList.remove('active-tab-btn');
+        if (DOM.casesUnboxPanel) DOM.casesUnboxPanel.style.display = 'block';
+        if (DOM.casesCollectionPanel) DOM.casesCollectionPanel.style.display = 'none';
+        SoundFX.playSelect();
+      });
+    }
+
+    if (DOM.casesTabCollectionBtn) {
+      DOM.casesTabCollectionBtn.addEventListener('click', () => {
+        DOM.casesTabCollectionBtn.classList.add('active-tab-btn');
+        DOM.casesTabOpenBtn.classList.remove('active-tab-btn');
+        if (DOM.casesUnboxPanel) DOM.casesUnboxPanel.style.display = 'none';
+        if (DOM.casesCollectionPanel) DOM.casesCollectionPanel.style.display = 'block';
+        updateCasesCollectionUI(state.caseActiveFilter || 'all');
+        SoundFX.playSelect();
+      });
+    }
+
+    // Open Case Buttons
+    if (DOM.openCaseBtn) {
+      DOM.openCaseBtn.addEventListener('click', () => startCaseOpening(false));
+    }
+    if (DOM.quickOpenCaseBtn) {
+      DOM.quickOpenCaseBtn.addEventListener('click', () => startCaseOpening(true));
+    }
+
+    // Reveal Modal Actions
+    if (DOM.casesOpenAnotherBtn) {
+      DOM.casesOpenAnotherBtn.addEventListener('click', () => {
+        closeCasesRevealModal();
+        startCaseOpening(false);
+      });
+    }
+    if (DOM.casesViewInCollectionBtn) {
+      DOM.casesViewInCollectionBtn.addEventListener('click', () => {
+        closeCasesRevealModal();
+        if (DOM.casesTabCollectionBtn) DOM.casesTabCollectionBtn.click();
+      });
+    }
+    if (DOM.casesCloseRevealBtn) {
+      DOM.casesCloseRevealBtn.addEventListener('click', closeCasesRevealModal);
+    }
+    if (DOM.casesRevealModal) {
+      DOM.casesRevealModal.addEventListener('click', (e) => {
+        if (e.target === DOM.casesRevealModal) closeCasesRevealModal();
+      });
+    }
+
+    // Lightbox Modal Actions
+    if (DOM.closeLightboxBtn) {
+      DOM.closeLightboxBtn.addEventListener('click', closeCasesLightbox);
+    }
+    if (DOM.lightboxDoneBtn) {
+      DOM.lightboxDoneBtn.addEventListener('click', closeCasesLightbox);
+    }
+    if (DOM.casesLightboxModal) {
+      DOM.casesLightboxModal.addEventListener('click', (e) => {
+        if (e.target === DOM.casesLightboxModal) closeCasesLightbox();
+      });
+    }
+
+    // Reset Collection
+    if (DOM.resetCollectionBtn) {
+      DOM.resetCollectionBtn.addEventListener('click', resetCasesCollection);
+    }
 
     // Quick example click buttons
     document.querySelectorAll('.quick-tag').forEach(tag => {
@@ -1489,9 +2805,10 @@
     renderDropdown(matches, query);
   }
 
-  function findMatches(query) {
+  function findMatches(query, isQuoteMode = null) {
     const results = [];
-    const activeGuessed = getActiveGuessedIds();
+    const useQuoteMode = isQuoteMode !== null ? isQuoteMode : (state.activeView === 'quote');
+    const activeGuessed = useQuoteMode ? getActiveQuoteGuessedIds() : getActiveGuessedIds();
 
     state.members.forEach(member => {
       const primary = member.name.toLowerCase();
@@ -1638,7 +2955,8 @@
 
   // --- Keyboard Navigation ---
   function handleInputKeydown(e) {
-    if (DOM.dropdown.style.display === 'none') {
+    const isDropdownVisible = DOM.dropdown && DOM.dropdown.style.display === 'block';
+    if (!isDropdownVisible) {
       if (e.key === 'Enter') {
         e.preventDefault();
         handleGuessSubmit();
@@ -1686,6 +3004,11 @@
 
   // --- Handle Guess Submission ---
   function handleGuessSubmit() {
+    const isDaily = state.gameMode === 'daily';
+    if (isDaily ? state.isWon : state.practiceIsWon) {
+      return;
+    }
+
     const query = DOM.input.value.trim().toLowerCase();
     if (!query) {
       shakeInput();
@@ -1764,6 +3087,7 @@
         setDailySolvedUI(true);
       } else {
         state.practiceIsWon = true;
+        updatePracticeUI();
       }
 
       if (playSound) {
@@ -1794,14 +3118,14 @@
     const avatarImgSrc = getMemberImage(member);
     const isCorrectChampion = isTarget ? 'correct-champion' : '';
 
-    // Comparisons
-    const cmpSpol = compareGeneral(guessCats.spol, targetCats.spol);
-    const cmpLokacija = compareGeneral(guessCats.lokacija, targetCats.lokacija);
-    const cmpStatus = compareGeneral(guessCats.status, targetCats.status);
+    // Category-specific comparison rules
+    const cmpSpol = compareSpol(guessCats.spol, targetCats.spol);
+    const cmpLokacija = compareLokacija(guessCats.lokacija, targetCats.lokacija);
+    const cmpStatus = compareStatus(guessCats.status, targetCats.status);
     const cmpDolazak = compareYear(guessCats.dolazak_na_server, targetCats.dolazak_na_server);
     const cmpKilaza = compareKilaza(guessCats.kilaza, targetCats.kilaza);
-    const cmpOkupacija = compareGeneral(guessCats.okupacija, targetCats.okupacija);
-    const cmpAktivnost = compareGeneral(guessCats.aktivnost, targetCats.aktivnost);
+    const cmpOkupacija = compareOkupacija(guessCats.okupacija, targetCats.okupacija);
+    const cmpAktivnost = compareAktivnost(guessCats.aktivnost, targetCats.aktivnost);
 
     function buildTile(val, cmpResult, label) {
       const displayVal = (val && String(val).trim().length > 0) ? escapeHtml(String(val).trim()) : '-';
@@ -1902,13 +3226,13 @@
       const gCats = g.categories || {};
       const tCats = state.targetMember.categories || {};
 
-      const cmpSpol = compareGeneral(gCats.spol, tCats.spol);
-      const cmpLok = compareGeneral(gCats.lokacija, tCats.lokacija);
-      const cmpStat = compareGeneral(gCats.status, tCats.status);
+      const cmpSpol = compareSpol(gCats.spol, tCats.spol);
+      const cmpLok = compareLokacija(gCats.lokacija, tCats.lokacija);
+      const cmpStat = compareStatus(gCats.status, tCats.status);
       const cmpDol = compareYear(gCats.dolazak_na_server, tCats.dolazak_na_server);
       const cmpKil = compareKilaza(gCats.kilaza, tCats.kilaza);
-      const cmpOkup = compareGeneral(gCats.okupacija, tCats.okupacija);
-      const cmpAkt = compareGeneral(gCats.aktivnost, tCats.aktivnost);
+      const cmpOkup = compareOkupacija(gCats.okupacija, tCats.okupacija);
+      const cmpAkt = compareAktivnost(gCats.aktivnost, tCats.aktivnost);
 
       function toEmoji(res) {
         if (res.arrow === 'up') return '⬆️';
@@ -1997,6 +3321,17 @@
     }
 
     // 5. Populate and show Victory Modal
+    state.lastVictoryMode = 'classic';
+    if (DOM.victoryQuoteBox) DOM.victoryQuoteBox.style.display = 'none';
+    if (DOM.victoryEmojiBox) DOM.victoryEmojiBox.style.display = 'none';
+    if (DOM.victoryPictureBox) DOM.victoryPictureBox.style.display = 'none';
+    if (DOM.victoryMultiMembers) DOM.victoryMultiMembers.style.display = 'none';
+    if (DOM.victoryMemberCard) DOM.victoryMemberCard.style.display = 'flex';
+    if (DOM.victoryCountdownCard) {
+      const label = DOM.victoryCountdownCard.querySelector('.countdown-card-label');
+      if (label) label.textContent = 'NEXT DAILY MEMBER IN';
+    }
+
     const isDaily = state.gameMode === 'daily';
     if (DOM.victoryHeading) {
       DOM.victoryHeading.textContent = isDaily ? `VICTORY! DAILY #${state.gameNumber}` : 'PRACTICE SOLVED!';
@@ -2089,6 +3424,2986 @@
     }
   }
 
+  // ==========================================================================
+  // QUOTE GAME MODE ENGINE (Server Quotes & Conversations)
+  // ==========================================================================
+
+  // --- Quote Mode Data Loading ---
+  function loadQuotesData() {
+    if (window.QUOTES_DATA && Array.isArray(window.QUOTES_DATA)) {
+      setQuotes(window.QUOTES_DATA);
+      return;
+    }
+
+    fetch('quotes.json')
+      .then(res => res.json())
+      .then(data => {
+        setQuotes(data);
+      })
+      .catch(err => {
+        console.error('Error fetching quotes.json:', err);
+      });
+  }
+
+  function setQuotes(data) {
+    state.quotes = data;
+    initDailyQuoteGame();
+  }
+
+  // --- Daily Quote Game Setup & Session Restoration ---
+  function initDailyQuoteGame() {
+    if (!state.quotes || state.quotes.length === 0) return;
+
+    const dayInfo = getLocalDayInfo();
+    state.quoteDailyTarget = getDailyQuote(dayInfo.dayIndex, state.quotes);
+    state.quoteTarget = state.quoteDailyTarget;
+
+    if (DOM.quoteDailyNum) DOM.quoteDailyNum.textContent = dayInfo.gameNumber;
+    if (DOM.quoteCardBadge) DOM.quoteCardBadge.textContent = 'DAILY #' + dayInfo.gameNumber;
+
+    // Attempt to restore quote daily save
+    const saved = QuoteDailyStateManager.load(dayInfo.dateKey);
+    if (saved && Array.isArray(saved.guesses) && saved.guesses.length > 0) {
+      state.quoteDailyGuesses = [];
+      state.quoteDailyGuessedIds.clear();
+      state.quoteDailyFoundMemberIds = new Set(saved.foundMemberIds || []);
+      state.quoteDailyRevealedClues = new Set(saved.revealedClues || []);
+      state.quoteDailyIsWon = !!saved.isWon;
+
+      // Re-log guesses in order (oldest first)
+      const inOrder = [...saved.guesses].reverse();
+      inOrder.forEach(item => {
+        logQuoteGuess(item.member, item.result, false);
+      });
+
+      renderQuoteDisplay(state.quoteDailyTarget, state.quoteDailyFoundMemberIds, state.quoteDailyIsWon);
+
+      if (state.quoteDailyIsWon) {
+        setQuoteDailySolvedUI(true);
+      }
+    } else {
+      state.quoteDailyGuesses = [];
+      state.quoteDailyGuessedIds.clear();
+      state.quoteDailyFoundMemberIds = new Set();
+      state.quoteDailyRevealedClues = new Set();
+      state.quoteDailyIsWon = false;
+      renderQuoteBoardFromState([]);
+      renderQuoteDisplay(state.quoteDailyTarget, state.quoteDailyFoundMemberIds, false);
+      setQuoteDailySolvedUI(false);
+    }
+  }
+
+  function handleQuoteMidnightRollover(dayInfo) {
+    if (!state.quotes || state.quotes.length === 0) return;
+    state.quoteDailyTarget = getDailyQuote(dayInfo.dayIndex, state.quotes);
+
+    if (DOM.quoteDailyNum) DOM.quoteDailyNum.textContent = dayInfo.gameNumber;
+    if (DOM.quoteCardBadge) DOM.quoteCardBadge.textContent = 'DAILY #' + dayInfo.gameNumber;
+
+    QuoteDailyStateManager.clear();
+    state.quoteDailyGuesses = [];
+    state.quoteDailyGuessedIds.clear();
+    state.quoteDailyFoundMemberIds = new Set();
+    state.quoteDailyRevealedClues = new Set();
+    state.quoteDailyIsWon = false;
+
+    if (state.quoteGameMode === 'daily') {
+      state.quoteTarget = state.quoteDailyTarget;
+      renderQuoteBoardFromState([]);
+      renderQuoteDisplay(state.quoteDailyTarget, state.quoteDailyFoundMemberIds, false);
+      setQuoteDailySolvedUI(false);
+    }
+  }
+
+  // --- Render Central Quote Display Card ---
+  function renderQuoteDisplay(quote, foundMemberIds, isSolved) {
+    if (!quote) return;
+    const isConv = quote.type === 'conversation';
+    foundMemberIds = foundMemberIds || new Set();
+
+    // Type pill
+    if (DOM.quoteTypePill) {
+      if (isConv) {
+        DOM.quoteTypePill.className = 'quote-type-pill conversation-pill';
+        if (DOM.quoteTypeIcon) DOM.quoteTypeIcon.textContent = '💬';
+        if (DOM.quoteTypeLabel) DOM.quoteTypeLabel.textContent = `CONVERSATION (${quote.requiredMemberIds.length} SPEAKERS)`;
+      } else {
+        DOM.quoteTypePill.className = 'quote-type-pill';
+        if (DOM.quoteTypeIcon) DOM.quoteTypeIcon.textContent = '❝';
+        if (DOM.quoteTypeLabel) DOM.quoteTypeLabel.textContent = 'SERVER QUOTE';
+      }
+    }
+
+    // Header hint
+    if (DOM.quoteHeaderHint) {
+      DOM.quoteHeaderHint.textContent = isConv 
+        ? `Who are in this conversation? Guess all ${quote.requiredMemberIds.length} members!` 
+        : 'Who said this quote? Guess the server member!';
+    }
+
+    // Conversation Speaker Tracker
+    if (DOM.convSpeakersTracker) {
+      if (isConv) {
+        DOM.convSpeakersTracker.style.display = 'block';
+        const foundCount = quote.requiredMemberIds.filter(id => foundMemberIds.has(id)).length;
+        const totalCount = quote.requiredMemberIds.length;
+        if (DOM.trackerProgress) {
+          DOM.trackerProgress.textContent = `${foundCount} / ${totalCount} FOUND`;
+        }
+
+        if (DOM.trackerChips) {
+          let chipsHtml = '';
+          quote.requiredMemberIds.forEach((mid, idx) => {
+            const member = state.members.find(m => m.id === mid) || { id: mid, name: quote.requiredMemberNames[idx] || mid };
+            const isFound = foundMemberIds.has(mid);
+            const imgSrc = getMemberImage(member);
+
+            if (isFound) {
+              chipsHtml += `
+                <div class="tracker-chip found" title="${escapeHtml(member.name)}">
+                  <div class="tracker-chip-avatar">
+                    <img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(member.name)}" onerror="this.style.display='none';" />
+                  </div>
+                  <span class="tracker-chip-name">${escapeHtml(member.name)} ✓</span>
+                </div>
+              `;
+            } else {
+              chipsHtml += `
+                <div class="tracker-chip" title="Speaker ${idx + 1} not yet found">
+                  <div class="tracker-chip-avatar">?</div>
+                  <span class="tracker-chip-name">Speaker ${idx + 1}</span>
+                </div>
+              `;
+            }
+          });
+          DOM.trackerChips.innerHTML = chipsHtml;
+        }
+      } else {
+        DOM.convSpeakersTracker.style.display = 'none';
+      }
+    }
+
+    // Main Content Area
+    if (DOM.quoteContentArea) {
+      if (isConv) {
+        // Conversation Dialogue Stream
+        let dialogueHtml = '<div class="dialogue-stream">';
+        
+        // Map unique member ID to speaker number for consistency
+        const speakerNumbers = {};
+        quote.requiredMemberIds.forEach((mid, i) => {
+          speakerNumbers[mid] = i + 1;
+        });
+
+        quote.dialogue.forEach(line => {
+          const isLineFound = foundMemberIds.has(line.authorId) || isSolved;
+          const member = state.members.find(m => m.id === line.authorId) || { id: line.authorId, name: line.authorName, image: line.authorImage };
+          const imgSrc = getMemberImage(member);
+          const speakerNum = speakerNumbers[line.authorId] || 1;
+
+          dialogueHtml += `
+            <div class="dialogue-bubble ${isLineFound ? 'revealed' : ''}">
+              <div class="dialogue-avatar">
+                ${isLineFound 
+                  ? `<img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(member.name)}" onerror="this.style.display='none'; if (this.nextElementSibling) this.nextElementSibling.style.display='inline';" /><span style="display:none;">👤</span>` 
+                  : `<span>?</span>`}
+              </div>
+              <div class="dialogue-body">
+                <div class="dialogue-header">
+                  <span class="dialogue-speaker-name">${isLineFound ? escapeHtml(member.name) : `Speaker ${speakerNum}`}</span>
+                  ${isLineFound ? `<span class="dialogue-verified-badge">✓ FOUND</span>` : ''}
+                </div>
+                <div class="dialogue-text">"${escapeHtml(line.text)}"</div>
+              </div>
+            </div>
+          `;
+        });
+        dialogueHtml += '</div>';
+        DOM.quoteContentArea.innerHTML = dialogueHtml;
+      } else {
+        // Single Quote
+        const quoteText = quote.dialogue[0] ? quote.dialogue[0].text : '';
+        DOM.quoteContentArea.innerHTML = `
+          <div class="single-quote-wrap">
+            <p class="single-quote-text">"${escapeHtml(quoteText)}"</p>
+          </div>
+        `;
+      }
+    }
+
+    // Author Reveal Area (Single Quote)
+    if (DOM.quoteAuthorReveal) {
+      if (!isConv) {
+        DOM.quoteAuthorReveal.style.display = 'block';
+        if (isSolved) {
+          const authorId = quote.requiredMemberIds[0];
+          const member = state.members.find(m => m.id === authorId) || { id: authorId, name: quote.dialogue[0].authorName, image: quote.dialogue[0].authorImage };
+          const imgSrc = getMemberImage(member);
+          DOM.quoteAuthorReveal.innerHTML = `
+            <div class="quote-author-revealed">
+              <img src="${escapeHtml(imgSrc)}" class="revealed-avatar" alt="${escapeHtml(member.name)}" onerror="this.style.display='none';" />
+              <span class="revealed-name">— ${escapeHtml(member.name)}</span>
+            </div>
+          `;
+        } else {
+          DOM.quoteAuthorReveal.innerHTML = `
+            <div class="quote-author-mystery">
+              <span class="mystery-avatar">?</span>
+              <span class="mystery-name">Who said this?</span>
+            </div>
+          `;
+        }
+      } else {
+        DOM.quoteAuthorReveal.style.display = 'none';
+      }
+    }
+
+    renderQuoteClues();
+  }
+
+  // --- Quote Clues & Hints Logic ---
+  function renderQuoteClues() {
+    if (!DOM.quoteCluesContainer) return;
+    const quote = state.quoteTarget;
+    if (!quote) {
+      DOM.quoteCluesContainer.style.display = 'none';
+      return;
+    }
+    DOM.quoteCluesContainer.style.display = 'block';
+
+    const history = getActiveQuoteHistory();
+    const guessCount = history.length;
+    const revealedClues = getActiveQuoteRevealedClues();
+    const foundIds = getActiveQuoteFoundIds();
+
+    const cluesConfig = [
+      { index: 1, reqGuesses: 5, icon: '📍', label: 'LOCATION' },
+      { index: 2, reqGuesses: 7, icon: '📅', label: 'JOINED SERVER' },
+      { index: 3, reqGuesses: 10, icon: '🔤', label: 'FIRST LETTER' }
+    ];
+
+    const speakerMembers = quote.requiredMemberIds.map(id => {
+      return state.members.find(m => m.id === id) || { 
+        id, 
+        name: id, 
+        categories: { lokacija: '?', dolazak_na_server: '?' } 
+      };
+    });
+
+    function getClueValue(clueIndex) {
+      if (quote.type === 'conversation') {
+        return speakerMembers.map((m, idx) => {
+          const speakerTag = foundIds.has(m.id) ? m.name : `Speaker ${idx + 1}`;
+          if (clueIndex === 1) {
+            return `${speakerTag}: ${m.categories?.lokacija || '?'}`;
+          } else if (clueIndex === 2) {
+            return `${speakerTag}: ${m.categories?.dolazak_na_server || '?'}`;
+          } else {
+            const letter = (m.name || '').trim().charAt(0).toUpperCase() || '?';
+            return `${speakerTag}: '${letter}'`;
+          }
+        }).join(' • ');
+      } else {
+        const m = speakerMembers[0] || { categories: {}, name: '' };
+        if (clueIndex === 1) {
+          return m.categories?.lokacija || 'Unknown';
+        } else if (clueIndex === 2) {
+          return m.categories?.dolazak_na_server || 'Unknown';
+        } else {
+          const letter = (m.name || '').trim().charAt(0).toUpperCase() || '?';
+          return `Starts with '${letter}'`;
+        }
+      }
+    }
+
+    let unlockedCount = 0;
+
+    cluesConfig.forEach(cfg => {
+      const card = document.getElementById(`quoteClue${cfg.index}`);
+      if (!card) return;
+
+      const isAvailable = guessCount >= cfg.reqGuesses;
+      const isRevealed = revealedClues.has(cfg.index);
+      if (isAvailable) unlockedCount++;
+
+      card.classList.remove('locked', 'available', 'revealed');
+
+      if (isRevealed) {
+        card.classList.add('revealed');
+        const val = getClueValue(cfg.index);
+        card.innerHTML = `
+          <div class="clue-card-content">
+            <div class="clue-header-badge">
+              <span class="clue-icon">${cfg.icon}</span>
+              <span class="clue-tag">${cfg.label}</span>
+            </div>
+            <div class="clue-value-text" title="${escapeHtml(val)}">${escapeHtml(val)}</div>
+          </div>
+        `;
+      } else if (isAvailable) {
+        card.classList.add('available');
+        card.innerHTML = `
+          <div class="clue-card-content">
+            <div class="clue-header-badge">
+              <span class="clue-icon">${cfg.icon}</span>
+              <span class="clue-tag">${cfg.label}</span>
+            </div>
+            <div class="clue-cta-text">
+              <span class="clue-tap-icon">✨</span>
+              <span>CLICK TO REVEAL</span>
+            </div>
+          </div>
+        `;
+      } else {
+        card.classList.add('locked');
+        card.innerHTML = `
+          <div class="clue-card-content">
+            <div class="clue-header-badge">
+              <span class="clue-lock-icon">🔒</span>
+              <span class="clue-tag">${cfg.label}</span>
+            </div>
+            <div class="clue-lock-sub">
+              <span>Unlocks at ${cfg.reqGuesses} guesses</span>
+              <span class="clue-progress-tag">${guessCount}/${cfg.reqGuesses}</span>
+            </div>
+          </div>
+        `;
+      }
+    });
+
+    if (DOM.quoteCluesCounter) {
+      DOM.quoteCluesCounter.textContent = `${unlockedCount} / 3 Available`;
+    }
+  }
+
+  function handleQuoteClueClick(clueIndex) {
+    const quote = state.quoteTarget;
+    if (!quote) return;
+
+    const history = getActiveQuoteHistory();
+    const guessCount = history.length;
+    const revealedClues = getActiveQuoteRevealedClues();
+
+    const thresholds = { 1: 5, 2: 7, 3: 10 };
+    const reqGuesses = thresholds[clueIndex];
+
+    const card = document.getElementById(`quoteClue${clueIndex}`);
+
+    if (guessCount < reqGuesses) {
+      if (card) {
+        card.classList.remove('clue-shake');
+        void card.offsetWidth;
+        card.classList.add('clue-shake');
+        setTimeout(() => card.classList.remove('clue-shake'), 400);
+      }
+      SoundFX.playError();
+      const need = reqGuesses - guessCount;
+      showToast(`🔒 Clue ${clueIndex} unlocks after ${reqGuesses} guesses! (${need} more needed)`);
+      return;
+    }
+
+    if (revealedClues.has(clueIndex)) {
+      SoundFX.playSelect();
+      return;
+    }
+
+    revealedClues.add(clueIndex);
+    SoundFX.playClueReveal();
+
+    if (state.quoteGameMode === 'daily') {
+      QuoteDailyStateManager.save(
+        state.currentDateKey,
+        state.gameNumber,
+        quote.id,
+        state.quoteDailyGuesses,
+        state.quoteDailyFoundMemberIds,
+        state.quoteDailyIsWon,
+        state.quoteDailyRevealedClues
+      );
+    }
+
+    renderQuoteClues();
+
+    const updatedCard = document.getElementById(`quoteClue${clueIndex}`);
+    if (updatedCard) {
+      updatedCard.classList.add('clue-just-revealed');
+      setTimeout(() => updatedCard.classList.remove('clue-just-revealed'), 700);
+    }
+  }
+
+  // --- Render Quote Guesses Board ---
+  function renderQuoteBoardFromState(history) {
+    if (!DOM.quoteGuessesList) return;
+    DOM.quoteGuessesList.innerHTML = '';
+
+    if (!history || history.length === 0) {
+      if (DOM.quoteEmptyGuessesState) DOM.quoteGuessesList.appendChild(DOM.quoteEmptyGuessesState);
+      updateQuoteGuessCounter();
+      return;
+    }
+
+    const inOrder = [...history].reverse();
+    inOrder.forEach(item => {
+      const card = createQuoteGuessCard(item.member, item.result, item.detail);
+      DOM.quoteGuessesList.prepend(card);
+    });
+
+    updateQuoteGuessCounter();
+  }
+
+  function createQuoteGuessCard(member, result, detail) {
+    const card = document.createElement('div');
+    card.className = `quote-guess-card status-${result}`;
+    card.setAttribute('data-id', member.id);
+
+    const imgSrc = getMemberImage(member);
+    const aliasStr = member.aliases && member.aliases.length > 0 ? member.aliases.join(', ') : '';
+
+    let badgeClass = 'badge-incorrect';
+    let badgeText = 'INCORRECT ✕';
+
+    if (result === 'correct') {
+      badgeClass = 'badge-correct';
+      badgeText = 'CORRECT! ✓';
+    } else if (result === 'speaker-found') {
+      badgeClass = 'badge-found';
+      badgeText = detail ? `SPEAKER FOUND! (${detail}) ✓` : 'SPEAKER FOUND! ✓';
+    } else if (result === 'already-found') {
+      badgeClass = 'badge-already';
+      badgeText = 'ALREADY FOUND';
+    }
+
+    card.innerHTML = `
+      <div class="quote-guess-left">
+        <div class="quote-guess-avatar">
+          <img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(member.name)}" onerror="this.style.display='none'; if (this.nextElementSibling) this.nextElementSibling.style.display='inline';" />
+          <span style="display:none;">👤</span>
+        </div>
+        <div class="quote-guess-meta">
+          <span class="quote-guess-name">${escapeHtml(member.name)}</span>
+          ${aliasStr ? `<span class="quote-guess-sub">AKA: ${escapeHtml(aliasStr)}</span>` : ''}
+        </div>
+      </div>
+      <div class="quote-guess-right">
+        <span class="quote-guess-badge ${badgeClass}">${badgeText}</span>
+      </div>
+    `;
+
+    return card;
+  }
+
+  function updateQuoteGuessCounter() {
+    const history = getActiveQuoteHistory();
+    if (DOM.quoteGuessCountBadge) {
+      DOM.quoteGuessCountBadge.textContent = `${history.length} ${history.length === 1 ? 'Guess' : 'Guesses'}`;
+    }
+  }
+
+  function setQuoteDailySolvedUI(isSolved) {
+    if (state.quoteGameMode !== 'daily') return;
+
+    if (isSolved) {
+      if (DOM.alreadySolvedQuoteBanner) DOM.alreadySolvedQuoteBanner.style.display = 'flex';
+      if (DOM.quoteMemberInput) {
+        DOM.quoteMemberInput.disabled = true;
+        DOM.quoteMemberInput.placeholder = "👑 Today's quote solved! Resets at midnight.";
+      }
+      if (DOM.quoteGuessBtn) DOM.quoteGuessBtn.disabled = true;
+      if (DOM.quoteCardBadge) {
+        DOM.quoteCardBadge.textContent = '✅ SOLVED TODAY';
+        DOM.quoteCardBadge.style.background = 'linear-gradient(135deg, #2ecc71, #27ae60)';
+        DOM.quoteCardBadge.style.color = '#ffffff';
+      }
+    } else {
+      if (DOM.alreadySolvedQuoteBanner) DOM.alreadySolvedQuoteBanner.style.display = 'none';
+      if (DOM.quoteMemberInput) {
+        DOM.quoteMemberInput.disabled = false;
+        DOM.quoteMemberInput.placeholder = 'Guess who said it... (e.g. lara, vito, krof, lean)';
+      }
+      if (DOM.quoteGuessBtn) DOM.quoteGuessBtn.disabled = false;
+      if (DOM.quoteCardBadge) {
+        DOM.quoteCardBadge.textContent = 'DAILY #' + state.gameNumber;
+        DOM.quoteCardBadge.style.background = '';
+        DOM.quoteCardBadge.style.color = '';
+      }
+    }
+  }
+
+  // --- Quote Practice Mode ---
+  function toggleQuotePracticeMode() {
+    if (state.quoteGameMode === 'daily') {
+      switchToQuotePracticeMode();
+    } else {
+      returnToQuoteDailyMode();
+    }
+  }
+
+  function switchToQuotePracticeMode() {
+    state.quoteGameMode = 'practice';
+    if (!state.quotePracticeTarget || state.quotePracticeIsWon) {
+      pickNewQuotePracticeTarget();
+    } else {
+      state.quoteTarget = state.quotePracticeTarget;
+      renderQuoteBoardFromState(state.quotePracticeGuesses);
+      renderQuoteDisplay(state.quotePracticeTarget, state.quotePracticeFoundMemberIds, state.quotePracticeIsWon);
+      updateQuotePracticeUI();
+    }
+    SoundFX.playSelect();
+  }
+
+  function pickNewQuotePracticeTarget() {
+    if (!state.quotes || state.quotes.length === 0) return;
+    const pool = state.quotes.filter(q => 
+      (!state.quoteDailyTarget || q.id !== state.quoteDailyTarget.id) &&
+      (!state.quotePracticeTarget || q.id !== state.quotePracticeTarget.id)
+    );
+    const chosen = pool[Math.floor(Math.random() * pool.length)] || state.quotes[0];
+
+    state.quotePracticeTarget = chosen;
+    state.quoteTarget = chosen;
+    state.quotePracticeGuesses = [];
+    state.quotePracticeGuessedIds.clear();
+    state.quotePracticeFoundMemberIds.clear();
+    state.quotePracticeRevealedClues.clear();
+    state.quotePracticeIsWon = false;
+
+    renderQuoteBoardFromState([]);
+    renderQuoteDisplay(chosen, state.quotePracticeFoundMemberIds, false);
+    updateQuotePracticeUI();
+
+    if (DOM.alreadySolvedQuoteBanner) DOM.alreadySolvedQuoteBanner.style.display = 'none';
+    if (DOM.quotePracticeSolvedBanner) DOM.quotePracticeSolvedBanner.style.display = 'none';
+    if (DOM.victoryModal) DOM.victoryModal.style.display = 'none';
+    VictoryCelebration.stop();
+  }
+
+  function returnToQuoteDailyMode() {
+    state.quoteGameMode = 'daily';
+    state.quoteTarget = state.quoteDailyTarget;
+
+    renderQuoteBoardFromState(state.quoteDailyGuesses);
+    renderQuoteDisplay(state.quoteDailyTarget, state.quoteDailyFoundMemberIds, state.quoteDailyIsWon);
+
+    if (DOM.quoteHeaderTitle) DOM.quoteHeaderTitle.textContent = 'QUOTE MODE';
+    if (DOM.quoteDailyBadge) {
+      DOM.quoteDailyBadge.textContent = 'DAILY #' + state.gameNumber;
+      DOM.quoteDailyBadge.style.background = '';
+      DOM.quoteDailyBadge.style.color = '';
+    }
+    if (DOM.quoteCountdownWrap) DOM.quoteCountdownWrap.style.display = 'inline-block';
+    if (DOM.quotePracticeToggleText) DOM.quotePracticeToggleText.textContent = 'Practice Mode';
+    if (DOM.quotePracticeToggleIcon) DOM.quotePracticeToggleIcon.textContent = '🎲';
+    if (DOM.quotePracticeSolvedBanner) DOM.quotePracticeSolvedBanner.style.display = 'none';
+
+    setQuoteDailySolvedUI(state.quoteDailyIsWon);
+    SoundFX.playSelect();
+  }
+
+  function updateQuotePracticeUI() {
+    if (DOM.quoteHeaderTitle) DOM.quoteHeaderTitle.textContent = 'QUOTE • PRACTICE';
+    if (DOM.quoteDailyBadge) {
+      DOM.quoteDailyBadge.textContent = '🎲 PRACTICE';
+      DOM.quoteDailyBadge.style.background = 'linear-gradient(135deg, #e6b43a, #996e14)';
+      DOM.quoteDailyBadge.style.color = '#000000';
+    }
+    if (DOM.quoteCountdownWrap) DOM.quoteCountdownWrap.style.display = 'none';
+    if (DOM.quotePracticeToggleText) DOM.quotePracticeToggleText.textContent = 'Back to Daily';
+    if (DOM.quotePracticeToggleIcon) DOM.quotePracticeToggleIcon.textContent = '🎯';
+    if (DOM.alreadySolvedQuoteBanner) DOM.alreadySolvedQuoteBanner.style.display = 'none';
+
+    if (state.quotePracticeIsWon) {
+      if (DOM.quoteMemberInput) {
+        DOM.quoteMemberInput.disabled = true;
+        DOM.quoteMemberInput.placeholder = '🎉 Practice quote solved! Click Next Practice to play again.';
+      }
+      if (DOM.quoteGuessBtn) DOM.quoteGuessBtn.disabled = true;
+      if (DOM.quotePracticeSolvedBanner) DOM.quotePracticeSolvedBanner.style.display = 'flex';
+    } else {
+      if (DOM.quoteMemberInput) {
+        DOM.quoteMemberInput.disabled = false;
+        DOM.quoteMemberInput.placeholder = 'Guess who said it... (Practice Mode)';
+        setTimeout(() => {
+          if (DOM.quoteMemberInput && !DOM.quoteMemberInput.disabled) DOM.quoteMemberInput.focus();
+        }, 50);
+      }
+      if (DOM.quoteGuessBtn) DOM.quoteGuessBtn.disabled = false;
+      if (DOM.quotePracticeSolvedBanner) DOM.quotePracticeSolvedBanner.style.display = 'none';
+    }
+  }
+
+  // --- Quote Autocomplete & Keyboard Navigation ---
+  function handleQuoteInputChange() {
+    const query = DOM.quoteMemberInput.value.trim().toLowerCase();
+    DOM.quoteClearInputBtn.style.display = query.length > 0 ? 'block' : 'none';
+
+    if (query.length === 0) {
+      closeQuoteDropdown();
+      return;
+    }
+
+    const matches = findMatches(query, true);
+    state.quoteCurrentMatches = matches;
+    state.quoteSelectedDropdownIndex = matches.length > 0 ? 0 : -1;
+    renderQuoteDropdown(matches, query);
+  }
+
+  function renderQuoteDropdown(matches, query) {
+    if (!DOM.quoteAutocompleteDropdown) return;
+
+    if (matches.length === 0) {
+      DOM.quoteAutocompleteDropdown.innerHTML = `
+        <div class="no-match-item">
+          <span>No Discord member found matching "<strong>${escapeHtml(query)}</strong>"</span>
+        </div>
+      `;
+      DOM.quoteAutocompleteDropdown.style.display = 'block';
+      return;
+    }
+
+    const activeGuessed = getActiveQuoteGuessedIds();
+
+    let html = '';
+    matches.forEach((item, idx) => {
+      const { member, matchedAlias } = item;
+      const isGuessed = activeGuessed.has(member.id);
+      const isActive = idx === state.quoteSelectedDropdownIndex ? 'active-item' : '';
+      const guessedClass = isGuessed ? 'already-guessed' : '';
+      const imgSrc = getMemberImage(member);
+      const highlightedName = highlightQuery(member.name, query);
+
+      let aliasesHtml = '';
+      if (member.aliases && member.aliases.length > 0) {
+        const aliasItems = member.aliases.map(a => {
+          if (matchedAlias && a.toLowerCase() === matchedAlias.toLowerCase()) {
+            return `<span class="alias-match-tag">AKA: ${highlightQuery(a, query)}</span>`;
+          }
+          return `<span>${escapeHtml(a)}</span>`;
+        }).join(', ');
+        aliasesHtml = `<div class="item-aliases">${aliasItems}</div>`;
+      }
+
+      const statusBadge = isGuessed 
+        ? `<span class="item-badge" style="opacity:0.6; color:#888;">GUESSED</span>` 
+        : `<span class="item-badge">#${member.index || idx + 1}</span>`;
+
+      html += `
+        <div class="dropdown-item ${isActive} ${guessedClass}" data-index="${idx}" data-id="${member.id}">
+          <div class="item-left">
+            <div class="item-avatar">
+              <img src="${escapeHtml(imgSrc)}" class="item-avatar-img" alt="" onerror="this.style.display='none'; if (this.nextElementSibling) this.nextElementSibling.style.display='inline';" />
+              <span class="item-avatar-fallback" style="display:none;">👤</span>
+            </div>
+            <div class="item-details">
+              <span class="item-primary-name">${highlightedName}</span>
+              ${aliasesHtml}
+            </div>
+          </div>
+          <div class="item-right">${statusBadge}</div>
+        </div>
+      `;
+    });
+
+    DOM.quoteAutocompleteDropdown.innerHTML = html;
+    DOM.quoteAutocompleteDropdown.style.display = 'block';
+
+    DOM.quoteAutocompleteDropdown.querySelectorAll('.dropdown-item').forEach(el => {
+      el.addEventListener('click', () => {
+        const idx = parseInt(el.getAttribute('data-index'), 10);
+        selectQuoteMatchByIndex(idx);
+      });
+      el.addEventListener('mouseenter', () => {
+        const idx = parseInt(el.getAttribute('data-index'), 10);
+        updateActiveQuoteDropdownItem(idx);
+      });
+    });
+  }
+
+  function updateActiveQuoteDropdownItem(index) {
+    state.quoteSelectedDropdownIndex = index;
+    const items = DOM.quoteAutocompleteDropdown.querySelectorAll('.dropdown-item');
+    items.forEach((item, idx) => {
+      if (idx === index) {
+        item.classList.add('active-item');
+        item.scrollIntoView({ block: 'nearest' });
+      } else {
+        item.classList.remove('active-item');
+      }
+    });
+  }
+
+  function selectQuoteMatchByIndex(index) {
+    if (!state.quoteCurrentMatches || !state.quoteCurrentMatches[index]) return;
+    const { member } = state.quoteCurrentMatches[index];
+    DOM.quoteMemberInput.value = member.name;
+    closeQuoteDropdown();
+    handleQuoteGuessSubmit();
+  }
+
+  function closeQuoteDropdown() {
+    if (DOM.quoteAutocompleteDropdown) DOM.quoteAutocompleteDropdown.style.display = 'none';
+    state.quoteSelectedDropdownIndex = -1;
+  }
+
+  function handleQuoteInputKeydown(e) {
+    const isDropdownVisible = DOM.quoteAutocompleteDropdown && DOM.quoteAutocompleteDropdown.style.display === 'block';
+    if (!isDropdownVisible) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleQuoteGuessSubmit();
+      }
+      return;
+    }
+
+    const items = state.quoteCurrentMatches;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (items.length === 0) return;
+      state.quoteSelectedDropdownIndex = (state.quoteSelectedDropdownIndex + 1) % items.length;
+      updateActiveQuoteDropdownItem(state.quoteSelectedDropdownIndex);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (items.length === 0) return;
+      state.quoteSelectedDropdownIndex = (state.quoteSelectedDropdownIndex - 1 + items.length) % items.length;
+      updateActiveQuoteDropdownItem(state.quoteSelectedDropdownIndex);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (state.quoteSelectedDropdownIndex >= 0 && items[state.quoteSelectedDropdownIndex]) {
+        selectQuoteMatchByIndex(state.quoteSelectedDropdownIndex);
+      } else {
+        handleQuoteGuessSubmit();
+      }
+    } else if (e.key === 'Escape') {
+      closeQuoteDropdown();
+    }
+  }
+
+  function shakeQuoteInput() {
+    DOM.quoteMemberInput.style.animation = 'none';
+    DOM.quoteMemberInput.offsetHeight;
+    DOM.quoteMemberInput.style.borderColor = '#ff2a55';
+    DOM.quoteMemberInput.style.boxShadow = '0 0 20px #ff2a55';
+
+    setTimeout(() => {
+      DOM.quoteMemberInput.style.borderColor = '';
+      DOM.quoteMemberInput.style.boxShadow = '';
+    }, 400);
+  }
+
+  function pulseAlreadyGuessedQuote(id) {
+    const card = DOM.quoteGuessesList.querySelector(`[data-id="${id}"]`);
+    if (card) {
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      card.style.transition = 'all 0.2s ease';
+      card.style.transform = 'scale(1.03)';
+      card.style.borderColor = '#f7d57f';
+      card.style.boxShadow = '0 0 25px rgba(247, 213, 127, 0.8)';
+
+      setTimeout(() => {
+        card.style.transform = '';
+        card.style.borderColor = '';
+        card.style.boxShadow = '';
+      }, 700);
+    }
+  }
+
+  function handleQuoteGuessSubmit() {
+    const isDaily = state.quoteGameMode === 'daily';
+    if (isDaily ? state.quoteDailyIsWon : state.quotePracticeIsWon) {
+      return;
+    }
+
+    const query = DOM.quoteMemberInput.value.trim().toLowerCase();
+    if (!query) {
+      shakeQuoteInput();
+      return;
+    }
+
+    const matchedMember = state.members.find(m => {
+      if (m.name.toLowerCase() === query) return true;
+      if (m.aliases && m.aliases.some(a => a.toLowerCase() === query)) return true;
+      return false;
+    });
+
+    if (!matchedMember) {
+      shakeQuoteInput();
+      SoundFX.playError();
+      return;
+    }
+
+    const activeGuessed = getActiveQuoteGuessedIds();
+    if (activeGuessed.has(matchedMember.id)) {
+      pulseAlreadyGuessedQuote(matchedMember.id);
+      SoundFX.playError();
+      DOM.quoteMemberInput.value = '';
+      DOM.quoteClearInputBtn.style.display = 'none';
+      closeQuoteDropdown();
+      return;
+    }
+
+    logQuoteGuess(matchedMember, null, true);
+
+    DOM.quoteMemberInput.value = '';
+    DOM.quoteClearInputBtn.style.display = 'none';
+    closeQuoteDropdown();
+    DOM.quoteMemberInput.focus();
+  }
+
+  function logQuoteGuess(member, explicitResult = null, playSound = true) {
+    const isDaily = state.quoteGameMode === 'daily';
+    const targetQuote = state.quoteTarget;
+    if (!targetQuote) return;
+
+    const isConv = targetQuote.type === 'conversation';
+    const foundIds = getActiveQuoteFoundIds();
+
+    let result = explicitResult;
+    let detail = '';
+
+    if (!result) {
+      if (isConv) {
+        if (targetQuote.requiredMemberIds.includes(member.id)) {
+          foundIds.add(member.id);
+          const foundCount = targetQuote.requiredMemberIds.filter(id => foundIds.has(id)).length;
+          const totalCount = targetQuote.requiredMemberIds.length;
+          result = 'speaker-found';
+          detail = `${foundCount}/${totalCount}`;
+        } else {
+          result = 'incorrect';
+        }
+      } else {
+        const targetAuthorId = targetQuote.requiredMemberIds[0];
+        if (member.id === targetAuthorId) {
+          result = 'correct';
+          foundIds.add(member.id);
+        } else {
+          result = 'incorrect';
+        }
+      }
+    }
+
+    const guessItem = { member, result, detail };
+
+    if (isDaily) {
+      state.quoteDailyGuessedIds.add(member.id);
+      state.quoteDailyGuesses.unshift(guessItem);
+    } else {
+      state.quotePracticeGuessedIds.add(member.id);
+      state.quotePracticeGuesses.unshift(guessItem);
+    }
+
+    updateQuoteGuessCounter();
+
+    if (DOM.quoteEmptyGuessesState && DOM.quoteEmptyGuessesState.parentNode) {
+      DOM.quoteEmptyGuessesState.parentNode.removeChild(DOM.quoteEmptyGuessesState);
+    }
+
+    const card = createQuoteGuessCard(member, result, detail);
+    DOM.quoteGuessesList.prepend(card);
+
+    // Check win condition
+    let isWonNow = false;
+    if (isConv) {
+      isWonNow = targetQuote.requiredMemberIds.every(id => foundIds.has(id));
+    } else {
+      isWonNow = result === 'correct';
+    }
+
+    renderQuoteDisplay(targetQuote, foundIds, isWonNow);
+
+    if (isDaily) {
+      QuoteDailyStateManager.save(
+        state.currentDateKey, 
+        state.gameNumber, 
+        targetQuote.id, 
+        state.quoteDailyGuesses, 
+        state.quoteDailyFoundMemberIds, 
+        isWonNow || state.quoteDailyIsWon,
+        state.quoteDailyRevealedClues
+      );
+    }
+
+    if (isWonNow) {
+      const currentHistory = isDaily ? state.quoteDailyGuesses : state.quotePracticeGuesses;
+      const guessNumber = currentHistory.length;
+
+      if (isDaily) {
+        state.quoteDailyIsWon = true;
+        const stats = QuoteStatsManager.recordWin(guessNumber, state.currentDateKey);
+        updateStatsUI(stats);
+        setQuoteDailySolvedUI(true);
+      } else {
+        state.quotePracticeIsWon = true;
+        updateQuotePracticeUI();
+      }
+
+      if (playSound) {
+        setTimeout(() => triggerQuoteVictory(targetQuote, guessNumber, true), 1000);
+      }
+    } else if (playSound) {
+      if (result === 'speaker-found' || result === 'correct') {
+        SoundFX.playGuessSuccess();
+      } else {
+        SoundFX.playError();
+      }
+    }
+  }
+
+  // --- Quote Victory Modal ---
+  function triggerQuoteVictory(quote, tries, withFanfare = true) {
+    state.lastVictoryMode = 'quote';
+    const isDaily = state.quoteGameMode === 'daily';
+    const isConv = quote.type === 'conversation';
+
+    if (withFanfare) {
+      SoundFX.playWin();
+      if (DOM.victoryFlash) {
+        DOM.victoryFlash.classList.remove('flash-active');
+        void DOM.victoryFlash.offsetWidth; // Force CSS reflow
+        DOM.victoryFlash.classList.add('flash-active');
+        setTimeout(() => {
+          if (DOM.victoryFlash) DOM.victoryFlash.classList.remove('flash-active');
+        }, 900);
+      }
+      document.body.classList.add('screen-rumble');
+      setTimeout(() => document.body.classList.remove('screen-rumble'), 450);
+      VictoryCelebration.start();
+    }
+
+    // Modal Titles
+    if (DOM.victoryHeading) {
+      DOM.victoryHeading.textContent = isDaily 
+        ? `QUOTE SOLVED! DAILY #${state.gameNumber}` 
+        : 'PRACTICE QUOTE SOLVED!';
+    }
+    if (DOM.victorySubtitle) {
+      DOM.victorySubtitle.textContent = isConv 
+        ? 'You identified all speakers in the conversation!' 
+        : 'You correctly identified who said this quote!';
+    }
+
+    // Single vs Multi-member layout
+    if (DOM.victoryMemberCard && DOM.victoryMultiMembers) {
+      if (isConv) {
+        DOM.victoryMemberCard.style.display = 'none';
+        DOM.victoryMultiMembers.style.display = 'flex';
+
+        let chipsHtml = '';
+        quote.requiredMemberIds.forEach(mid => {
+          const m = state.members.find(x => x.id === mid) || { id: mid, name: mid };
+          const imgSrc = getMemberImage(m);
+          chipsHtml += `
+            <div class="victory-speaker-chip">
+              <img src="${escapeHtml(imgSrc)}" class="victory-speaker-avatar" alt="${escapeHtml(m.name)}" onerror="this.style.display='none'; if (this.nextElementSibling) this.nextElementSibling.style.display='inline';" />
+              <span class="victory-speaker-fallback" style="display:none;">👤</span>
+              <span class="victory-speaker-name">${escapeHtml(m.name)}</span>
+            </div>
+          `;
+        });
+        DOM.victoryMultiMembers.innerHTML = chipsHtml;
+      } else {
+        DOM.victoryMemberCard.style.display = 'flex';
+        DOM.victoryMultiMembers.style.display = 'none';
+
+        const authorId = quote.requiredMemberIds[0];
+        const member = state.members.find(m => m.id === authorId) || { id: authorId, name: quote.dialogue[0].authorName };
+        const imgSrc = getMemberImage(member);
+
+        if (DOM.victoryAvatar) {
+          DOM.victoryAvatar.innerHTML = `
+            <img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(member.name)}" class="victory-avatar-img" onerror="this.style.display='none'; if (this.nextElementSibling) this.nextElementSibling.style.display='inline';" />
+            <span class="victory-avatar-fallback" style="display:none;">👑</span>
+          `;
+        }
+        if (DOM.victoryMemberName) DOM.victoryMemberName.textContent = member.name;
+        if (DOM.victoryAliases) {
+          const aliasStr = member.aliases && member.aliases.length > 0 ? member.aliases.join(', ') : 'None';
+          DOM.victoryAliases.textContent = `Aliases: ${aliasStr}`;
+        }
+      }
+    }
+
+    // Solved Quote Box in Victory Modal
+    if (DOM.victoryEmojiBox) DOM.victoryEmojiBox.style.display = 'none';
+    if (DOM.victoryPictureBox) DOM.victoryPictureBox.style.display = 'none';
+    if (DOM.victoryQuoteBox) {
+      DOM.victoryQuoteBox.style.display = 'block';
+      if (isConv) {
+        let convHtml = '<div style="display:flex; flex-direction:column; gap:8px; text-align:left;">';
+        quote.dialogue.forEach(line => {
+          convHtml += `<div><strong style="color:var(--text-gold); font-family:var(--font-display); font-size:1.05rem;">${escapeHtml(line.authorName)}:</strong> <span style="color:#ffffff;">"${escapeHtml(line.text)}"</span></div>`;
+        });
+        convHtml += '</div>';
+        DOM.victoryQuoteBox.innerHTML = convHtml;
+      } else {
+        DOM.victoryQuoteBox.innerHTML = `"${escapeHtml(quote.dialogue[0].text)}"`;
+      }
+    }
+
+    if (DOM.victoryGuessCount) {
+      DOM.victoryGuessCount.textContent = `Solved in ${tries} ${tries === 1 ? 'try' : 'tries'}!`;
+    }
+
+    // Countdown Card
+    if (DOM.victoryCountdownCard) {
+      DOM.victoryCountdownCard.style.display = isDaily ? 'block' : 'none';
+      const label = DOM.victoryCountdownCard.querySelector('.countdown-card-label');
+      if (label) label.textContent = 'NEXT DAILY QUOTE IN';
+    }
+
+    // Stats Row
+    if (DOM.victoryStatsRow) {
+      DOM.victoryStatsRow.style.display = isDaily ? 'grid' : 'none';
+      if (isDaily) {
+        const stats = QuoteStatsManager.get();
+        if (DOM.vstatPlayed) DOM.vstatPlayed.textContent = stats.played;
+        if (DOM.vstatWinPct) {
+          const pct = stats.played > 0 ? Math.round((stats.won / stats.played) * 100) : 0;
+          DOM.vstatWinPct.textContent = pct + '%';
+        }
+        if (DOM.vstatStreak) DOM.vstatStreak.textContent = '🔥 ' + stats.currentStreak;
+        if (DOM.vstatMaxStreak) DOM.vstatMaxStreak.textContent = '⭐ ' + stats.maxStreak;
+      }
+    }
+
+    if (DOM.victoryPracticeBtn) {
+      DOM.victoryPracticeBtn.innerHTML = isDaily 
+        ? '<span>🎲 PRACTICE MODE (UNLIMITED)</span>' 
+        : '<span>🔄 NEXT PRACTICE QUOTE</span>';
+    }
+
+    if (DOM.victoryModal) {
+      DOM.victoryModal.style.display = 'flex';
+    }
+  }
+
+  function shareQuoteResult(quote, tries, isPractice = false) {
+    const dayInfo = getLocalDayInfo();
+    const isConv = quote.type === 'conversation';
+    const title = isPractice 
+      ? `❝ ANTISIMPDLE QUOTE #Practice` 
+      : `❝ ANTISIMPDLE QUOTE #${dayInfo.gameNumber}`;
+    const sub = isConv ? `💬 Conversation (${quote.requiredMemberIds.length} speakers)` : `👤 Single Quote`;
+
+    const history = isPractice ? state.quotePracticeGuesses : state.quoteDailyGuesses;
+    const inOrder = [...history].reverse();
+    const emojis = inOrder.map(g => (g.result === 'correct' || g.result === 'speaker-found') ? '🟩' : '🟥').join('');
+
+    const webUrl = (window.location.origin && !window.location.origin.startsWith('file'))
+      ? `${window.location.origin}${window.location.pathname}`
+      : 'Antisimpdle';
+
+    const text = `${title}\n${sub}\n🎯 Solved in ${tries} ${tries === 1 ? 'try' : 'tries'}!\n${emojis}\n\nPlay: ${webUrl}`;
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('📋 Copied quote result to clipboard!');
+        SoundFX.playTone(880, 'sine', 0.12, 0.08);
+      }).catch(() => fallbackCopy(text));
+    } else {
+      fallbackCopy(text);
+    }
+  }
+
+  function resetQuoteGame() {
+    if (state.quoteGameMode === 'daily') {
+      if (state.quoteDailyIsWon) {
+        showToast('👑 You already solved today! Play Practice Mode to guess more.');
+        return;
+      }
+      if (state.quoteDailyGuesses.length === 0) return;
+      if (confirm("Reset today's daily quote guesses and restart from 0?")) {
+        state.quoteDailyGuessedIds.clear();
+        state.quoteDailyFoundMemberIds.clear();
+        state.quoteDailyRevealedClues.clear();
+        state.quoteDailyGuesses = [];
+        state.quoteDailyIsWon = false;
+        QuoteDailyStateManager.clear();
+        renderQuoteBoardFromState([]);
+        renderQuoteDisplay(state.quoteDailyTarget, state.quoteDailyFoundMemberIds, false);
+        setQuoteDailySolvedUI(false);
+        SoundFX.playTone(320, 'sine', 0.15);
+      }
+    } else {
+      if (confirm('Start a new practice quote?')) {
+        pickNewQuotePracticeTarget();
+        SoundFX.playTone(440, 'sine', 0.12);
+      }
+    }
+  }
+
+  // ========================================================
+  // EMOJI MODE GAME LOGIC
+  // ========================================================
+
+  // --- Emoji Data Loading ---
+  function loadEmojisData() {
+    if (window.EMOJIS_DATA && Array.isArray(window.EMOJIS_DATA)) {
+      setEmojis(window.EMOJIS_DATA);
+      return;
+    }
+
+    fetch('emojis.json')
+      .then(res => res.json())
+      .then(data => {
+        setEmojis(data);
+      })
+      .catch(err => {
+        console.error('Error fetching emojis.json:', err);
+      });
+  }
+
+  function setEmojis(data) {
+    state.emojis = data;
+    initDailyEmojiGame();
+    if (window.location.hash === '#emoji') {
+      showView('emoji', false);
+    }
+  }
+
+  // --- Daily Emoji Game Setup & Session Restoration ---
+  function initDailyEmojiGame() {
+    if (!state.emojis || state.emojis.length === 0) return;
+
+    const dayInfo = getLocalDayInfo();
+    state.emojiDailyTarget = getDailyEmoji(dayInfo.dayIndex, state.emojis);
+    state.emojiTarget = state.emojiDailyTarget;
+
+    if (DOM.emojiDailyNum) DOM.emojiDailyNum.textContent = dayInfo.gameNumber;
+    if (DOM.emojiCardBadge) DOM.emojiCardBadge.textContent = 'DAILY #' + dayInfo.gameNumber;
+
+    // Attempt to restore emoji daily save
+    const saved = EmojiDailyStateManager.load(dayInfo.dateKey);
+    if (saved && Array.isArray(saved.guesses) && saved.guesses.length > 0) {
+      state.emojiDailyGuesses = [];
+      state.emojiDailyGuessedIds.clear();
+      state.emojiDailyRevealedClues = new Set(saved.revealedClues || []);
+      state.emojiDailyIsWon = !!saved.isWon;
+
+      // Re-log guesses in order (oldest first)
+      const inOrder = [...saved.guesses].reverse();
+      inOrder.forEach(item => {
+        logEmojiGuess(item.member, item.result, false);
+      });
+
+      renderEmojiDisplay(state.emojiDailyTarget, state.emojiDailyIsWon);
+
+      if (state.emojiDailyIsWon) {
+        setEmojiDailySolvedUI(true);
+      }
+    } else {
+      state.emojiDailyGuesses = [];
+      state.emojiDailyGuessedIds.clear();
+      state.emojiDailyRevealedClues = new Set();
+      state.emojiDailyIsWon = false;
+      renderEmojiBoardFromState([]);
+      renderEmojiDisplay(state.emojiDailyTarget, false);
+      setEmojiDailySolvedUI(false);
+    }
+  }
+
+  function handleEmojiMidnightRollover(dayInfo) {
+    if (!state.emojis || state.emojis.length === 0) return;
+    state.emojiDailyTarget = getDailyEmoji(dayInfo.dayIndex, state.emojis);
+
+    if (DOM.emojiDailyNum) DOM.emojiDailyNum.textContent = dayInfo.gameNumber;
+    if (DOM.emojiCardBadge) DOM.emojiCardBadge.textContent = 'DAILY #' + dayInfo.gameNumber;
+
+    EmojiDailyStateManager.clear();
+    state.emojiDailyGuesses = [];
+    state.emojiDailyGuessedIds.clear();
+    state.emojiDailyRevealedClues = new Set();
+    state.emojiDailyIsWon = false;
+
+    if (state.emojiGameMode === 'daily') {
+      state.emojiTarget = state.emojiDailyTarget;
+      renderEmojiBoardFromState([]);
+      renderEmojiDisplay(state.emojiDailyTarget, false);
+      setEmojiDailySolvedUI(false);
+    }
+  }
+
+  // --- Render Central Emoji Display Card ---
+  function renderEmojiDisplay(target, isSolved, justRevealedIndex = -1) {
+    if (!target) return;
+    const emojis = target.emojis || [];
+    const N = emojis.length;
+    const history = getActiveEmojiHistory();
+    const guessCount = history.length;
+
+    // At start (0 guesses), exactly 1 emoji is offered. Each guess reveals 1 extra emoji.
+    // If solved, all emojis are revealed.
+    const revealedCount = isSolved ? N : Math.min(1 + guessCount, N);
+
+    // Progress badge
+    if (DOM.emojiRevealProgress) {
+      if (revealedCount >= N) {
+        DOM.emojiRevealProgress.textContent = `All ${N} Emojis Revealed ✨`;
+        DOM.emojiRevealProgress.style.borderColor = '#f7d57f';
+        DOM.emojiRevealProgress.style.color = '#f7d57f';
+      } else {
+        DOM.emojiRevealProgress.textContent = `${revealedCount} / ${N} Emojis Revealed`;
+        DOM.emojiRevealProgress.style.borderColor = 'rgba(255, 255, 255, 0.14)';
+        DOM.emojiRevealProgress.style.color = 'var(--text-gold)';
+      }
+    }
+
+    // Render emoji tokens
+    if (DOM.emojiTokensContainer) {
+      let tokensHtml = '';
+      for (let i = 0; i < N; i++) {
+        if (i < revealedCount) {
+          const isJustRevealed = i === justRevealedIndex;
+          tokensHtml += `
+            <div class="emoji-token revealed ${isJustRevealed ? 'just-revealed' : ''}" title="Emoji #${i + 1}">
+              <span>${escapeHtml(emojis[i])}</span>
+            </div>
+          `;
+        } else {
+          tokensHtml += `
+            <div class="emoji-token mystery" title="Emoji #${i + 1} (Unlocks on guess ${i})">
+              <span>?</span>
+            </div>
+          `;
+        }
+      }
+      DOM.emojiTokensContainer.innerHTML = tokensHtml;
+    }
+
+    // Solved Author Reveal Area
+    if (DOM.emojiAuthorReveal) {
+      if (isSolved) {
+        DOM.emojiAuthorReveal.style.display = 'block';
+        const member = state.members.find(m => m.id === target.memberId) || { id: target.memberId, name: target.memberName, image: target.memberImage };
+        const imgSrc = getMemberImage(member);
+        DOM.emojiAuthorReveal.innerHTML = `
+          <div class="quote-author-revealed">
+            <img src="${escapeHtml(imgSrc)}" class="revealed-avatar" alt="${escapeHtml(member.name)}" onerror="this.style.display='none';" />
+            <span class="revealed-name">— ${escapeHtml(member.name)}</span>
+          </div>
+        `;
+      } else {
+        DOM.emojiAuthorReveal.style.display = 'none';
+      }
+    }
+
+    renderEmojiClues();
+  }
+
+  // --- Emoji Clues & Hints Logic ---
+  // "after all emojies have been revealed the same hitns and clue boxes shows up as in quotes
+  // and it starts couting only guesses after all the emojies have been revealed"
+  function renderEmojiClues() {
+    if (!DOM.emojiCluesContainer) return;
+    const target = state.emojiTarget;
+    if (!target) {
+      DOM.emojiCluesContainer.style.display = 'none';
+      return;
+    }
+
+    const emojis = target.emojis || [];
+    const N = emojis.length;
+    const history = getActiveEmojiHistory();
+    const guessCount = history.length;
+    const isWon = state.emojiGameMode === 'daily' ? state.emojiDailyIsWon : state.emojiPracticeIsWon;
+
+    // All emojis are revealed once guessCount >= N - 1 (or won)
+    const allEmojisRevealed = (guessCount >= N - 1) || isWon;
+
+    if (!allEmojisRevealed) {
+      DOM.emojiCluesContainer.style.display = 'none';
+      return;
+    }
+
+    // Show hints & clues box!
+    DOM.emojiCluesContainer.style.display = 'block';
+
+    // "it starts couting only guesses after all the emojies have been revealed"
+    // G_post = Math.max(0, guessCount - (N - 1))
+    const postGuesses = Math.max(0, guessCount - (N - 1));
+    const revealedClues = getActiveEmojiRevealedClues();
+
+    const cluesConfig = [
+      { index: 1, reqGuesses: 5, icon: '📍', label: 'LOCATION' },
+      { index: 2, reqGuesses: 7, icon: '📅', label: 'JOINED SERVER' },
+      { index: 3, reqGuesses: 10, icon: '🔤', label: 'FIRST LETTER' }
+    ];
+
+    const member = state.members.find(m => m.id === target.memberId) || { 
+      id: target.memberId, 
+      name: target.memberName, 
+      categories: { lokacija: '?', dolazak_na_server: '?' } 
+    };
+
+    function getClueValue(clueIndex) {
+      if (clueIndex === 1) {
+        return member.categories?.lokacija || 'Unknown';
+      } else if (clueIndex === 2) {
+        return member.categories?.dolazak_na_server || 'Unknown';
+      } else {
+        const letter = (member.name || target.memberName || '').trim().charAt(0).toUpperCase() || '?';
+        return `Starts with '${letter}'`;
+      }
+    }
+
+    let unlockedCount = 0;
+
+    cluesConfig.forEach(cfg => {
+      const card = document.getElementById(`emojiClue${cfg.index}`);
+      if (!card) return;
+
+      const isAvailable = postGuesses >= cfg.reqGuesses || isWon;
+      const isRevealed = revealedClues.has(cfg.index) || isWon;
+      if (isAvailable) unlockedCount++;
+
+      card.classList.remove('locked', 'available', 'revealed');
+
+      if (isRevealed) {
+        card.classList.add('revealed');
+        const val = getClueValue(cfg.index);
+        card.innerHTML = `
+          <div class="clue-card-content">
+            <div class="clue-header-badge">
+              <span class="clue-icon">${cfg.icon}</span>
+              <span class="clue-tag">${cfg.label}</span>
+            </div>
+            <div class="clue-value-text" title="${escapeHtml(val)}">${escapeHtml(val)}</div>
+          </div>
+        `;
+      } else if (isAvailable) {
+        card.classList.add('available');
+        card.innerHTML = `
+          <div class="clue-card-content">
+            <div class="clue-header-badge">
+              <span class="clue-icon">${cfg.icon}</span>
+              <span class="clue-tag">${cfg.label}</span>
+            </div>
+            <div class="clue-cta-text">
+              <span class="clue-tap-icon">✨</span>
+              <span>CLICK TO REVEAL</span>
+            </div>
+          </div>
+        `;
+      } else {
+        card.classList.add('locked');
+        card.innerHTML = `
+          <div class="clue-card-content">
+            <div class="clue-header-badge">
+              <span class="clue-lock-icon">🔒</span>
+              <span class="clue-tag">${cfg.label}</span>
+            </div>
+            <div class="clue-lock-sub">
+              <span>Unlocks in ${cfg.reqGuesses} post-emoji tries</span>
+              <span class="clue-progress-tag">${postGuesses}/${cfg.reqGuesses}</span>
+            </div>
+          </div>
+        `;
+      }
+    });
+
+    if (DOM.emojiCluesCounter) {
+      DOM.emojiCluesCounter.textContent = `${unlockedCount} / 3 Available`;
+    }
+  }
+
+  function handleEmojiClueClick(clueIndex) {
+    const target = state.emojiTarget;
+    if (!target) return;
+
+    const emojis = target.emojis || [];
+    const N = emojis.length;
+    const history = getActiveEmojiHistory();
+    const guessCount = history.length;
+    const isWon = state.emojiGameMode === 'daily' ? state.emojiDailyIsWon : state.emojiPracticeIsWon;
+
+    if (guessCount < N - 1 && !isWon) {
+      SoundFX.playError();
+      showToast('🔒 Hints unlock after all emojis have been revealed!');
+      return;
+    }
+
+    const postGuesses = Math.max(0, guessCount - (N - 1));
+    const revealedClues = getActiveEmojiRevealedClues();
+
+    const thresholds = { 1: 5, 2: 7, 3: 10 };
+    const reqGuesses = thresholds[clueIndex];
+
+    const card = document.getElementById(`emojiClue${clueIndex}`);
+
+    if (postGuesses < reqGuesses && !isWon) {
+      if (card) {
+        card.classList.remove('clue-shake');
+        void card.offsetWidth;
+        card.classList.add('clue-shake');
+        setTimeout(() => card.classList.remove('clue-shake'), 400);
+      }
+      SoundFX.playError();
+      const need = reqGuesses - postGuesses;
+      showToast(`🔒 Clue ${clueIndex} unlocks after ${reqGuesses} guesses after all emojis are revealed! (${need} more needed)`);
+      return;
+    }
+
+    if (revealedClues.has(clueIndex)) {
+      SoundFX.playSelect();
+      return;
+    }
+
+    revealedClues.add(clueIndex);
+    SoundFX.playClueReveal();
+
+    if (state.emojiGameMode === 'daily') {
+      EmojiDailyStateManager.save(
+        state.currentDateKey,
+        state.gameNumber,
+        target.id,
+        state.emojiDailyGuesses,
+        state.emojiDailyIsWon,
+        state.emojiDailyRevealedClues
+      );
+    }
+
+    renderEmojiClues();
+
+    const updatedCard = document.getElementById(`emojiClue${clueIndex}`);
+    if (updatedCard) {
+      updatedCard.classList.add('clue-just-revealed');
+      setTimeout(() => updatedCard.classList.remove('clue-just-revealed'), 700);
+    }
+  }
+
+  // --- Render Emoji Guesses Board ---
+  function renderEmojiBoardFromState(history) {
+    if (!DOM.emojiGuessesList) return;
+    DOM.emojiGuessesList.innerHTML = '';
+
+    if (!history || history.length === 0) {
+      if (DOM.emojiEmptyGuessesState) DOM.emojiGuessesList.appendChild(DOM.emojiEmptyGuessesState);
+      updateEmojiGuessCounter();
+      return;
+    }
+
+    const inOrder = [...history].reverse();
+    inOrder.forEach(item => {
+      const card = createEmojiGuessCard(item.member, item.result);
+      DOM.emojiGuessesList.prepend(card);
+    });
+
+    updateEmojiGuessCounter();
+  }
+
+  function createEmojiGuessCard(member, result) {
+    const card = document.createElement('div');
+    card.className = `quote-guess-card status-${result}`;
+    card.setAttribute('data-id', member.id);
+
+    const imgSrc = getMemberImage(member);
+    const aliasStr = member.aliases && member.aliases.length > 0 ? member.aliases.join(', ') : '';
+
+    let badgeClass = 'badge-incorrect';
+    let badgeText = 'INCORRECT ✕';
+
+    if (result === 'correct') {
+      badgeClass = 'badge-correct';
+      badgeText = 'CORRECT! ✓';
+    }
+
+    card.innerHTML = `
+      <div class="quote-guess-left">
+        <div class="quote-guess-avatar">
+          <img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(member.name)}" onerror="this.style.display='none'; if (this.nextElementSibling) this.nextElementSibling.style.display='inline';" />
+          <span style="display:none;">👤</span>
+        </div>
+        <div class="quote-guess-meta">
+          <span class="quote-guess-name">${escapeHtml(member.name)}</span>
+          ${aliasStr ? `<span class="quote-guess-sub">AKA: ${escapeHtml(aliasStr)}</span>` : ''}
+        </div>
+      </div>
+      <div class="quote-guess-right">
+        <span class="quote-guess-badge ${badgeClass}">${badgeText}</span>
+      </div>
+    `;
+
+    return card;
+  }
+
+  function updateEmojiGuessCounter() {
+    const history = getActiveEmojiHistory();
+    if (DOM.emojiGuessCountBadge) {
+      DOM.emojiGuessCountBadge.textContent = `${history.length} ${history.length === 1 ? 'Guess' : 'Guesses'}`;
+    }
+  }
+
+  function setEmojiDailySolvedUI(isSolved) {
+    if (state.emojiGameMode !== 'daily') return;
+
+    if (isSolved) {
+      if (DOM.alreadySolvedEmojiBanner) DOM.alreadySolvedEmojiBanner.style.display = 'flex';
+      if (DOM.emojiMemberInput) {
+        DOM.emojiMemberInput.disabled = true;
+        DOM.emojiMemberInput.placeholder = "👑 Today's emoji solved! Resets at midnight.";
+      }
+      if (DOM.emojiGuessBtn) DOM.emojiGuessBtn.disabled = true;
+      if (DOM.emojiCardBadge) {
+        DOM.emojiCardBadge.textContent = '✅ SOLVED TODAY';
+        DOM.emojiCardBadge.style.background = 'linear-gradient(135deg, #2ecc71, #27ae60)';
+        DOM.emojiCardBadge.style.color = '#ffffff';
+      }
+    } else {
+      if (DOM.alreadySolvedEmojiBanner) DOM.alreadySolvedEmojiBanner.style.display = 'none';
+      if (DOM.emojiMemberInput) {
+        DOM.emojiMemberInput.disabled = false;
+        DOM.emojiMemberInput.placeholder = 'Guess who this represents... (e.g. lara, vito, krof, dineks)';
+      }
+      if (DOM.emojiGuessBtn) DOM.emojiGuessBtn.disabled = false;
+      if (DOM.emojiCardBadge) {
+        DOM.emojiCardBadge.textContent = 'DAILY #' + state.gameNumber;
+        DOM.emojiCardBadge.style.background = '';
+        DOM.emojiCardBadge.style.color = '';
+      }
+    }
+  }
+
+  // --- Emoji Practice Mode ---
+  function toggleEmojiPracticeMode() {
+    if (state.emojiGameMode === 'daily') {
+      switchToEmojiPracticeMode();
+    } else {
+      returnToEmojiDailyMode();
+    }
+  }
+
+  function switchToEmojiPracticeMode() {
+    state.emojiGameMode = 'practice';
+    if (!state.emojiPracticeTarget || state.emojiPracticeIsWon) {
+      pickNewEmojiPracticeTarget();
+    } else {
+      state.emojiTarget = state.emojiPracticeTarget;
+      renderEmojiBoardFromState(state.emojiPracticeGuesses);
+      renderEmojiDisplay(state.emojiPracticeTarget, state.emojiPracticeIsWon);
+      updateEmojiPracticeUI();
+    }
+    SoundFX.playSelect();
+  }
+
+  function pickNewEmojiPracticeTarget() {
+    if (!state.emojis || state.emojis.length === 0) return;
+    const pool = state.emojis.filter(e => 
+      (!state.emojiDailyTarget || e.id !== state.emojiDailyTarget.id) &&
+      (!state.emojiPracticeTarget || e.id !== state.emojiPracticeTarget.id)
+    );
+    const chosen = pool[Math.floor(Math.random() * pool.length)] || state.emojis[0];
+
+    state.emojiPracticeTarget = chosen;
+    state.emojiTarget = chosen;
+    state.emojiPracticeGuesses = [];
+    state.emojiPracticeGuessedIds.clear();
+    state.emojiPracticeRevealedClues.clear();
+    state.emojiPracticeIsWon = false;
+
+    renderEmojiBoardFromState([]);
+    renderEmojiDisplay(chosen, false);
+    updateEmojiPracticeUI();
+
+    if (DOM.alreadySolvedEmojiBanner) DOM.alreadySolvedEmojiBanner.style.display = 'none';
+    if (DOM.emojiPracticeSolvedBanner) DOM.emojiPracticeSolvedBanner.style.display = 'none';
+    if (DOM.victoryModal) DOM.victoryModal.style.display = 'none';
+    VictoryCelebration.stop();
+  }
+
+  function returnToEmojiDailyMode() {
+    state.emojiGameMode = 'daily';
+    state.emojiTarget = state.emojiDailyTarget;
+
+    renderEmojiBoardFromState(state.emojiDailyGuesses);
+    renderEmojiDisplay(state.emojiDailyTarget, state.emojiDailyIsWon);
+
+    if (DOM.emojiHeaderTitle) DOM.emojiHeaderTitle.textContent = 'EMOJI MODE';
+    if (DOM.emojiDailyBadge) {
+      DOM.emojiDailyBadge.textContent = 'DAILY #' + state.gameNumber;
+      DOM.emojiDailyBadge.style.background = '';
+      DOM.emojiDailyBadge.style.color = '';
+    }
+    if (DOM.emojiCountdownWrap) DOM.emojiCountdownWrap.style.display = 'inline-block';
+    if (DOM.emojiPracticeToggleText) DOM.emojiPracticeToggleText.textContent = 'Practice Mode';
+    if (DOM.emojiPracticeToggleIcon) DOM.emojiPracticeToggleIcon.textContent = '🎲';
+    if (DOM.emojiPracticeSolvedBanner) DOM.emojiPracticeSolvedBanner.style.display = 'none';
+
+    setEmojiDailySolvedUI(state.emojiDailyIsWon);
+    SoundFX.playSelect();
+  }
+
+  function updateEmojiPracticeUI() {
+    if (DOM.emojiHeaderTitle) DOM.emojiHeaderTitle.textContent = 'EMOJI • PRACTICE';
+    if (DOM.emojiDailyBadge) {
+      DOM.emojiDailyBadge.textContent = '🎲 PRACTICE';
+      DOM.emojiDailyBadge.style.background = 'linear-gradient(135deg, #e6b43a, #996e14)';
+      DOM.emojiDailyBadge.style.color = '#000000';
+    }
+    if (DOM.emojiCountdownWrap) DOM.emojiCountdownWrap.style.display = 'none';
+    if (DOM.emojiPracticeToggleText) DOM.emojiPracticeToggleText.textContent = 'Back to Daily';
+    if (DOM.emojiPracticeToggleIcon) DOM.emojiPracticeToggleIcon.textContent = '🎯';
+    if (DOM.alreadySolvedEmojiBanner) DOM.alreadySolvedEmojiBanner.style.display = 'none';
+
+    if (state.emojiPracticeIsWon) {
+      if (DOM.emojiMemberInput) {
+        DOM.emojiMemberInput.disabled = true;
+        DOM.emojiMemberInput.placeholder = '🎉 Practice emoji solved! Click Next Practice to play again.';
+      }
+      if (DOM.emojiGuessBtn) DOM.emojiGuessBtn.disabled = true;
+      if (DOM.emojiPracticeSolvedBanner) DOM.emojiPracticeSolvedBanner.style.display = 'flex';
+    } else {
+      if (DOM.emojiMemberInput) {
+        DOM.emojiMemberInput.disabled = false;
+        DOM.emojiMemberInput.placeholder = 'Guess who this represents... (Practice Mode)';
+        setTimeout(() => {
+          if (DOM.emojiMemberInput && !DOM.emojiMemberInput.disabled) DOM.emojiMemberInput.focus();
+        }, 50);
+      }
+      if (DOM.emojiGuessBtn) DOM.emojiGuessBtn.disabled = false;
+      if (DOM.emojiPracticeSolvedBanner) DOM.emojiPracticeSolvedBanner.style.display = 'none';
+    }
+  }
+
+  // --- Emoji Autocomplete & Keyboard Navigation ---
+  function handleEmojiInputChange() {
+    const query = DOM.emojiMemberInput.value.trim().toLowerCase();
+    DOM.emojiClearInputBtn.style.display = query.length > 0 ? 'block' : 'none';
+
+    if (query.length === 0) {
+      closeEmojiDropdown();
+      return;
+    }
+
+    const matches = findMatches(query, true);
+    state.emojiCurrentMatches = matches;
+    state.emojiSelectedDropdownIndex = matches.length > 0 ? 0 : -1;
+    renderEmojiDropdown(matches, query);
+  }
+
+  function renderEmojiDropdown(matches, query) {
+    if (!DOM.emojiAutocompleteDropdown) return;
+
+    if (matches.length === 0) {
+      DOM.emojiAutocompleteDropdown.innerHTML = `
+        <div class="no-match-item">
+          <span>No Discord member found matching "<strong>${escapeHtml(query)}</strong>"</span>
+        </div>
+      `;
+      DOM.emojiAutocompleteDropdown.style.display = 'block';
+      return;
+    }
+
+    const activeGuessed = getActiveEmojiGuessedIds();
+
+    let html = '';
+    matches.forEach((item, idx) => {
+      const { member, matchedAlias } = item;
+      const isGuessed = activeGuessed.has(member.id);
+      const isActive = idx === state.emojiSelectedDropdownIndex ? 'active-item' : '';
+      const guessedClass = isGuessed ? 'already-guessed' : '';
+      const imgSrc = getMemberImage(member);
+      const highlightedName = highlightQuery(member.name, query);
+
+      let aliasesHtml = '';
+      if (member.aliases && member.aliases.length > 0) {
+        const aliasItems = member.aliases.map(a => {
+          if (matchedAlias && a.toLowerCase() === matchedAlias.toLowerCase()) {
+            return `<span class="alias-match-tag">AKA: ${highlightQuery(a, query)}</span>`;
+          }
+          return `<span>${escapeHtml(a)}</span>`;
+        }).join(', ');
+        aliasesHtml = `<div class="item-aliases">${aliasItems}</div>`;
+      }
+
+      const statusBadge = isGuessed 
+        ? `<span class="item-badge" style="opacity:0.6; color:#888;">GUESSED</span>` 
+        : `<span class="item-badge">#${member.index || idx + 1}</span>`;
+
+      html += `
+        <div class="dropdown-item ${isActive} ${guessedClass}" data-index="${idx}" data-id="${member.id}">
+          <div class="item-left">
+            <div class="item-avatar">
+              <img src="${escapeHtml(imgSrc)}" class="item-avatar-img" alt="" onerror="this.style.display='none'; if (this.nextElementSibling) this.nextElementSibling.style.display='inline';" />
+              <span class="item-avatar-fallback" style="display:none;">👤</span>
+            </div>
+            <div class="item-details">
+              <span class="item-primary-name">${highlightedName}</span>
+              ${aliasesHtml}
+            </div>
+          </div>
+          <div class="item-right">${statusBadge}</div>
+        </div>
+      `;
+    });
+
+    DOM.emojiAutocompleteDropdown.innerHTML = html;
+    DOM.emojiAutocompleteDropdown.style.display = 'block';
+
+    DOM.emojiAutocompleteDropdown.querySelectorAll('.dropdown-item').forEach(el => {
+      el.addEventListener('click', () => {
+        const idx = parseInt(el.getAttribute('data-index'), 10);
+        selectEmojiMatchByIndex(idx);
+      });
+      el.addEventListener('mouseenter', () => {
+        const idx = parseInt(el.getAttribute('data-index'), 10);
+        updateActiveEmojiDropdownItem(idx);
+      });
+    });
+  }
+
+  function updateActiveEmojiDropdownItem(index) {
+    state.emojiSelectedDropdownIndex = index;
+    const items = DOM.emojiAutocompleteDropdown.querySelectorAll('.dropdown-item');
+    items.forEach((item, idx) => {
+      if (idx === index) {
+        item.classList.add('active-item');
+        item.scrollIntoView({ block: 'nearest' });
+      } else {
+        item.classList.remove('active-item');
+      }
+    });
+  }
+
+  function selectEmojiMatchByIndex(index) {
+    if (!state.emojiCurrentMatches || !state.emojiCurrentMatches[index]) return;
+    const { member } = state.emojiCurrentMatches[index];
+    DOM.emojiMemberInput.value = member.name;
+    closeEmojiDropdown();
+    handleEmojiGuessSubmit();
+  }
+
+  function closeEmojiDropdown() {
+    if (DOM.emojiAutocompleteDropdown) DOM.emojiAutocompleteDropdown.style.display = 'none';
+    state.emojiSelectedDropdownIndex = -1;
+  }
+
+  function handleEmojiInputKeydown(e) {
+    const isDropdownVisible = DOM.emojiAutocompleteDropdown && DOM.emojiAutocompleteDropdown.style.display === 'block';
+    if (!isDropdownVisible) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleEmojiGuessSubmit();
+      }
+      return;
+    }
+
+    const items = state.emojiCurrentMatches;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (items.length === 0) return;
+      state.emojiSelectedDropdownIndex = (state.emojiSelectedDropdownIndex + 1) % items.length;
+      updateActiveEmojiDropdownItem(state.emojiSelectedDropdownIndex);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (items.length === 0) return;
+      state.emojiSelectedDropdownIndex = (state.emojiSelectedDropdownIndex - 1 + items.length) % items.length;
+      updateActiveEmojiDropdownItem(state.emojiSelectedDropdownIndex);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (state.emojiSelectedDropdownIndex >= 0 && items[state.emojiSelectedDropdownIndex]) {
+        selectEmojiMatchByIndex(state.emojiSelectedDropdownIndex);
+      } else {
+        handleEmojiGuessSubmit();
+      }
+    } else if (e.key === 'Escape') {
+      closeEmojiDropdown();
+    }
+  }
+
+  function shakeEmojiInput() {
+    DOM.emojiMemberInput.style.animation = 'none';
+    DOM.emojiMemberInput.offsetHeight;
+    DOM.emojiMemberInput.style.borderColor = '#ff2a55';
+    DOM.emojiMemberInput.style.boxShadow = '0 0 20px #ff2a55';
+
+    setTimeout(() => {
+      DOM.emojiMemberInput.style.borderColor = '';
+      DOM.emojiMemberInput.style.boxShadow = '';
+    }, 400);
+  }
+
+  function pulseAlreadyGuessedEmoji(id) {
+    const card = DOM.emojiGuessesList.querySelector(`[data-id="${id}"]`);
+    if (card) {
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      card.style.transition = 'all 0.2s ease';
+      card.style.transform = 'scale(1.03)';
+      card.style.borderColor = '#f7d57f';
+      card.style.boxShadow = '0 0 25px rgba(247, 213, 127, 0.8)';
+
+      setTimeout(() => {
+        card.style.transform = '';
+        card.style.borderColor = '';
+        card.style.boxShadow = '';
+      }, 700);
+    }
+  }
+
+  function handleEmojiGuessSubmit() {
+    const isDaily = state.emojiGameMode === 'daily';
+    if (isDaily ? state.emojiDailyIsWon : state.emojiPracticeIsWon) {
+      return;
+    }
+
+    const query = DOM.emojiMemberInput.value.trim().toLowerCase();
+    if (!query) {
+      shakeEmojiInput();
+      return;
+    }
+
+    const matchedMember = state.members.find(m => {
+      if (m.name.toLowerCase() === query) return true;
+      if (m.aliases && m.aliases.some(a => a.toLowerCase() === query)) return true;
+      return false;
+    });
+
+    if (!matchedMember) {
+      shakeEmojiInput();
+      SoundFX.playError();
+      return;
+    }
+
+    const activeGuessed = getActiveEmojiGuessedIds();
+    if (activeGuessed.has(matchedMember.id)) {
+      pulseAlreadyGuessedEmoji(matchedMember.id);
+      SoundFX.playError();
+      DOM.emojiMemberInput.value = '';
+      DOM.emojiClearInputBtn.style.display = 'none';
+      closeEmojiDropdown();
+      return;
+    }
+
+    logEmojiGuess(matchedMember, null, true);
+
+    DOM.emojiMemberInput.value = '';
+    DOM.emojiClearInputBtn.style.display = 'none';
+    closeEmojiDropdown();
+    DOM.emojiMemberInput.focus();
+  }
+
+  function logEmojiGuess(member, explicitResult = null, playSound = true) {
+    const isDaily = state.emojiGameMode === 'daily';
+    const target = state.emojiTarget;
+    if (!target) return;
+
+    let result = explicitResult;
+    if (!result) {
+      result = (member.id === target.memberId) ? 'correct' : 'incorrect';
+    }
+
+    const guessItem = { member, result };
+
+    if (isDaily) {
+      state.emojiDailyGuessedIds.add(member.id);
+      state.emojiDailyGuesses.unshift(guessItem);
+    } else {
+      state.emojiPracticeGuessedIds.add(member.id);
+      state.emojiPracticeGuesses.unshift(guessItem);
+    }
+
+    updateEmojiGuessCounter();
+
+    if (DOM.emojiEmptyGuessesState && DOM.emojiEmptyGuessesState.parentNode) {
+      DOM.emojiEmptyGuessesState.parentNode.removeChild(DOM.emojiEmptyGuessesState);
+    }
+
+    const card = createEmojiGuessCard(member, result);
+    DOM.emojiGuessesList.prepend(card);
+
+    const isWonNow = (result === 'correct');
+    const history = isDaily ? state.emojiDailyGuesses : state.emojiPracticeGuesses;
+    const guessCount = history.length;
+    const justRevealedIdx = Math.min(guessCount, target.emojis.length - 1);
+
+    renderEmojiDisplay(target, isWonNow, justRevealedIdx);
+
+    if (isDaily) {
+      EmojiDailyStateManager.save(
+        state.currentDateKey,
+        state.gameNumber,
+        target.id,
+        state.emojiDailyGuesses,
+        isWonNow || state.emojiDailyIsWon,
+        state.emojiDailyRevealedClues
+      );
+    }
+
+    if (isWonNow) {
+      const tries = guessCount;
+
+      if (isDaily) {
+        state.emojiDailyIsWon = true;
+        const stats = EmojiStatsManager.recordWin(tries, state.currentDateKey);
+        updateStatsUI(stats);
+        setEmojiDailySolvedUI(true);
+      } else {
+        state.emojiPracticeIsWon = true;
+        updateEmojiPracticeUI();
+      }
+
+      if (playSound) {
+        setTimeout(() => triggerEmojiVictory(target, tries, true), 1000);
+      }
+    } else if (playSound) {
+      SoundFX.playError();
+    }
+  }
+
+  // --- Emoji Victory Modal ---
+  function triggerEmojiVictory(target, tries, withFanfare = true) {
+    state.lastVictoryMode = 'emoji';
+    const isDaily = state.emojiGameMode === 'daily';
+
+    if (withFanfare) {
+      SoundFX.playWin();
+      if (DOM.victoryFlash) {
+        DOM.victoryFlash.classList.remove('flash-active');
+        void DOM.victoryFlash.offsetWidth;
+        DOM.victoryFlash.classList.add('flash-active');
+        setTimeout(() => {
+          if (DOM.victoryFlash) DOM.victoryFlash.classList.remove('flash-active');
+        }, 900);
+      }
+      document.body.classList.add('screen-rumble');
+      setTimeout(() => document.body.classList.remove('screen-rumble'), 450);
+      VictoryCelebration.start();
+    }
+
+    // Modal Titles
+    if (DOM.victoryHeading) {
+      DOM.victoryHeading.textContent = isDaily 
+        ? `EMOJI SOLVED! DAILY #${state.gameNumber}` 
+        : 'PRACTICE EMOJI SOLVED!';
+    }
+    if (DOM.victorySubtitle) {
+      DOM.victorySubtitle.textContent = 'You correctly identified who this set of emojis represents!';
+    }
+
+    // Single member layout
+    if (DOM.victoryMemberCard) {
+      DOM.victoryMemberCard.style.display = 'flex';
+      const member = state.members.find(m => m.id === target.memberId) || { id: target.memberId, name: target.memberName, image: target.memberImage };
+      const imgSrc = getMemberImage(member);
+
+      if (DOM.victoryAvatar) {
+        DOM.victoryAvatar.innerHTML = `
+          <img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(member.name)}" class="victory-avatar-img" onerror="this.style.display='none'; if (this.nextElementSibling) this.nextElementSibling.style.display='inline';" />
+          <span class="victory-avatar-fallback" style="display:none;">👑</span>
+        `;
+      }
+      if (DOM.victoryMemberName) DOM.victoryMemberName.textContent = member.name;
+      if (DOM.victoryAliases) {
+        const aliasStr = member.aliases && member.aliases.length > 0 ? member.aliases.join(', ') : 'None';
+        DOM.victoryAliases.textContent = `Aliases: ${aliasStr}`;
+      }
+    }
+
+    if (DOM.victoryMultiMembers) {
+      DOM.victoryMultiMembers.style.display = 'none';
+    }
+    if (DOM.victoryQuoteBox) {
+      DOM.victoryQuoteBox.style.display = 'none';
+    }
+    if (DOM.victoryPictureBox) {
+      DOM.victoryPictureBox.style.display = 'none';
+    }
+
+    // Solved Emojis Box in Victory Modal
+    if (DOM.victoryEmojiBox) {
+      DOM.victoryEmojiBox.style.display = 'flex';
+      DOM.victoryEmojiBox.innerHTML = (target.emojis || []).map(em => `<span>${escapeHtml(em)}</span>`).join(' ');
+    }
+
+    if (DOM.victoryGuessCount) {
+      DOM.victoryGuessCount.textContent = `Solved in ${tries} ${tries === 1 ? 'try' : 'tries'}!`;
+    }
+
+    // Countdown Card
+    if (DOM.victoryCountdownCard) {
+      DOM.victoryCountdownCard.style.display = isDaily ? 'block' : 'none';
+      const label = DOM.victoryCountdownCard.querySelector('.countdown-card-label');
+      if (label) label.textContent = 'NEXT DAILY EMOJI IN';
+    }
+
+    // Stats Row
+    if (DOM.victoryStatsRow) {
+      DOM.victoryStatsRow.style.display = isDaily ? 'grid' : 'none';
+      if (isDaily) {
+        const stats = EmojiStatsManager.get();
+        if (DOM.vstatPlayed) DOM.vstatPlayed.textContent = stats.played;
+        if (DOM.vstatWinPct) {
+          const pct = stats.played > 0 ? Math.round((stats.won / stats.played) * 100) : 0;
+          DOM.vstatWinPct.textContent = pct + '%';
+        }
+        if (DOM.vstatStreak) DOM.vstatStreak.textContent = '🔥 ' + stats.currentStreak;
+        if (DOM.vstatMaxStreak) DOM.vstatMaxStreak.textContent = '⭐ ' + stats.maxStreak;
+      }
+    }
+
+    if (DOM.victoryPracticeBtn) {
+      DOM.victoryPracticeBtn.innerHTML = isDaily 
+        ? '<span>🎲 PRACTICE MODE (UNLIMITED)</span>' 
+        : '<span>🔄 NEXT PRACTICE EMOJI</span>';
+    }
+
+    if (DOM.victoryModal) {
+      DOM.victoryModal.style.display = 'flex';
+    }
+  }
+
+  function shareEmojiResult(target, tries, isPractice = false) {
+    const dayInfo = getLocalDayInfo();
+    const title = isPractice 
+      ? `😀 ANTISIMPDLE EMOJI #Practice` 
+      : `😀 ANTISIMPDLE EMOJI #${dayInfo.gameNumber}`;
+    const sub = `👤 Target: ${target.memberName}`;
+
+    const history = isPractice ? state.emojiPracticeGuesses : state.emojiDailyGuesses;
+    const inOrder = [...history].reverse();
+    const emojis = inOrder.map(g => (g.result === 'correct') ? '🟩' : '🟥').join('');
+
+    const webUrl = (window.location.origin && !window.location.origin.startsWith('file'))
+      ? `${window.location.origin}${window.location.pathname}`
+      : 'Antisimpdle';
+
+    const text = `${title}\n${sub}\n🎯 Solved in ${tries} ${tries === 1 ? 'try' : 'tries'}!\n${emojis}\n\nPlay: ${webUrl}`;
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('📋 Copied emoji result to clipboard!');
+        SoundFX.playTone(880, 'sine', 0.12, 0.08);
+      }).catch(() => fallbackCopy(text));
+    } else {
+      fallbackCopy(text);
+    }
+  }
+
+  function resetEmojiGame() {
+    if (state.emojiGameMode === 'daily') {
+      if (state.emojiDailyIsWon) {
+        showToast('👑 You already solved today! Play Practice Mode to guess more.');
+        return;
+      }
+      if (state.emojiDailyGuesses.length === 0) return;
+      if (confirm("Reset today's daily emoji guesses and restart from 0?")) {
+        state.emojiDailyGuessedIds.clear();
+        state.emojiDailyRevealedClues.clear();
+        state.emojiDailyGuesses = [];
+        state.emojiDailyIsWon = false;
+        EmojiDailyStateManager.clear();
+        renderEmojiBoardFromState([]);
+        renderEmojiDisplay(state.emojiDailyTarget, false);
+        setEmojiDailySolvedUI(false);
+        SoundFX.playTone(320, 'sine', 0.15);
+      }
+    } else {
+      if (confirm('Start a new practice emoji puzzle?')) {
+        pickNewEmojiPracticeTarget();
+        SoundFX.playTone(440, 'sine', 0.12);
+      }
+    }
+  }
+
+  // ========================================================
+  // PICTURE MODE IMPLEMENTATION
+  // ========================================================
+
+  function loadPicturesData() {
+    if (window.PICTURES_DATA && Array.isArray(window.PICTURES_DATA)) {
+      setPictures(window.PICTURES_DATA);
+      return;
+    }
+
+    fetch('pictures.json')
+      .then(res => res.json())
+      .then(data => {
+        setPictures(data);
+      })
+      .catch(err => {
+        console.error('Error fetching pictures.json:', err);
+      });
+  }
+
+  function setPictures(data) {
+    state.pictures = data;
+    initDailyPictureGame();
+    if (window.location.hash === '#picture') {
+      showView('picture', false);
+    }
+  }
+
+  // --- Daily Picture Game Setup & Session Restoration ---
+  function initDailyPictureGame() {
+    if (!state.pictures || state.pictures.length === 0) return;
+
+    const dayInfo = getLocalDayInfo();
+    state.pictureDailyTarget = getDailyPicture(dayInfo.dayIndex, state.pictures);
+    state.pictureDailyFocusPoint = getDailyPictureFocusPoint(dayInfo.dayIndex, state.pictureDailyTarget.id);
+    state.picturePracticeFocusPoint = getRandomPictureFocusPoint();
+    state.pictureTarget = state.pictureDailyTarget;
+
+    if (DOM.pictureDailyNum) DOM.pictureDailyNum.textContent = dayInfo.gameNumber;
+    if (DOM.pictureCardBadge) DOM.pictureCardBadge.textContent = 'DAILY #' + dayInfo.gameNumber;
+
+    // Attempt to restore picture daily save
+    const saved = PictureDailyStateManager.load(dayInfo.dateKey);
+    if (saved && Array.isArray(saved.guesses) && saved.guesses.length > 0) {
+      state.pictureDailyGuesses = [];
+      state.pictureDailyGuessedIds.clear();
+      state.pictureDailyFoundMemberIds = new Set(saved.foundMemberIds || []);
+      state.pictureDailyIsWon = !!saved.isWon;
+
+      // Re-log guesses in order (oldest first)
+      const inOrder = [...saved.guesses].reverse();
+      inOrder.forEach(item => {
+        logPictureGuess(item.member, item.result, false);
+      });
+
+      renderPictureDisplay(state.pictureDailyTarget, state.pictureDailyFoundMemberIds, state.pictureDailyIsWon);
+
+      if (state.pictureDailyIsWon) {
+        setPictureDailySolvedUI(true);
+      }
+    } else {
+      state.pictureDailyGuesses = [];
+      state.pictureDailyGuessedIds.clear();
+      state.pictureDailyFoundMemberIds = new Set();
+      state.pictureDailyIsWon = false;
+      renderPictureBoardFromState([]);
+      renderPictureDisplay(state.pictureDailyTarget, state.pictureDailyFoundMemberIds, false);
+      setPictureDailySolvedUI(false);
+    }
+  }
+
+  function handlePictureMidnightRollover(dayInfo) {
+    if (!state.pictures || state.pictures.length === 0) return;
+    state.pictureDailyTarget = getDailyPicture(dayInfo.dayIndex, state.pictures);
+    state.pictureDailyFocusPoint = getDailyPictureFocusPoint(dayInfo.dayIndex, state.pictureDailyTarget.id);
+
+    if (DOM.pictureDailyNum) DOM.pictureDailyNum.textContent = dayInfo.gameNumber;
+    if (DOM.pictureCardBadge) DOM.pictureCardBadge.textContent = 'DAILY #' + dayInfo.gameNumber;
+
+    PictureDailyStateManager.clear();
+    state.pictureDailyGuesses = [];
+    state.pictureDailyGuessedIds.clear();
+    state.pictureDailyFoundMemberIds = new Set();
+    state.pictureDailyIsWon = false;
+
+    if (state.pictureGameMode === 'daily') {
+      state.pictureTarget = state.pictureDailyTarget;
+      renderPictureBoardFromState([]);
+      renderPictureDisplay(state.pictureDailyTarget, state.pictureDailyFoundMemberIds, false);
+      setPictureDailySolvedUI(false);
+    }
+  }
+
+  // --- Render Central Picture Display Card & Zoom ---
+  function renderPictureDisplay(picture, foundMemberIds, isSolved) {
+    if (!picture || !DOM.pictureViewport) return;
+
+    const history = getActivePictureHistory();
+    const wrongGuesses = history.filter(g => g.result === 'incorrect').length;
+
+    // Zoom progression levels (initial 5.0x, reaches 1.0x / full view after 10 guesses)
+    const zoomLevels = [5.0, 4.3, 3.6, 3.1, 2.6, 2.2, 1.9, 1.6, 1.4, 1.2, 1.0];
+    const step = isSolved ? zoomLevels.length - 1 : Math.min(wrongGuesses, zoomLevels.length - 1);
+    const scale = isSolved ? 1.0 : zoomLevels[step];
+
+    const focus = (state.pictureGameMode === 'daily') 
+      ? state.pictureDailyFocusPoint 
+      : state.picturePracticeFocusPoint;
+
+    if (DOM.pictureImg) {
+      if (DOM.pictureImg.src !== picture.image && !DOM.pictureImg.src.endsWith(picture.image)) {
+        DOM.pictureImg.src = picture.image;
+      }
+      if (isSolved || scale <= 1.0) {
+        DOM.pictureImg.style.objectFit = 'contain';
+        DOM.pictureImg.style.transformOrigin = '50% 50%';
+        DOM.pictureImg.style.transform = 'scale(1)';
+      } else {
+        DOM.pictureImg.style.objectFit = 'cover';
+        DOM.pictureImg.style.transformOrigin = `${focus.fx}% ${focus.fy}%`;
+        DOM.pictureImg.style.transform = `scale(${scale})`;
+      }
+    }
+
+    // Zoom badge
+    if (DOM.pictureZoomBadge) {
+      DOM.pictureZoomBadge.textContent = isSolved 
+        ? 'FULL VIEW' 
+        : (step >= zoomLevels.length - 1 ? 'FULL VIEW (1.0x)' : `ZOOM ${scale.toFixed(1)}x`);
+    }
+
+    // Zoom progress bar
+    if (DOM.pictureZoomBar) {
+      const progress = isSolved ? 100 : Math.min(100, Math.round(((step + 1) / zoomLevels.length) * 100));
+      DOM.pictureZoomBar.style.width = `${progress}%`;
+    }
+
+    const isMulti = picture.type === 'multi' && picture.requiredMemberIds.length > 1;
+
+    // Multi-member picture tracker
+    if (DOM.pictureMembersTracker) {
+      if (isMulti) {
+        DOM.pictureMembersTracker.style.display = 'block';
+        const foundCount = picture.requiredMemberIds.filter(id => foundMemberIds.has(id)).length;
+        const totalCount = picture.requiredMemberIds.length;
+        if (DOM.pictureTrackerCount) {
+          DOM.pictureTrackerCount.textContent = `${foundCount} / ${totalCount} FOUND`;
+        }
+
+        if (DOM.pictureTrackerChips) {
+          let chipsHtml = '';
+          picture.requiredMemberIds.forEach((mid, idx) => {
+            const member = state.members.find(m => m.id === mid) || { id: mid, name: picture.requiredMemberNames[idx] || mid };
+            const isFound = foundMemberIds.has(mid);
+            const imgSrc = getMemberImage(member);
+
+            if (isFound) {
+              chipsHtml += `
+                <div class="tracker-chip found" title="${escapeHtml(member.name)} (Found!)">
+                  <div class="tracker-chip-avatar">
+                    <img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(member.name)}" onerror="this.style.display='none'; if (this.nextElementSibling) this.nextElementSibling.style.display='inline';" />
+                    <span style="display:none;">👤</span>
+                  </div>
+                  <span class="tracker-chip-name">${escapeHtml(member.name)}</span>
+                  <span class="tracker-chip-badge">✓</span>
+                </div>
+              `;
+            } else {
+              chipsHtml += `
+                <div class="tracker-chip" title="Member #${idx + 1} (Not found yet)">
+                  <div class="tracker-chip-avatar">
+                    <span>?</span>
+                  </div>
+                  <span class="tracker-chip-name">Member #${idx + 1}</span>
+                </div>
+              `;
+            }
+          });
+          DOM.pictureTrackerChips.innerHTML = chipsHtml;
+        }
+      } else {
+        DOM.pictureMembersTracker.style.display = 'none';
+      }
+    }
+
+    // Header hint
+    if (DOM.pictureHeaderHint) {
+      DOM.pictureHeaderHint.textContent = isMulti 
+        ? `Who is in this picture? Guess all ${picture.requiredMemberIds.length} members!` 
+        : 'Who is in this picture? Guess the member!';
+    }
+
+    // Solved reveal area
+    if (DOM.pictureAuthorReveal) {
+      if (isSolved) {
+        DOM.pictureAuthorReveal.style.display = 'block';
+        if (isMulti) {
+          let membersHtml = '<div style="display:flex; flex-wrap:wrap; justify-content:center; gap:16px;">';
+          picture.requiredMemberIds.forEach((mid, idx) => {
+            const member = state.members.find(m => m.id === mid) || { id: mid, name: picture.requiredMemberNames[idx] || mid };
+            const imgSrc = getMemberImage(member);
+            membersHtml += `
+              <div class="quote-author-revealed">
+                <img src="${escapeHtml(imgSrc)}" class="revealed-avatar" alt="${escapeHtml(member.name)}" onerror="this.style.display='none';" />
+                <div class="revealed-meta">
+                  <span class="revealed-label">MEMBER #${idx + 1}</span>
+                  <h4 class="revealed-name">${escapeHtml(member.name)}</h4>
+                </div>
+              </div>
+            `;
+          });
+          membersHtml += '</div>';
+          DOM.pictureAuthorReveal.innerHTML = membersHtml;
+        } else {
+          const mid = picture.requiredMemberIds[0];
+          const member = state.members.find(m => m.id === mid) || { id: mid, name: picture.requiredMemberNames[0] || mid };
+          const imgSrc = getMemberImage(member);
+          DOM.pictureAuthorReveal.innerHTML = `
+            <div class="quote-author-revealed">
+              <img src="${escapeHtml(imgSrc)}" class="revealed-avatar" alt="${escapeHtml(member.name)}" onerror="this.style.display='none';" />
+              <div class="revealed-meta">
+                <span class="revealed-label">MEMBER IN PICTURE</span>
+                <h4 class="revealed-name">${escapeHtml(member.name)}</h4>
+              </div>
+            </div>
+          `;
+        }
+      } else {
+        DOM.pictureAuthorReveal.style.display = 'none';
+      }
+    }
+  }
+
+  // --- Render Picture Guesses Board ---
+  function renderPictureBoardFromState(history) {
+    if (!DOM.pictureGuessesList) return;
+    DOM.pictureGuessesList.innerHTML = '';
+
+    if (!history || history.length === 0) {
+      if (DOM.pictureEmptyGuessesState) DOM.pictureGuessesList.appendChild(DOM.pictureEmptyGuessesState);
+      updatePictureGuessCounter();
+      return;
+    }
+
+    const inOrder = [...history].reverse();
+    inOrder.forEach(item => {
+      const card = createPictureGuessCard(item.member, item.result, item.detail);
+      DOM.pictureGuessesList.prepend(card);
+    });
+
+    updatePictureGuessCounter();
+  }
+
+  function createPictureGuessCard(member, result, detail) {
+    const card = document.createElement('div');
+    card.className = `quote-guess-card status-${result}`;
+    card.setAttribute('data-id', member.id);
+
+    const imgSrc = getMemberImage(member);
+    const aliasStr = member.aliases && member.aliases.length > 0 ? member.aliases.join(', ') : '';
+
+    let badgeClass = 'badge-incorrect';
+    let badgeText = 'INCORRECT ✕';
+
+    if (result === 'correct') {
+      badgeClass = 'badge-correct';
+      badgeText = 'CORRECT! ✓';
+    } else if (result === 'member-found') {
+      badgeClass = 'badge-found';
+      badgeText = detail ? `MEMBER FOUND! (${detail}) ✓` : 'MEMBER FOUND! ✓';
+    }
+
+    card.innerHTML = `
+      <div class="quote-guess-left">
+        <div class="quote-guess-avatar">
+          <img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(member.name)}" onerror="this.style.display='none'; if (this.nextElementSibling) this.nextElementSibling.style.display='inline';" />
+          <span style="display:none;">👤</span>
+        </div>
+        <div class="quote-guess-meta">
+          <span class="quote-guess-name">${escapeHtml(member.name)}</span>
+          ${aliasStr ? `<span class="quote-guess-sub">AKA: ${escapeHtml(aliasStr)}</span>` : ''}
+        </div>
+      </div>
+      <div class="quote-guess-right">
+        <span class="quote-guess-badge ${badgeClass}">${badgeText}</span>
+      </div>
+    `;
+
+    return card;
+  }
+
+  function updatePictureGuessCounter() {
+    const history = getActivePictureHistory();
+    if (DOM.pictureGuessCountBadge) {
+      DOM.pictureGuessCountBadge.textContent = `${history.length} ${history.length === 1 ? 'Guess' : 'Guesses'}`;
+    }
+  }
+
+  function setPictureDailySolvedUI(isSolved) {
+    if (state.pictureGameMode !== 'daily') return;
+
+    if (isSolved) {
+      if (DOM.alreadySolvedPictureBanner) DOM.alreadySolvedPictureBanner.style.display = 'flex';
+      if (DOM.pictureMemberInput) {
+        DOM.pictureMemberInput.disabled = true;
+        DOM.pictureMemberInput.placeholder = "👑 Today's picture solved! Resets at midnight.";
+      }
+      if (DOM.pictureGuessBtn) DOM.pictureGuessBtn.disabled = true;
+      if (DOM.pictureCardBadge) {
+        DOM.pictureCardBadge.textContent = '✅ SOLVED TODAY';
+        DOM.pictureCardBadge.style.background = 'linear-gradient(135deg, #2ecc71, #27ae60)';
+        DOM.pictureCardBadge.style.color = '#ffffff';
+      }
+    } else {
+      if (DOM.alreadySolvedPictureBanner) DOM.alreadySolvedPictureBanner.style.display = 'none';
+      if (DOM.pictureMemberInput) {
+        DOM.pictureMemberInput.disabled = false;
+        DOM.pictureMemberInput.placeholder = 'Guess who is in this picture... (e.g. krof, bindi, lean, dineks)';
+      }
+      if (DOM.pictureGuessBtn) DOM.pictureGuessBtn.disabled = false;
+      if (DOM.pictureCardBadge) {
+        DOM.pictureCardBadge.textContent = 'DAILY #' + state.gameNumber;
+        DOM.pictureCardBadge.style.background = '';
+        DOM.pictureCardBadge.style.color = '';
+      }
+    }
+  }
+
+  function updatePicturePracticeUI() {
+    if (state.pictureGameMode !== 'practice') return;
+
+    if (DOM.pictureHeaderTitle) DOM.pictureHeaderTitle.textContent = 'PRACTICE PICTURE';
+    if (DOM.pictureDailyBadge) {
+      DOM.pictureDailyBadge.textContent = 'PRACTICE';
+      DOM.pictureDailyBadge.style.background = 'linear-gradient(135deg, #9b59b6, #8e44ad)';
+      DOM.pictureDailyBadge.style.color = '#ffffff';
+    }
+    if (DOM.pictureCountdownWrap) DOM.pictureCountdownWrap.style.display = 'none';
+    if (DOM.picturePracticeToggleText) DOM.picturePracticeToggleText.textContent = 'Back to Daily';
+    if (DOM.picturePracticeToggleIcon) DOM.picturePracticeToggleIcon.textContent = '🎯';
+    if (DOM.alreadySolvedPictureBanner) DOM.alreadySolvedPictureBanner.style.display = 'none';
+
+    if (state.picturePracticeIsWon) {
+      if (DOM.pictureMemberInput) {
+        DOM.pictureMemberInput.disabled = true;
+        DOM.pictureMemberInput.placeholder = '🎉 Practice picture solved! Click Next Practice to play again.';
+      }
+      if (DOM.pictureGuessBtn) DOM.pictureGuessBtn.disabled = true;
+      if (DOM.picturePracticeSolvedBanner) DOM.picturePracticeSolvedBanner.style.display = 'flex';
+    } else {
+      if (DOM.pictureMemberInput) {
+        DOM.pictureMemberInput.disabled = false;
+        DOM.pictureMemberInput.placeholder = 'Guess who is in this picture... (Practice Mode)';
+        setTimeout(() => {
+          if (DOM.pictureMemberInput && !DOM.pictureMemberInput.disabled) DOM.pictureMemberInput.focus();
+        }, 50);
+      }
+      if (DOM.pictureGuessBtn) DOM.pictureGuessBtn.disabled = false;
+      if (DOM.picturePracticeSolvedBanner) DOM.picturePracticeSolvedBanner.style.display = 'none';
+    }
+  }
+
+  // --- Picture Autocomplete & Keyboard Navigation ---
+  function handlePictureInputChange() {
+    const query = DOM.pictureMemberInput.value.trim().toLowerCase();
+    DOM.pictureClearInputBtn.style.display = query.length > 0 ? 'block' : 'none';
+
+    if (query.length === 0) {
+      closePictureDropdown();
+      return;
+    }
+
+    const matches = findMatches(query, true);
+    state.pictureCurrentMatches = matches;
+    state.pictureSelectedDropdownIndex = matches.length > 0 ? 0 : -1;
+    renderPictureDropdown(matches, query);
+  }
+
+  function renderPictureDropdown(matches, query) {
+    if (!DOM.pictureAutocompleteDropdown) return;
+
+    if (matches.length === 0) {
+      DOM.pictureAutocompleteDropdown.innerHTML = `
+        <div class="no-match-item">
+          <span>No Discord member found matching "<strong>${escapeHtml(query)}</strong>"</span>
+        </div>
+      `;
+      DOM.pictureAutocompleteDropdown.style.display = 'block';
+      return;
+    }
+
+    const activeGuessed = getActivePictureGuessedIds();
+
+    let html = '';
+    matches.forEach((item, idx) => {
+      const { member, matchedAlias } = item;
+      const isGuessed = activeGuessed.has(member.id);
+      const isActive = idx === state.pictureSelectedDropdownIndex ? 'active-item' : '';
+      const guessedClass = isGuessed ? 'already-guessed' : '';
+      const imgSrc = getMemberImage(member);
+      const highlightedName = highlightQuery(member.name, query);
+
+      let aliasesHtml = '';
+      if (member.aliases && member.aliases.length > 0) {
+        const aliasItems = member.aliases.map(a => {
+          if (matchedAlias && a.toLowerCase() === matchedAlias.toLowerCase()) {
+            return `<span class="alias-match-tag">AKA: ${highlightQuery(a, query)}</span>`;
+          }
+          return `<span>${escapeHtml(a)}</span>`;
+        }).join(', ');
+        aliasesHtml = `<div class="item-aliases">${aliasItems}</div>`;
+      }
+
+      const statusBadge = isGuessed 
+        ? `<span class="item-badge" style="opacity:0.6; color:#888;">GUESSED</span>` 
+        : `<span class="item-badge">#${member.index || idx + 1}</span>`;
+
+      html += `
+        <div class="dropdown-item ${isActive} ${guessedClass}" data-index="${idx}" data-id="${member.id}">
+          <div class="item-left">
+            <div class="item-avatar">
+              <img src="${escapeHtml(imgSrc)}" class="item-avatar-img" alt="" onerror="this.style.display='none'; if (this.nextElementSibling) this.nextElementSibling.style.display='inline';" />
+              <span class="item-avatar-fallback" style="display:none;">👤</span>
+            </div>
+            <div class="item-details">
+              <span class="item-primary-name">${highlightedName}</span>
+              ${aliasesHtml}
+            </div>
+          </div>
+          <div class="item-right">${statusBadge}</div>
+        </div>
+      `;
+    });
+
+    DOM.pictureAutocompleteDropdown.innerHTML = html;
+    DOM.pictureAutocompleteDropdown.style.display = 'block';
+
+    DOM.pictureAutocompleteDropdown.querySelectorAll('.dropdown-item').forEach(el => {
+      el.addEventListener('click', () => {
+        const idx = parseInt(el.getAttribute('data-index'), 10);
+        selectPictureMatchByIndex(idx);
+      });
+      el.addEventListener('mouseenter', () => {
+        const idx = parseInt(el.getAttribute('data-index'), 10);
+        updateActivePictureDropdownItem(idx);
+      });
+    });
+  }
+
+  function updateActivePictureDropdownItem(index) {
+    if (!DOM.pictureAutocompleteDropdown) return;
+    const items = DOM.pictureAutocompleteDropdown.querySelectorAll('.dropdown-item');
+    items.forEach((item, i) => {
+      item.classList.toggle('active-item', i === index);
+      if (i === index) item.scrollIntoView({ block: 'nearest' });
+    });
+    state.pictureSelectedDropdownIndex = index;
+  }
+
+  function selectPictureMatchByIndex(index) {
+    if (!state.pictureCurrentMatches || !state.pictureCurrentMatches[index]) return;
+    const { member } = state.pictureCurrentMatches[index];
+    DOM.pictureMemberInput.value = member.name;
+    closePictureDropdown();
+    handlePictureGuessSubmit();
+  }
+
+  function closePictureDropdown() {
+    if (DOM.pictureAutocompleteDropdown) {
+      DOM.pictureAutocompleteDropdown.style.display = 'none';
+      DOM.pictureAutocompleteDropdown.innerHTML = '';
+    }
+    state.pictureSelectedDropdownIndex = -1;
+  }
+
+  function handlePictureInputKeydown(e) {
+    const items = DOM.pictureAutocompleteDropdown 
+      ? DOM.pictureAutocompleteDropdown.querySelectorAll('.dropdown-item') 
+      : [];
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (items.length === 0) return;
+      state.pictureSelectedDropdownIndex = (state.pictureSelectedDropdownIndex + 1) % items.length;
+      updateActivePictureDropdownItem(state.pictureSelectedDropdownIndex);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (items.length === 0) return;
+      state.pictureSelectedDropdownIndex = (state.pictureSelectedDropdownIndex - 1 + items.length) % items.length;
+      updateActivePictureDropdownItem(state.pictureSelectedDropdownIndex);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (state.pictureSelectedDropdownIndex >= 0 && items[state.pictureSelectedDropdownIndex]) {
+        selectPictureMatchByIndex(state.pictureSelectedDropdownIndex);
+      } else {
+        handlePictureGuessSubmit();
+      }
+    } else if (e.key === 'Escape') {
+      closePictureDropdown();
+    }
+  }
+
+  function shakePictureInput() {
+    DOM.pictureMemberInput.style.animation = 'none';
+    DOM.pictureMemberInput.offsetHeight;
+    DOM.pictureMemberInput.style.borderColor = '#ff2a55';
+    DOM.pictureMemberInput.style.boxShadow = '0 0 20px #ff2a55';
+
+    setTimeout(() => {
+      DOM.pictureMemberInput.style.borderColor = '';
+      DOM.pictureMemberInput.style.boxShadow = '';
+    }, 400);
+  }
+
+  function pulseAlreadyGuessedPicture(id) {
+    const card = DOM.pictureGuessesList.querySelector(`[data-id="${id}"]`);
+    if (card) {
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      card.style.transition = 'all 0.2s ease';
+      card.style.transform = 'scale(1.03)';
+      card.style.borderColor = '#f7d57f';
+      card.style.boxShadow = '0 0 25px rgba(247, 213, 127, 0.8)';
+
+      setTimeout(() => {
+        card.style.transform = '';
+        card.style.borderColor = '';
+        card.style.boxShadow = '';
+      }, 700);
+    }
+  }
+
+  function handlePictureGuessSubmit() {
+    const isDaily = state.pictureGameMode === 'daily';
+    if (isDaily ? state.pictureDailyIsWon : state.picturePracticeIsWon) {
+      return;
+    }
+
+    const query = DOM.pictureMemberInput.value.trim().toLowerCase();
+    if (!query) {
+      shakePictureInput();
+      return;
+    }
+
+    const matchedMember = state.members.find(m => {
+      if (m.name.toLowerCase() === query) return true;
+      if (m.aliases && m.aliases.some(a => a.toLowerCase() === query)) return true;
+      return false;
+    });
+
+    if (!matchedMember) {
+      shakePictureInput();
+      SoundFX.playError();
+      return;
+    }
+
+    const activeGuessed = getActivePictureGuessedIds();
+    if (activeGuessed.has(matchedMember.id)) {
+      pulseAlreadyGuessedPicture(matchedMember.id);
+      SoundFX.playError();
+      DOM.pictureMemberInput.value = '';
+      DOM.pictureClearInputBtn.style.display = 'none';
+      closePictureDropdown();
+      return;
+    }
+
+    logPictureGuess(matchedMember, null, true);
+
+    DOM.pictureMemberInput.value = '';
+    DOM.pictureClearInputBtn.style.display = 'none';
+    closePictureDropdown();
+    DOM.pictureMemberInput.focus();
+  }
+
+  function logPictureGuess(member, explicitResult = null, playSound = true) {
+    const isDaily = state.pictureGameMode === 'daily';
+    const target = state.pictureTarget;
+    if (!target) return;
+
+    const isMulti = target.type === 'multi' && target.requiredMemberIds.length > 1;
+    const foundIds = isDaily ? state.pictureDailyFoundMemberIds : state.picturePracticeFoundMemberIds;
+
+    let result = explicitResult;
+    let detail = null;
+
+    if (!result) {
+      if (isMulti) {
+        if (target.requiredMemberIds.includes(member.id)) {
+          foundIds.add(member.id);
+          const foundCount = target.requiredMemberIds.filter(id => foundIds.has(id)).length;
+          const totalCount = target.requiredMemberIds.length;
+          result = 'member-found';
+          detail = `${foundCount}/${totalCount}`;
+        } else {
+          result = 'incorrect';
+        }
+      } else {
+        const targetMemberId = target.requiredMemberIds[0];
+        if (member.id === targetMemberId) {
+          result = 'correct';
+          foundIds.add(member.id);
+        } else {
+          result = 'incorrect';
+        }
+      }
+    }
+
+    const guessItem = { member, result, detail };
+
+    if (isDaily) {
+      state.pictureDailyGuessedIds.add(member.id);
+      state.pictureDailyGuesses.unshift(guessItem);
+    } else {
+      state.picturePracticeGuessedIds.add(member.id);
+      state.picturePracticeGuesses.unshift(guessItem);
+    }
+
+    updatePictureGuessCounter();
+
+    if (DOM.pictureEmptyGuessesState && DOM.pictureEmptyGuessesState.parentNode) {
+      DOM.pictureEmptyGuessesState.parentNode.removeChild(DOM.pictureEmptyGuessesState);
+    }
+
+    const card = createPictureGuessCard(member, result, detail);
+    DOM.pictureGuessesList.prepend(card);
+
+    // Win condition check
+    let isWonNow = false;
+    if (isMulti) {
+      isWonNow = target.requiredMemberIds.every(id => foundIds.has(id));
+    } else {
+      isWonNow = result === 'correct';
+    }
+
+    renderPictureDisplay(target, foundIds, isWonNow);
+
+    if (isDaily) {
+      PictureDailyStateManager.save(
+        state.currentDateKey,
+        state.gameNumber,
+        target.id,
+        state.pictureDailyGuesses,
+        state.pictureDailyFoundMemberIds,
+        isWonNow || state.pictureDailyIsWon
+      );
+    }
+
+    if (isWonNow) {
+      const currentHistory = isDaily ? state.pictureDailyGuesses : state.picturePracticeGuesses;
+      const guessNumber = currentHistory.length;
+
+      if (isDaily) {
+        state.pictureDailyIsWon = true;
+        const stats = PictureStatsManager.recordWin(guessNumber, state.currentDateKey);
+        updateStatsUI(stats);
+        setPictureDailySolvedUI(true);
+      } else {
+        state.picturePracticeIsWon = true;
+        updatePicturePracticeUI();
+      }
+
+      if (playSound) {
+        setTimeout(() => triggerPictureVictory(target, guessNumber, true), 900);
+      }
+    } else if (playSound) {
+      if (result === 'member-found' || result === 'correct') {
+        SoundFX.playGuessSuccess();
+      } else {
+        SoundFX.playError();
+      }
+    }
+  }
+
+  // --- Picture Victory Modal ---
+  function triggerPictureVictory(picture, tries, withFanfare = true) {
+    state.lastVictoryMode = 'picture';
+    const isDaily = state.pictureGameMode === 'daily';
+    const isMulti = picture.type === 'multi' && picture.requiredMemberIds.length > 1;
+
+    if (withFanfare) {
+      SoundFX.playWin();
+      VictoryCelebration.start();
+      flashVictoryScreen();
+    }
+
+    if (DOM.victoryQuoteBox) DOM.victoryQuoteBox.style.display = 'none';
+    if (DOM.victoryEmojiBox) DOM.victoryEmojiBox.style.display = 'none';
+
+    // Solved Picture Box
+    if (DOM.victoryPictureBox) {
+      DOM.victoryPictureBox.style.display = 'flex';
+      DOM.victoryPictureBox.innerHTML = `<img src="${escapeHtml(picture.image)}" alt="Solved picture" />`;
+    }
+
+    if (DOM.victoryHeading) DOM.victoryHeading.textContent = 'VICTORY!';
+    if (DOM.victorySubtitle) {
+      DOM.victorySubtitle.textContent = isMulti 
+        ? 'You identified all members in this picture!' 
+        : 'You correctly identified who is in this picture!';
+    }
+
+    // Single vs Multi member presentation in victory modal
+    if (DOM.victoryMemberCard && DOM.victoryMultiMembers) {
+      if (isMulti) {
+        DOM.victoryMemberCard.style.display = 'none';
+        DOM.victoryMultiMembers.style.display = 'flex';
+
+        let chipsHtml = '';
+        picture.requiredMemberIds.forEach(mid => {
+          const m = state.members.find(x => x.id === mid) || { id: mid, name: mid };
+          const imgSrc = getMemberImage(m);
+          chipsHtml += `
+            <div class="victory-speaker-chip">
+              <img src="${escapeHtml(imgSrc)}" class="victory-speaker-avatar" alt="${escapeHtml(m.name)}" onerror="this.style.display='none'; if (this.nextElementSibling) this.nextElementSibling.style.display='inline';" />
+              <span class="victory-speaker-fallback" style="display:none;">👤</span>
+              <span class="victory-speaker-name">${escapeHtml(m.name)}</span>
+            </div>
+          `;
+        });
+        DOM.victoryMultiMembers.innerHTML = chipsHtml;
+      } else {
+        DOM.victoryMemberCard.style.display = 'flex';
+        DOM.victoryMultiMembers.style.display = 'none';
+
+        const authorId = picture.requiredMemberIds[0];
+        const member = state.members.find(m => m.id === authorId) || { id: authorId, name: picture.requiredMemberNames[0] || authorId };
+        const imgSrc = getMemberImage(member);
+
+        if (DOM.victoryAvatar) {
+          DOM.victoryAvatar.innerHTML = `
+            <img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(member.name)}" class="victory-avatar-img" onerror="this.style.display='none'; if (this.nextElementSibling) this.nextElementSibling.style.display='inline';" />
+            <span class="victory-avatar-fallback" style="display:none;">👑</span>
+          `;
+        }
+        if (DOM.victoryMemberName) DOM.victoryMemberName.textContent = member.name;
+        if (DOM.victoryAliases) {
+          const aliasStr = member.aliases && member.aliases.length > 0 ? member.aliases.join(', ') : 'None';
+          DOM.victoryAliases.textContent = `Aliases: ${aliasStr}`;
+        }
+      }
+    }
+
+    if (DOM.victoryGuessCount) {
+      DOM.victoryGuessCount.textContent = `Solved in ${tries} ${tries === 1 ? 'try' : 'tries'}!`;
+    }
+
+    // Countdown Card
+    if (DOM.victoryCountdownCard) {
+      DOM.victoryCountdownCard.style.display = isDaily ? 'block' : 'none';
+      const label = DOM.victoryCountdownCard.querySelector('.countdown-card-label');
+      if (label) label.textContent = 'NEXT DAILY PICTURE IN';
+    }
+
+    // Stats Row
+    if (DOM.victoryStatsRow) {
+      DOM.victoryStatsRow.style.display = isDaily ? 'grid' : 'none';
+      if (isDaily) {
+        const stats = PictureStatsManager.get();
+        if (DOM.vstatPlayed) DOM.vstatPlayed.textContent = stats.played;
+        if (DOM.vstatWinPct) {
+          const pct = stats.played > 0 ? Math.round((stats.won / stats.played) * 100) : 0;
+          DOM.vstatWinPct.textContent = pct + '%';
+        }
+        if (DOM.vstatStreak) DOM.vstatStreak.textContent = '🔥 ' + stats.currentStreak;
+        if (DOM.vstatMaxStreak) DOM.vstatMaxStreak.textContent = '⭐ ' + stats.maxStreak;
+      }
+    }
+
+    if (DOM.victoryPracticeBtn) {
+      DOM.victoryPracticeBtn.innerHTML = isDaily 
+        ? '<span>🎲 PRACTICE MODE (UNLIMITED)</span>' 
+        : '<span>🔄 NEXT PRACTICE PICTURE</span>';
+    }
+
+    if (DOM.victoryModal) {
+      DOM.victoryModal.style.display = 'flex';
+    }
+  }
+
+  function sharePictureResult(picture, tries, isPractice = false) {
+    const dayInfo = getLocalDayInfo();
+    const title = isPractice 
+      ? `🖼️ ANTISIMPDLE PICTURE #Practice` 
+      : `🖼️ ANTISIMPDLE PICTURE #${dayInfo.gameNumber}`;
+    const sub = `👥 Member(s): ${picture.requiredMemberNames.join(' & ')}`;
+
+    const history = isPractice ? state.picturePracticeGuesses : state.pictureDailyGuesses;
+    const inOrder = [...history].reverse();
+    const emojis = inOrder.map(g => (g.result === 'correct' || g.result === 'member-found') ? '🟩' : '🟥').join('');
+
+    const webUrl = (window.location.origin && !window.location.origin.startsWith('file'))
+      ? `${window.location.origin}${window.location.pathname}`
+      : 'Antisimpdle';
+
+    const text = `${title}\n${sub}\n🎯 Solved in ${tries} ${tries === 1 ? 'try' : 'tries'}!\n${emojis}\n\nPlay: ${webUrl}`;
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('📋 Copied picture result to clipboard!');
+        SoundFX.playTone(880, 'sine', 0.12, 0.08);
+      }).catch(() => fallbackCopy(text));
+    } else {
+      fallbackCopy(text);
+    }
+  }
+
+  // --- Picture Practice Mode Switching ---
+  function togglePicturePracticeMode() {
+    if (state.pictureGameMode === 'daily') {
+      switchToPicturePracticeMode();
+    } else {
+      returnToPictureDailyMode();
+    }
+  }
+
+  function switchToPicturePracticeMode() {
+    state.pictureGameMode = 'practice';
+    if (!state.picturePracticeTarget || state.picturePracticeIsWon) {
+      pickNewPicturePracticeTarget();
+    } else {
+      state.pictureTarget = state.picturePracticeTarget;
+      renderPictureBoardFromState(state.picturePracticeGuesses);
+      renderPictureDisplay(state.picturePracticeTarget, state.picturePracticeFoundMemberIds, state.picturePracticeIsWon);
+      updatePicturePracticeUI();
+    }
+    SoundFX.playSelect();
+  }
+
+  function pickNewPicturePracticeTarget() {
+    if (!state.pictures || state.pictures.length === 0) return;
+    const pool = state.pictures.filter(p => 
+      (!state.pictureDailyTarget || p.id !== state.pictureDailyTarget.id) &&
+      (!state.picturePracticeTarget || p.id !== state.picturePracticeTarget.id)
+    );
+    const chosen = pool[Math.floor(Math.random() * pool.length)] || state.pictures[0];
+
+    state.picturePracticeTarget = chosen;
+    state.pictureTarget = chosen;
+    state.picturePracticeGuesses = [];
+    state.picturePracticeGuessedIds.clear();
+    state.picturePracticeFoundMemberIds.clear();
+    state.picturePracticeFocusPoint = getRandomPictureFocusPoint();
+    state.picturePracticeIsWon = false;
+
+    renderPictureBoardFromState([]);
+    renderPictureDisplay(chosen, state.picturePracticeFoundMemberIds, false);
+    updatePicturePracticeUI();
+
+    if (DOM.alreadySolvedPictureBanner) DOM.alreadySolvedPictureBanner.style.display = 'none';
+    if (DOM.picturePracticeSolvedBanner) DOM.picturePracticeSolvedBanner.style.display = 'none';
+    if (DOM.victoryModal) DOM.victoryModal.style.display = 'none';
+    VictoryCelebration.stop();
+  }
+
+  function returnToPictureDailyMode() {
+    state.pictureGameMode = 'daily';
+    state.pictureTarget = state.pictureDailyTarget;
+
+    renderPictureBoardFromState(state.pictureDailyGuesses);
+    renderPictureDisplay(state.pictureDailyTarget, state.pictureDailyFoundMemberIds, state.pictureDailyIsWon);
+
+    if (DOM.pictureHeaderTitle) DOM.pictureHeaderTitle.textContent = 'PICTURE MODE';
+    if (DOM.pictureDailyBadge) {
+      DOM.pictureDailyBadge.textContent = 'DAILY #' + state.gameNumber;
+      DOM.pictureDailyBadge.style.background = '';
+      DOM.pictureDailyBadge.style.color = '';
+    }
+    if (DOM.pictureCountdownWrap) DOM.pictureCountdownWrap.style.display = 'inline-block';
+    if (DOM.picturePracticeToggleText) DOM.picturePracticeToggleText.textContent = 'Practice Mode';
+    if (DOM.picturePracticeToggleIcon) DOM.picturePracticeToggleIcon.textContent = '🎲';
+    if (DOM.picturePracticeSolvedBanner) DOM.picturePracticeSolvedBanner.style.display = 'none';
+
+    setPictureDailySolvedUI(state.pictureDailyIsWon);
+    SoundFX.playSelect();
+  }
+
+  function resetPictureGame() {
+    if (state.pictureGameMode === 'daily') {
+      if (state.pictureDailyIsWon) {
+        showToast('👑 You already solved today! Play Practice Mode to guess more.');
+        return;
+      }
+      if (state.pictureDailyGuesses.length === 0) return;
+      if (confirm("Reset today's daily picture guesses and restart from 0?")) {
+        state.pictureDailyGuessedIds.clear();
+        state.pictureDailyFoundMemberIds.clear();
+        state.pictureDailyGuesses = [];
+        state.pictureDailyIsWon = false;
+        PictureDailyStateManager.clear();
+        renderPictureBoardFromState([]);
+        renderPictureDisplay(state.pictureDailyTarget, state.pictureDailyFoundMemberIds, false);
+        setPictureDailySolvedUI(false);
+        SoundFX.playTone(320, 'sine', 0.15);
+      }
+    } else {
+      if (confirm('Start a new practice picture puzzle?')) {
+        pickNewPicturePracticeTarget();
+        SoundFX.playTone(440, 'sine', 0.12);
+      }
+    }
+  }
+
   // --- Members Modal Roster ---
   function openMembersModal() {
     DOM.membersModal.style.display = 'flex';
@@ -2170,15 +6485,38 @@
       card.addEventListener('click', () => {
         const name = card.getAttribute('data-name');
         if (name) {
-          if (state.activeView !== 'classic') {
-            showView('classic', false);
+          if (state.activeView === 'quote') {
+            DOM.quoteMemberInput.value = name;
+            DOM.quoteClearInputBtn.style.display = 'block';
+            closeMembersModal();
+            DOM.quoteMemberInput.focus();
+            handleQuoteInputChange();
+            SoundFX.playSelect();
+          } else if (state.activeView === 'emoji') {
+            DOM.emojiMemberInput.value = name;
+            DOM.emojiClearInputBtn.style.display = 'block';
+            closeMembersModal();
+            DOM.emojiMemberInput.focus();
+            handleEmojiInputChange();
+            SoundFX.playSelect();
+          } else if (state.activeView === 'picture') {
+            DOM.pictureMemberInput.value = name;
+            DOM.pictureClearInputBtn.style.display = 'block';
+            closeMembersModal();
+            DOM.pictureMemberInput.focus();
+            handlePictureInputChange();
+            SoundFX.playSelect();
+          } else {
+            if (state.activeView !== 'classic') {
+              showView('classic', false);
+            }
+            DOM.input.value = name;
+            DOM.clearBtn.style.display = 'block';
+            closeMembersModal();
+            DOM.input.focus();
+            handleInputChange();
+            SoundFX.playSelect();
           }
-          DOM.input.value = name;
-          DOM.clearBtn.style.display = 'block';
-          closeMembersModal();
-          DOM.input.focus();
-          handleInputChange();
-          SoundFX.playSelect();
         }
       });
     });
@@ -2209,9 +6547,873 @@
     return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
+  // ==========================================================================
+  // CASES & CS:GO LOOTBOX UNBOXING ENGINE
+  // ==========================================================================
+
+  const CaseCollectionManager = {
+    KEY: 'antisimpdle_case_inventory',
+
+    get() {
+      try {
+        const raw = localStorage.getItem(this.KEY);
+        if (raw) return JSON.parse(raw);
+      } catch (e) {}
+      return {
+        totalOpened: 0,
+        unlockedItems: {},
+        rarityCounts: {}
+      };
+    },
+
+    save(data) {
+      try {
+        localStorage.setItem(this.KEY, JSON.stringify(data));
+      } catch (e) {}
+    },
+
+    recordItem(item) {
+      const data = this.get();
+      data.totalOpened = (data.totalOpened || 0) + 1;
+      const now = Date.now();
+      const existing = data.unlockedItems[item.id];
+      const isNew = !existing;
+
+      if (!existing) {
+        data.unlockedItems[item.id] = {
+          id: item.id,
+          count: 1,
+          firstUnlocked: now,
+          lastUnlocked: now
+        };
+      } else {
+        existing.count = (existing.count || 0) + 1;
+        existing.lastUnlocked = now;
+      }
+
+      if (!data.rarityCounts) data.rarityCounts = {};
+      data.rarityCounts[item.rarity] = (data.rarityCounts[item.rarity] || 0) + 1;
+
+      this.save(data);
+      return { isNew, count: data.unlockedItems[item.id].count, totalOpened: data.totalOpened };
+    },
+
+    clear() {
+      try {
+        localStorage.removeItem(this.KEY);
+      } catch (e) {}
+    }
+  };
+
+  // Roll item based on exact rarity probabilities:
+  // Hell: 0.001%, Divine: 0.1%, Mythic: 0.5%, Legendary: 1%, Epic: 5%, Rare: 15%, Uncommon: 30%, Common: rest (48.399%)
+  function rollCaseItem() {
+    const data = window.CASES_DATA;
+    if (!data || !data.items || data.items.length === 0) return null;
+
+    const r = Math.random() * 100;
+    let chosenRarity = 'common';
+
+    if (r < 0.001) {
+      chosenRarity = 'hell';
+    } else if (r < 0.001 + 0.1) {          // 0.101%
+      chosenRarity = 'divine';
+    } else if (r < 0.101 + 0.5) {          // 0.601%
+      chosenRarity = 'mythic';
+    } else if (r < 0.601 + 1.0) {          // 1.601%
+      chosenRarity = 'legendary';
+    } else if (r < 1.601 + 5.0) {          // 6.601%
+      chosenRarity = 'epic';
+    } else if (r < 6.601 + 15.0) {         // 21.601%
+      chosenRarity = 'rare';
+    } else if (r < 21.601 + 30.0) {        // 51.601%
+      chosenRarity = 'uncommon';
+    } else {
+      chosenRarity = 'common';
+    }
+
+    const pool = data.items.filter(item => item.rarity === chosenRarity);
+    if (!pool || pool.length === 0) {
+      return data.items[Math.floor(Math.random() * data.items.length)];
+    }
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  // Format rarity drop chance for display (Common visually displayed as 48% for clarity)
+  function formatRarityChance(r) {
+    if (!r) return '';
+    if (r.key === 'common') return '48%';
+    if (r.displayChance) return r.displayChance;
+    return `${r.chance}%`;
+  }
+
+  // Render static Odds Grid in Cases view (First row: common, uncommon, rare, epic, legendary; Second row: mythic, divine, hell)
+  function renderCasesOddsGrid() {
+    if (!DOM.casesOddsGrid || !window.CASES_DATA) return;
+    const rarities = window.CASES_DATA.rarities;
+
+    // First row: common, uncommon, rare, epic, legendary (5 items)
+    const row1Rarities = rarities.slice(0, 5);
+    // Second row: mythic, divine, hell (3 items)
+    const row2Rarities = rarities.slice(5);
+
+    const renderItem = (r) => `
+      <div class="odds-item" title="${escapeHtml(r.name)} (${formatRarityChance(r)})" style="border-color:${r.color}66; box-shadow:0 0 6px ${r.glow};">
+        <div class="odds-rarity-header">
+          <span class="odds-color-dot" style="background:${r.color}; box-shadow:0 0 8px ${r.glow};"></span>
+          <span class="odds-rarity-name" style="color:${r.color};">${escapeHtml(r.name)}</span>
+        </div>
+        <span class="odds-chance">${formatRarityChance(r)}</span>
+      </div>
+    `;
+
+    let html = `<div class="odds-row odds-row-1">`;
+    row1Rarities.forEach(r => { html += renderItem(r); });
+    html += `</div><div class="odds-row odds-row-2">`;
+    row2Rarities.forEach(r => { html += renderItem(r); });
+    html += `</div>`;
+
+    DOM.casesOddsGrid.innerHTML = html;
+  }
+
+  // ========================================================
+  // CASE VAULT CRYPTO MANAGER (AES-256-GCM Decryption on Demand)
+  // ========================================================
+  const CaseVaultManager = (() => {
+    const mediaCache = new Map(); // itemId -> blobUrl
+    const pendingPromises = new Map(); // itemId -> Promise<blobUrl>
+    const VAULT_SALT = 'antisimpdle_case_vault_v1_salt_2026';
+
+    function hexToBytes(hex) {
+      const bytes = new Uint8Array(hex.length / 2);
+      for (let i = 0; i < hex.length; i += 2) {
+        bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
+      }
+      return bytes;
+    }
+
+    async function deriveCryptoKey(item) {
+      const maskedKey = hexToBytes(item.key);
+      const encoder = new TextEncoder();
+      const maskSeed = encoder.encode(`${VAULT_SALT}_mask_${item.id}`);
+      const maskBuffer = await crypto.subtle.digest('SHA-256', maskSeed);
+      const mask = new Uint8Array(maskBuffer);
+
+      const rawKey = new Uint8Array(32);
+      for (let i = 0; i < 32; i++) {
+        rawKey[i] = maskedKey[i] ^ mask[i];
+      }
+      return await crypto.subtle.importKey('raw', rawKey, { name: 'AES-GCM' }, false, ['decrypt']);
+    }
+
+    async function getItemMediaUrl(item) {
+      if (!item) return null;
+      if (mediaCache.has(item.id)) {
+        return mediaCache.get(item.id);
+      }
+      if (pendingPromises.has(item.id)) {
+        return pendingPromises.get(item.id);
+      }
+
+      // If item has no vaultFile, fallback to static path if present
+      if (!item.vaultFile) {
+        return item.path || null;
+      }
+
+      const fetchPromise = (async () => {
+        try {
+          const resp = await fetch(item.vaultFile);
+          if (!resp.ok) throw new Error(`Vault HTTP error ${resp.status}`);
+          const buffer = await resp.arrayBuffer();
+
+          const iv = buffer.slice(0, 12);
+          const ciphertext = buffer.slice(12);
+
+          const cryptoKey = await deriveCryptoKey(item);
+          const decrypted = await crypto.subtle.decrypt(
+            { name: 'AES-GCM', iv: iv, tagLength: 128 },
+            cryptoKey,
+            ciphertext
+          );
+
+          const blob = new Blob([decrypted], { type: item.mimeType || 'image/png' });
+          const blobUrl = URL.createObjectURL(blob);
+          mediaCache.set(item.id, blobUrl);
+          return blobUrl;
+        } catch (err) {
+          console.error(`[CaseVault] Decryption failed for ${item.name}:`, err);
+          return null;
+        } finally {
+          pendingPromises.delete(item.id);
+        }
+      })();
+
+      pendingPromises.set(item.id, fetchPromise);
+      return fetchPromise;
+    }
+
+    function getCachedUrl(itemId) {
+      return mediaCache.get(itemId) || null;
+    }
+
+    function hasDecrypted(itemId) {
+      return mediaCache.has(itemId);
+    }
+
+    return {
+      getItemMediaUrl,
+      getCachedUrl,
+      hasDecrypted
+    };
+  })();
+
+  // Generate a card DOM element for the roulette reel (Generic mystery image while rolling)
+  function createRouletteCard(item, isRevealed = false) {
+    const card = document.createElement('div');
+    card.className = `roulette-card rarity-${item.rarity}`;
+    card.style.borderColor = `${item.rarityColor}55`;
+    card.dataset.itemId = item.id;
+    card.dataset.rarity = item.rarity;
+
+    if (isRevealed) {
+      const cachedUrl = CaseVaultManager.getCachedUrl(item.id);
+      const vidBadge = item.isVideo ? `<span class="roulette-card-vid-tag">▶ VID</span>` : '';
+      card.innerHTML = `
+        <div class="roulette-card-thumb-wrap">
+          ${item.isVideo 
+            ? `<video src="${cachedUrl ? escapeHtml(cachedUrl) : ''}" data-vault-item="${item.id}" muted playsinline class="roulette-card-thumb" preload="metadata"></video>`
+            : `<img src="${cachedUrl ? escapeHtml(cachedUrl) : ''}" data-vault-item="${item.id}" alt="${escapeHtml(item.name)}" class="roulette-card-thumb" loading="lazy" />`
+          }
+          ${vidBadge}
+        </div>
+        <div class="roulette-card-details">
+          <span class="roulette-card-name" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</span>
+          <span class="roulette-card-rarity" style="color:${item.rarityColor};">${escapeHtml(item.rarityName.toUpperCase())}</span>
+        </div>
+        <div class="roulette-card-strip" style="background:${item.rarityColor}; box-shadow:0 0 8px ${item.rarityGlow};"></div>
+      `;
+      if (!cachedUrl) {
+        CaseVaultManager.getItemMediaUrl(item).then(url => {
+          if (!url) return;
+          const el = card.querySelector(`[data-vault-item="${item.id}"]`);
+          if (el) el.src = url;
+        });
+      }
+    } else {
+      // Mystery orb placeholder for each rarity while rolling
+      const orbSrc = item.orbImage || `case opening/orbs/orb_${item.rarity}.png`;
+      card.innerHTML = `
+        <div class="roulette-card-thumb-wrap">
+          <img src="${escapeHtml(orbSrc)}" alt="${escapeHtml(item.rarityName)} Orb" class="roulette-card-thumb roulette-mystery-thumb roulette-orb-thumb" loading="lazy" />
+        </div>
+        <div class="roulette-card-details">
+          <span class="roulette-card-name">???</span>
+          <span class="roulette-card-rarity" style="color:${item.rarityColor};">${escapeHtml(item.rarityName.toUpperCase())}</span>
+        </div>
+        <div class="roulette-card-strip" style="background:${item.rarityColor}; box-shadow:0 0 8px ${item.rarityGlow};"></div>
+      `;
+    }
+    return card;
+  }
+
+  // Reveal winning card on landing
+  async function revealWinnerCard(winCardEl, item) {
+    if (!winCardEl) return;
+    winCardEl.classList.add('card-winner', 'card-winner-revealed');
+    winCardEl.style.borderColor = item.rarityColor;
+    winCardEl.style.boxShadow = `0 0 30px ${item.rarityGlow}, inset 0 0 15px ${item.rarityGlow}`;
+    
+    const thumbWrap = winCardEl.querySelector('.roulette-card-thumb-wrap');
+    const nameEl = winCardEl.querySelector('.roulette-card-name');
+    
+    if (nameEl) {
+      nameEl.textContent = item.name;
+      nameEl.title = item.name;
+      nameEl.style.color = '#fff';
+      nameEl.style.fontWeight = '800';
+    }
+
+    const mediaUrl = await CaseVaultManager.getItemMediaUrl(item);
+
+    if (thumbWrap && mediaUrl) {
+      const vidBadge = item.isVideo ? `<span class="roulette-card-vid-tag">▶ VID</span>` : '';
+      thumbWrap.innerHTML = `
+        ${item.isVideo 
+          ? `<video src="${escapeHtml(mediaUrl)}" autoplay muted loop playsinline class="roulette-card-thumb"></video>`
+          : `<img src="${escapeHtml(mediaUrl)}" alt="${escapeHtml(item.name)}" class="roulette-card-thumb" />`
+        }
+        ${vidBadge}
+      `;
+    }
+  }
+
+  // Populate Initial Reel with Mystery Cards
+  function initCasesRoulette() {
+    if (!DOM.casesRouletteTrack || !window.CASES_DATA) return;
+    DOM.casesRouletteTrack.style.transition = 'none';
+    DOM.casesRouletteTrack.style.transform = 'translateX(0px)';
+    DOM.casesRouletteTrack.innerHTML = '';
+
+    // Create 15 initial preview mystery items
+    const items = window.CASES_DATA.items;
+    for (let i = 0; i < 15; i++) {
+      const it = items[i % items.length];
+      DOM.casesRouletteTrack.appendChild(createRouletteCard(it, false));
+    }
+  }
+
+  // Reset stage to idle state
+  let reelEntranceTimer = null;
+  let spinStartTimer = null;
+  let spinAnimationTimer = null;
+  let tickRafId = null;
+
+  function resetCaseOpeningStage() {
+    clearTimeout(reelEntranceTimer);
+    clearTimeout(spinStartTimer);
+    clearTimeout(spinAnimationTimer);
+    if (tickRafId) cancelAnimationFrame(tickRafId);
+    state.caseIsSpinning = false;
+
+    if (DOM.openCaseBtn) {
+      DOM.openCaseBtn.disabled = false;
+      const btnText = DOM.openCaseBtn.querySelector('.btn-text');
+      if (btnText) btnText.textContent = 'OPEN CASE';
+    }
+    if (DOM.quickOpenCaseBtn) DOM.quickOpenCaseBtn.disabled = false;
+
+    if (DOM.caseStageArea) {
+      DOM.caseStageArea.classList.remove('is-opening');
+    }
+    if (DOM.caseOpenVideo) {
+      DOM.caseOpenVideo.pause();
+      DOM.caseOpenVideo.currentTime = 0;
+      DOM.caseOpenVideo.style.display = 'none';
+    }
+    if (DOM.caseStaticBoxImg) {
+      DOM.caseStaticBoxImg.style.display = 'block';
+    }
+    if (DOM.casesRouletteViewport) {
+      DOM.casesRouletteViewport.classList.remove('reel-active');
+    }
+  }
+
+  // Start Case Opening (Normal synced to video or Instant Quick Open with NO animation)
+  function startCaseOpening(isFast = false) {
+    if (state.caseIsSpinning) return;
+    if (!window.CASES_DATA || !window.CASES_DATA.items) return;
+
+    // 1. Roll winner
+    const winner = rollCaseItem();
+    if (!winner) {
+      resetCaseOpeningStage();
+      return;
+    }
+
+    // QUICK OPEN: Instant unbox with NO animation!
+    if (isFast) {
+      // Record immediately to collection
+      const result = CaseCollectionManager.recordItem(winner);
+      updateCasesCollectionUI();
+
+      // Play Item Obtain Audio immediately!
+      if (SoundFX.enabled) {
+        const obtainAudio = DOM.itemObtainAudio || document.getElementById('itemObtainAudio');
+        if (obtainAudio) {
+          obtainAudio.currentTime = 0;
+          obtainAudio.volume = 0.95;
+          obtainAudio.play().catch(() => {});
+        }
+        SoundFX.playRarityReveal(winner.rarity);
+      }
+
+      // Open Reveal Modal immediately without any delay or animation!
+      openCasesRevealModal(winner, result);
+      return;
+    }
+
+    // Normal full cinematic opening with video and rolling over the box
+    state.caseIsSpinning = true;
+    if (DOM.openCaseBtn) {
+      DOM.openCaseBtn.disabled = true;
+      const btnText = DOM.openCaseBtn.querySelector('.btn-text');
+      if (btnText) btnText.textContent = 'OPENING...';
+    }
+    if (DOM.quickOpenCaseBtn) DOM.quickOpenCaseBtn.disabled = true;
+
+    // 2. Prepare roulette track: 65 mystery cards with winner at index 45
+    const winnerIndex = 45;
+    const totalStripCount = 65;
+    if (DOM.casesRouletteTrack) {
+      DOM.casesRouletteTrack.innerHTML = '';
+      DOM.casesRouletteTrack.style.transition = 'none';
+      DOM.casesRouletteTrack.style.transform = 'translateX(0px)';
+
+      const stripItems = [];
+      for (let i = 0; i < totalStripCount; i++) {
+        if (i === winnerIndex) {
+          stripItems.push(winner);
+        } else {
+          stripItems.push(rollCaseItem());
+        }
+      }
+
+      // Pre-decrypt the winner in memory during the spin animation
+      CaseVaultManager.getItemMediaUrl(winner);
+
+      const frag = document.createDocumentFragment();
+      stripItems.forEach((it, idx) => {
+        // Generic mystery card during spin
+        const card = createRouletteCard(it, false);
+        card.setAttribute('data-index', idx);
+        if (idx === winnerIndex) card.classList.add('target-winner');
+        frag.appendChild(card);
+      });
+      DOM.casesRouletteTrack.appendChild(frag);
+
+      // Force reflow
+      void DOM.casesRouletteTrack.offsetWidth;
+    }
+
+    // 3. Calculate stop position
+    const isMobile = window.innerWidth <= 600;
+    const cardStep = isMobile ? 115 : 135; // card width (125px on desktop, 105px on mobile) + 10px gap
+    const viewportWidth = DOM.casesRouletteViewport ? DOM.casesRouletteViewport.offsetWidth : 680;
+    const winnerCenter = (winnerIndex * cardStep) + (cardStep / 2);
+    const jitter = (Math.random() - 0.5) * (cardStep * 0.52);
+    const stopX = -(winnerCenter - (viewportWidth / 2) + jitter);
+
+    // 4. Activate Video Stage & Play Opening Video
+    const video = DOM.caseOpenVideo || document.getElementById('caseOpenVideo');
+    if (DOM.caseStageArea) DOM.caseStageArea.classList.add('is-opening');
+    if (DOM.caseStaticBoxImg) DOM.caseStaticBoxImg.style.display = 'none';
+
+    if (video) {
+      video.style.display = 'block';
+      video.currentTime = 0;
+      video.muted = !SoundFX.enabled;
+      video.volume = 0.95;
+      video.play().catch(e => console.warn('Case open video play prevented:', e));
+    }
+
+    const startSpinPhysics = (durationSec) => {
+      if (!DOM.casesRouletteTrack) return;
+      const btnText = DOM.openCaseBtn ? DOM.openCaseBtn.querySelector('.btn-text') : null;
+      if (btnText) btnText.textContent = 'ROLLING...';
+
+      const bezier = 'cubic-bezier(0.12, 0.8, 0.25, 1)';
+
+      DOM.casesRouletteTrack.style.transition = `transform ${durationSec}s ${bezier}`;
+      DOM.casesRouletteTrack.style.transform = `translateX(${stopX}px)`;
+
+      // Needle tick bouncing
+      let lastTickCardIndex = -1;
+      const topNeedle = DOM.casesRouletteViewport ? DOM.casesRouletteViewport.querySelector('.roulette-needle-top') : null;
+
+      function trackTicks() {
+        if (!state.caseIsSpinning || !DOM.casesRouletteTrack) return;
+        try {
+          const style = window.getComputedStyle(DOM.casesRouletteTrack);
+          const matrix = new DOMMatrix(style.transform);
+          const currentX = -matrix.m41;
+          const currentCenterCard = Math.floor((currentX + (viewportWidth / 2)) / cardStep);
+
+          if (currentCenterCard !== lastTickCardIndex && currentCenterCard >= 0) {
+            lastTickCardIndex = currentCenterCard;
+            if (topNeedle) {
+              topNeedle.classList.add('needle-tick-active');
+              setTimeout(() => topNeedle.classList.remove('needle-tick-active'), 40);
+            }
+          }
+        } catch (e) {}
+
+        tickRafId = requestAnimationFrame(trackTicks);
+      }
+      tickRafId = requestAnimationFrame(trackTicks);
+
+      // Finish spin when stopped
+      clearTimeout(spinAnimationTimer);
+      spinAnimationTimer = setTimeout(() => {
+        cancelAnimationFrame(tickRafId);
+        state.caseIsSpinning = false;
+
+        // Reveal the winning card in the reel!
+        const winCardEl = DOM.casesRouletteTrack ? DOM.casesRouletteTrack.querySelector(`[data-index="${winnerIndex}"]`) : null;
+        if (winCardEl) {
+          revealWinnerCard(winCardEl, winner);
+        }
+
+        // Play Item Obtain Audio!
+        if (SoundFX.enabled) {
+          const obtainAudio = DOM.itemObtainAudio || document.getElementById('itemObtainAudio');
+          if (obtainAudio) {
+            obtainAudio.currentTime = 0;
+            obtainAudio.volume = 0.95;
+            obtainAudio.play().catch(e => console.warn('Obtain audio error:', e));
+          }
+          SoundFX.playRarityReveal(winner.rarity);
+        }
+
+        // Record to inventory
+        const result = CaseCollectionManager.recordItem(winner);
+        updateCasesCollectionUI();
+
+        // Open Reveal Modal after 420ms
+        setTimeout(() => {
+          openCasesRevealModal(winner, result);
+        }, 420);
+
+      }, durationSec * 1000 + 40);
+    };
+
+    // Normal full cinematic opening:
+    // 0.0s - 3.2s: Crate unlocks and lid opens in video
+    // 3.2s: Roulette reel activates over the opened box
+    // 4.45s: Rolling starts in sync with video ticking audio
+    clearTimeout(reelEntranceTimer);
+    reelEntranceTimer = setTimeout(() => {
+      if (!state.caseIsSpinning) return;
+      if (DOM.casesRouletteViewport) DOM.casesRouletteViewport.classList.add('reel-active');
+    }, 3200);
+
+    clearTimeout(spinStartTimer);
+    spinStartTimer = setTimeout(() => {
+      if (!state.caseIsSpinning) return;
+      startSpinPhysics(5.3); // 4.45s + 5.3s = 9.75s!
+    }, 4450);
+  }
+
+  // Open the Spectacular Unboxing Reveal Modal
+  function openCasesRevealModal(item, result) {
+    if (!DOM.casesRevealModal) return;
+
+    // Remove any previous tier animation classes
+    DOM.casesRevealModal.className = 'modal-backdrop cases-reveal-backdrop';
+    DOM.casesRevealModal.classList.add(`anim-tier-${item.rarity}`);
+
+    // Update tags
+    if (DOM.casesRevealNewBadge) {
+      if (result.isNew) {
+        DOM.casesRevealNewBadge.textContent = '✨ NEW ITEM UNLOCKED! ✨';
+        DOM.casesRevealNewBadge.style.display = 'inline-block';
+        DOM.casesRevealNewBadge.style.background = 'linear-gradient(135deg, #2ecc71 0%, #27ae60 100%)';
+        DOM.casesRevealNewBadge.style.boxShadow = '0 0 12px rgba(46, 204, 113, 0.7)';
+      } else {
+        DOM.casesRevealNewBadge.textContent = `DUPLICATE (${result.count}x OWNED)`;
+        DOM.casesRevealNewBadge.style.display = 'inline-block';
+        DOM.casesRevealNewBadge.style.background = 'rgba(255, 255, 255, 0.12)';
+        DOM.casesRevealNewBadge.style.boxShadow = 'none';
+      }
+    }
+
+    if (DOM.casesRevealRarityTag) {
+      DOM.casesRevealRarityTag.textContent = item.rarityName.toUpperCase();
+      DOM.casesRevealRarityTag.style.background = `${item.rarityColor}28`;
+      DOM.casesRevealRarityTag.style.borderColor = item.rarityColor;
+      DOM.casesRevealRarityTag.style.color = item.rarityColor;
+      DOM.casesRevealRarityTag.style.boxShadow = `0 0 12px ${item.rarityGlow}`;
+    }
+
+    if (DOM.casesRevealTitle) {
+      DOM.casesRevealTitle.textContent = item.name;
+    }
+
+    if (DOM.casesRevealMeta) {
+      const rObj = window.CASES_DATA.rarities.find(r => r.key === item.rarity);
+      const chanceStr = formatRarityChance(rObj);
+      DOM.casesRevealMeta.textContent = `${item.rarityName} • Drop Chance: ${chanceStr}`;
+    }
+
+    if (DOM.casesRevealCountBadge) {
+      DOM.casesRevealCountBadge.textContent = `Total Owned: ${result.count} • Collection Total: ${result.totalOpened} opened`;
+    }
+
+    // Media element
+    if (DOM.casesRevealMediaWrap) {
+      const cachedUrl = CaseVaultManager.getCachedUrl(item.id);
+      if (cachedUrl) {
+        if (item.isVideo) {
+          DOM.casesRevealMediaWrap.innerHTML = `
+            <video src="${escapeHtml(cachedUrl)}" autoplay loop controls playsinline></video>
+          `;
+        } else {
+          DOM.casesRevealMediaWrap.innerHTML = `
+            <img src="${escapeHtml(cachedUrl)}" alt="${escapeHtml(item.name)}" />
+          `;
+        }
+      } else {
+        DOM.casesRevealMediaWrap.innerHTML = `
+          <div class="cases-reveal-decrypting" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:${item.rarityColor};">
+            <span style="font-size:1.8rem; margin-bottom:8px;">🔓</span>
+            <span style="font-family:var(--font-display); font-weight:700;">Decrypting Vault Asset...</span>
+          </div>
+        `;
+        CaseVaultManager.getItemMediaUrl(item).then(mediaUrl => {
+          if (!mediaUrl || !DOM.casesRevealMediaWrap) return;
+          if (item.isVideo) {
+            DOM.casesRevealMediaWrap.innerHTML = `
+              <video src="${escapeHtml(mediaUrl)}" autoplay loop controls playsinline></video>
+            `;
+          } else {
+            DOM.casesRevealMediaWrap.innerHTML = `
+              <img src="${escapeHtml(mediaUrl)}" alt="${escapeHtml(item.name)}" />
+            `;
+          }
+        });
+      }
+    }
+
+    // Special screen FX for high rarities
+    if (item.rarity === 'hell') {
+      document.body.classList.add('screen-rumble');
+      setTimeout(() => document.body.classList.remove('screen-rumble'), 1200);
+      showToast('🔥 UNBELIEVABLE! You unboxed a 0.001% HELL item! 🔥');
+    } else if (item.rarity === 'divine') {
+      flashVictoryScreen();
+      showToast('🌟 DIVINE DROP! 0.1% Heavenly rarity unboxed!');
+    } else if (item.rarity === 'mythic' || item.rarity === 'legendary') {
+      VictoryCelebration.start();
+      setTimeout(() => VictoryCelebration.stop(), 4000);
+    }
+
+    DOM.casesRevealModal.style.display = 'flex';
+  }
+
+  function closeCasesRevealModal() {
+    if (DOM.casesRevealModal) {
+      DOM.casesRevealModal.style.display = 'none';
+      if (DOM.casesRevealMediaWrap) {
+        DOM.casesRevealMediaWrap.innerHTML = '';
+      }
+    }
+    resetCaseOpeningStage();
+  }
+
+  // Update Home Page Badge with current collection status in golden style
+  function updateCasesHomeBadge() {
+    if (!DOM.casesCardBadge) return;
+    const inv = CaseCollectionManager.get();
+    const data = window.CASES_DATA;
+    const totalItems = (data && data.items) ? data.items.length : 25;
+    const unlockedCount = Object.keys(inv.unlockedItems || {}).length;
+    DOM.casesCardBadge.textContent = `${unlockedCount}/${totalItems} UNLOCKED`;
+    DOM.casesCardBadge.classList.add('badge-cases-gold');
+  }
+
+  // Update Collection UI & Tab
+  function updateCasesCollectionUI(filter = 'all') {
+    state.caseActiveFilter = filter;
+    const inv = CaseCollectionManager.get();
+    const data = window.CASES_DATA;
+    if (!data || !data.items) return;
+
+    const totalItems = data.items.length; // 25
+    const unlockedCount = Object.keys(inv.unlockedItems || {}).length;
+    const percent = Math.round((unlockedCount / totalItems) * 100);
+
+    // Update Home Page Badge
+    updateCasesHomeBadge();
+
+    // Nav and Stats
+    if (DOM.casesNavUnlockedCount) DOM.casesNavUnlockedCount.textContent = unlockedCount;
+    if (DOM.cstatTotalOpened) DOM.cstatTotalOpened.textContent = inv.totalOpened || 0;
+    if (DOM.cstatUniqueUnlocked) DOM.cstatUniqueUnlocked.textContent = unlockedCount;
+    if (DOM.cstatPercent) DOM.cstatPercent.textContent = `${percent}%`;
+
+    // Filter pills
+    if (DOM.collectionFilters) {
+      let filterHtml = `<button class="cfilter-pill ${filter === 'all' ? 'active' : ''}" data-rarity="all">ALL (${totalItems})</button>`;
+      data.rarities.forEach(r => {
+        const count = data.items.filter(it => it.rarity === r.key).length;
+        const isActive = filter === r.key ? 'active' : '';
+        filterHtml += `<button class="cfilter-pill ${isActive}" data-rarity="${r.key}" style="border-color:${r.color}55;">${escapeHtml(r.name.toUpperCase())} (${count})</button>`;
+      });
+      DOM.collectionFilters.innerHTML = filterHtml;
+
+      // Add click listeners to filter pills
+      DOM.collectionFilters.querySelectorAll('.cfilter-pill').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const rKey = btn.getAttribute('data-rarity');
+          updateCasesCollectionUI(rKey);
+          SoundFX.playSelect();
+        });
+      });
+    }
+
+    // Grid rendering
+    if (DOM.casesCollectionGrid) {
+      let filteredItems = data.items;
+      if (filter !== 'all') {
+        filteredItems = data.items.filter(it => it.rarity === filter);
+      }
+
+      let gridHtml = '';
+      filteredItems.forEach(item => {
+        const record = inv.unlockedItems[item.id];
+        const isUnlocked = !!record;
+        const count = isUnlocked ? record.count : 0;
+
+        if (isUnlocked) {
+          const cachedUrl = CaseVaultManager.getCachedUrl(item.id);
+          const vidTag = item.isVideo ? `<span class="collection-vid-indicator">▶ VIDEO</span>` : '';
+          gridHtml += `
+            <div class="collection-card unlocked rarity-${item.rarity}" data-item-id="${item.id}" style="border-color:${item.rarityColor}; box-shadow:0 0 12px ${item.rarityGlow};">
+              <div class="collection-card-thumb-wrap">
+                ${item.isVideo 
+                  ? `<video src="${cachedUrl ? escapeHtml(cachedUrl) : ''}" data-vault-item="${item.id}" muted playsinline class="collection-card-thumb" preload="metadata"></video>`
+                  : `<img src="${cachedUrl ? escapeHtml(cachedUrl) : ''}" data-vault-item="${item.id}" alt="${escapeHtml(item.name)}" class="collection-card-thumb" loading="lazy" />`
+                }
+                ${vidTag}
+                <span class="collection-count-badge">x${count}</span>
+              </div>
+              <div class="collection-card-meta">
+                <span class="collection-card-name" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</span>
+                <span class="collection-card-rarity" style="color:${item.rarityColor};">${escapeHtml(item.rarityName)}</span>
+              </div>
+            </div>
+          `;
+          if (!cachedUrl) {
+            CaseVaultManager.getItemMediaUrl(item).then(mediaUrl => {
+              if (!mediaUrl || !DOM.casesCollectionGrid) return;
+              const el = DOM.casesCollectionGrid.querySelector(`[data-vault-item="${item.id}"]`);
+              if (el) el.src = mediaUrl;
+            });
+          }
+        } else {
+          gridHtml += `
+            <div class="collection-card locked rarity-${item.rarity}" style="border-color:${item.rarityColor}; box-shadow:0 0 10px ${item.rarityGlow};">
+              <div class="collection-card-thumb-wrap">
+                <div class="collection-card-locked-icon" style="color:${item.rarityColor}; text-shadow:0 0 10px ${item.rarityGlow};">🔒</div>
+                <span class="collection-locked-badge">LOCKED</span>
+              </div>
+              <div class="collection-card-meta">
+                <span class="collection-card-name" title="${escapeHtml(item.name)}" style="color:#ffffff; font-weight:700;">${escapeHtml(item.name)}</span>
+                <span class="collection-card-rarity" style="color:${item.rarityColor}; font-weight:800; text-shadow:0 0 6px ${item.rarityGlow};">${escapeHtml(item.rarityName.toUpperCase())}</span>
+              </div>
+            </div>
+          `;
+        }
+      });
+
+      DOM.casesCollectionGrid.innerHTML = gridHtml;
+
+      // Click card to open Lightbox
+      DOM.casesCollectionGrid.querySelectorAll('.collection-card.unlocked').forEach(card => {
+        card.addEventListener('click', () => {
+          const itId = card.getAttribute('data-item-id');
+          const it = data.items.find(x => x.id === itId);
+          if (it) openCasesLightbox(it);
+        });
+      });
+    }
+  }
+
+  // Open Lightbox for full picture or video playback
+  function openCasesLightbox(item) {
+    if (!DOM.casesLightboxModal) return;
+    const inv = CaseCollectionManager.get();
+    const record = inv.unlockedItems[item.id] || { count: 1, firstUnlocked: Date.now() };
+
+    if (DOM.lightboxRarityBadge) {
+      DOM.lightboxRarityBadge.textContent = item.rarityName.toUpperCase();
+      DOM.lightboxRarityBadge.style.background = `${item.rarityColor}28`;
+      DOM.lightboxRarityBadge.style.borderColor = item.rarityColor;
+      DOM.lightboxRarityBadge.style.color = item.rarityColor;
+    }
+
+    if (DOM.lightboxItemTitle) {
+      DOM.lightboxItemTitle.textContent = item.name;
+    }
+
+    if (DOM.lightboxMetaText) {
+      const rObj = window.CASES_DATA.rarities.find(r => r.key === item.rarity);
+      const chanceStr = formatRarityChance(rObj);
+      const dateStr = new Date(record.firstUnlocked).toLocaleDateString();
+      DOM.lightboxMetaText.textContent = `Rarity: ${item.rarityName} (${chanceStr}) • Unboxed: ${record.count} times • First found: ${dateStr}`;
+    }
+
+    if (DOM.lightboxMediaWrap) {
+      const cachedUrl = CaseVaultManager.getCachedUrl(item.id);
+      if (cachedUrl) {
+        if (item.isVideo) {
+          DOM.lightboxMediaWrap.innerHTML = `
+            <video src="${escapeHtml(cachedUrl)}" controls autoplay loop playsinline></video>
+          `;
+        } else {
+          DOM.lightboxMediaWrap.innerHTML = `
+            <img src="${escapeHtml(cachedUrl)}" alt="${escapeHtml(item.name)}" />
+          `;
+        }
+      } else {
+        DOM.lightboxMediaWrap.innerHTML = `
+          <div class="lightbox-decrypting" style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:200px; color:${item.rarityColor};">
+            <span style="font-size:2rem; margin-bottom:8px;">🔓</span>
+            <span style="font-family:var(--font-display); font-weight:700;">Decrypting Secure Media...</span>
+          </div>
+        `;
+        CaseVaultManager.getItemMediaUrl(item).then(mediaUrl => {
+          if (!mediaUrl || !DOM.lightboxMediaWrap) return;
+          if (item.isVideo) {
+            DOM.lightboxMediaWrap.innerHTML = `
+              <video src="${escapeHtml(mediaUrl)}" controls autoplay loop playsinline></video>
+            `;
+          } else {
+            DOM.lightboxMediaWrap.innerHTML = `
+              <img src="${escapeHtml(mediaUrl)}" alt="${escapeHtml(item.name)}" />
+            `;
+          }
+        });
+      }
+    }
+
+    DOM.casesLightboxModal.style.display = 'flex';
+    SoundFX.playSelect();
+  }
+
+  function closeCasesLightbox() {
+    if (DOM.casesLightboxModal) {
+      DOM.casesLightboxModal.style.display = 'none';
+      if (DOM.lightboxMediaWrap) {
+        DOM.lightboxMediaWrap.innerHTML = '';
+      }
+    }
+  }
+
+  function resetCasesCollection() {
+    if (confirm('Reset your entire cases collection, unboxed loot history, and counters?')) {
+      CaseCollectionManager.clear();
+      updateCasesCollectionUI(state.caseActiveFilter || 'all');
+      showToast('🗑️ Cases collection has been reset to 0.');
+      SoundFX.playTone(320, 'sine', 0.15);
+    }
+  }
+
   // Expose for testing & celebration controls
   window.VictoryCelebration = VictoryCelebration;
   window.AntisimpdleState = state;
+  window.AntisimpdleEmoji = {
+    renderEmojiDisplay,
+    renderEmojiBoardFromState,
+    renderEmojiClues,
+    pickNewEmojiPracticeTarget
+  };
+  window.AntisimpdlePicture = {
+    renderPictureDisplay,
+    renderPictureBoardFromState,
+    pickNewPicturePracticeTarget,
+    logPictureGuess
+  };
+  window.AntisimpdleCases = {
+    startCaseOpening,
+    resetCaseOpeningStage,
+    rollCaseItem,
+    createRouletteCard,
+    updateCasesCollectionUI,
+    updateCasesHomeBadge,
+    CaseCollectionManager,
+    openCasesRevealModal,
+    openCasesLightbox
+  };
 
   // Bootstrap when DOM ready
   if (document.readyState === 'loading') {

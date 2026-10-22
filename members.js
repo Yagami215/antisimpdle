@@ -245,11 +245,11 @@ window.MEMBERS_DATA = [
         "folder": "members/leonard zadro",
         "categories": {
             "spol": "Muško",
-            "lokacija": "Rijeka",
-            "status": "Na serveru",
-            "dolazak_na_server": "2026",
-            "kilaza": "70-80 kg",
-            "okupacija": "Zaposlen",
+            "lokacija": "Zagreb",
+            "status": "Nije na serveru",
+            "dolazak_na_server": "2022",
+            "kilaza": "80-90 kg",
+            "okupacija": "Student",
             "aktivnost": "Neaktivan"
         },
         "image": "members/leonard zadro/IMG_20210801_195558.jpg"
@@ -381,7 +381,7 @@ window.MEMBERS_DATA = [
             "status": "Na serveru",
             "dolazak_na_server": "2024",
             "kilaza": "60-70 kg",
-            "okupacija": "Studentl, Zaposlen",
+            "okupacija": "Student, Zaposlen",
             "aktivnost": "Neaktivan"
         },
         "image": "members/francesko/Screenshot_2.png"
