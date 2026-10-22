@@ -1,0 +1,19 @@
+{
+    "index": 42,
+    "id": "og_cancle",
+    "name": "Og Cancle",
+    "aliases": [
+        "Jajcetov Frend"
+    ],
+    "folder": "members/og cancle",
+    "categories": {
+        "spol": "Muško",
+        "lokacija": "Rijeka",
+        "status": "Na serveru",
+        "dolazak_na_server": "2022",
+        "kilaza": "70-80 kg",
+        "okupacija": "Zaposlen",
+        "aktivnost": "Neaktivan"
+    },
+    "image": "members/og cancle/Screenshot_1.png"
+}

@@ -1,0 +1,19 @@
+{
+    "index": 28,
+    "id": "pforgot",
+    "name": "Pforgot",
+    "aliases": [
+        "Plavao"
+    ],
+    "folder": "members/pforgot",
+    "categories": {
+        "spol": "Muško",
+        "lokacija": "Zagreb",
+        "status": "Na serveru",
+        "dolazak_na_server": "2023",
+        "kilaza": "60-70 kg",
+        "okupacija": "Student",
+        "aktivnost": "Neaktivan"
+    },
+    "image": "members/pforgot/Screenshot_2.png"
+}

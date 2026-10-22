@@ -1,0 +1,17 @@
+{
+    "index": 61,
+    "id": "ksan",
+    "name": "Ksan",
+    "aliases": [],
+    "folder": "members/ksan",
+    "categories": {
+        "spol": "Muško",
+        "lokacija": "BiH",
+        "status": "Banan",
+        "dolazak_na_server": "2021",
+        "kilaza": "70-80 kg",
+        "okupacija": "Nezaposlen",
+        "aktivnost": "Neaktivan"
+    },
+    "image": "members/ksan/Screenshot_1.png"
+}

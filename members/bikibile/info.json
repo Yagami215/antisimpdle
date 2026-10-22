@@ -1,0 +1,17 @@
+{
+    "index": 6,
+    "id": "bikibile",
+    "name": "Bikibile",
+    "aliases": [],
+    "folder": "members/bikibile",
+    "categories": {
+        "spol": "Muško",
+        "lokacija": "Rijeka",
+        "status": "Na serveru",
+        "dolazak_na_server": "2026",
+        "kilaza": "?",
+        "okupacija": "?",
+        "aktivnost": "Neaktivan"
+    },
+    "image": "members/bikibile/Screenshot_2.png"
+}

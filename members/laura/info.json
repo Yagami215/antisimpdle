@@ -1,0 +1,19 @@
+{
+    "index": 53,
+    "id": "laura",
+    "name": "Laura",
+    "aliases": [
+        "Kuromi Chan"
+    ],
+    "folder": "members/laura",
+    "categories": {
+        "spol": "Žensko",
+        "lokacija": "Rijeka",
+        "status": "Nije na serveru",
+        "dolazak_na_server": "2022",
+        "kilaza": "50-60 kg",
+        "okupacija": "Student",
+        "aktivnost": "Neaktivan"
+    },
+    "image": "members/laura/Screenshot_1.png"
+}

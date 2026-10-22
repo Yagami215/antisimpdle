@@ -1,0 +1,21 @@
+{
+    "index": 30,
+    "id": "vito",
+    "name": "Vito",
+    "aliases": [
+        "Furry",
+        "Chudito",
+        "Vito Magdic"
+    ],
+    "folder": "members/vito",
+    "categories": {
+        "spol": "Muško",
+        "lokacija": "Zagreb",
+        "status": "Na serveru",
+        "dolazak_na_server": "2023",
+        "kilaza": "70-80 kg",
+        "okupacija": "Student",
+        "aktivnost": "Vrlo visoka"
+    },
+    "image": "members/vito/Screenshot_1.png"
+}

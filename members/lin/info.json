@@ -1,0 +1,21 @@
+{
+    "index": 17,
+    "id": "lin",
+    "name": "Lin",
+    "aliases": [
+        "Niko",
+        "Chudin",
+        "Cgpt"
+    ],
+    "folder": "members/lin",
+    "categories": {
+        "spol": "Muško",
+        "lokacija": "Rijeka",
+        "status": "Na serveru",
+        "dolazak_na_server": "2025",
+        "kilaza": "80-90 kg",
+        "okupacija": "Student, cripto trader",
+        "aktivnost": "Niska"
+    },
+    "image": "members/lin/Screenshot_2.png"
+}

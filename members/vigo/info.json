@@ -1,0 +1,17 @@
+{
+    "index": 23,
+    "id": "vigo",
+    "name": "Vigo",
+    "aliases": [],
+    "folder": "members/vigo",
+    "categories": {
+        "spol": "Muško",
+        "lokacija": "Rijeka",
+        "status": "Na serveru",
+        "dolazak_na_server": "2025",
+        "kilaza": "?",
+        "okupacija": "?",
+        "aktivnost": "Neaktivan"
+    },
+    "image": "members/vigo/Screenshot_1.png"
+}

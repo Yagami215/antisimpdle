@@ -1,0 +1,19 @@
+{
+    "index": 16,
+    "id": "bong",
+    "name": "Bong",
+    "aliases": [
+        "Chudoh"
+    ],
+    "folder": "members/bong",
+    "categories": {
+        "spol": "Muško",
+        "lokacija": "Gorski kotar, Zagreb",
+        "status": "Na serveru",
+        "dolazak_na_server": "2025",
+        "kilaza": "70-80 kg",
+        "okupacija": "Student",
+        "aktivnost": "Visoka"
+    },
+    "image": "members/bong/Screenshot_1.png"
+}

@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Antisimpdle - Discord Server Guessing Game</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Atmospheric Fantasy Background -->
+  <div class="bg-art"></div>
+  <div class="bg-vignette"></div>
+  <div class="light-beam beam-left"></div>
+  <div class="light-beam beam-right"></div>
+
+  <!-- Main Application Wrapper -->
+  <div class="app-wrapper">
+
+    <!-- Top Utility Bar -->
+    <div class="top-nav-bar">
+      <div class="nav-left">
+        <button id="homeLogoBtn" class="nav-home-btn" title="Back to Game Modes">
+          <span class="home-icon">🏠</span>
+          <span class="home-text">Game Modes</span>
+        </button>
+      </div>
+
+      <div class="nav-right">
+        <button id="viewMembersBtn" class="top-icon-btn" title="Browse Server Members">
+          <span class="btn-emoji">👥</span>
+          <span class="btn-label">Members (<span id="totalMembersBadge">67</span>)</span>
+        </button>
+        <button id="statsBtn" class="top-icon-btn" title="View Statistics & Daily Streak">
+          <span class="btn-emoji">📊</span>
+          <span class="btn-label">Stats (<span id="topStatsStreak">🔥 0</span>)</span>
+        </button>
+        <button id="soundToggleBtn" class="top-icon-btn icon-only" title="Toggle Sound">
+          <span id="soundIcon">🔊</span>
+        </button>
+        <button id="resetGameBtn" class="top-icon-btn icon-only" title="Reset Guesses">
+          <span>🔄</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ========================================================
+         VIEW 1: HOME PAGE (Matches the LoLdle Screenshot)
+         ======================================================== -->
+    <section id="homeView" class="view-section active-view">
+      <!-- LoLdle Style Golden Crest Logo -->
+      <div class="brand-header">
+        <div class="crest-frame">
+          <div class="crest-wings-left"></div>
+          <h1 class="loldle-logo">
+            <span class="gold-text">Anti</span><span class="gold-text-accent">Simp</span><span class="gold-text">dle</span>
+          </h1>
+          <div class="crest-wings-right"></div>
+        </div>
+        <p class="subtitle-text">Guess Discord server members</p>
+        <div class="daily-home-banner">
+          <span class="daily-home-pill">📅 DAILY #<span id="homeDailyNum">1</span></span>
+          <span class="daily-home-dot">•</span>
+          <span class="daily-home-timer">⏳ Resets at midnight in <strong id="homeCountdown">00:00:00</strong></span>
+        </div>
+      </div>
+
+      <!-- Mode Cards Stack (Exact LoLdle UI) -->
+      <div class="modes-stack">
+
+        <!-- Mode 1: Classic (Active) -->
+        <div id="playClassicCard" class="mode-card card-classic active-mode" role="button" tabindex="0">
+          <div class="mode-medal">
+            <div class="medal-ring">
+              <span class="medal-glyph">?</span>
+            </div>
+          </div>
+          <div class="mode-card-body">
+            <div class="mode-text-group">
+              <h2 class="mode-title">Classic</h2>
+              <p class="mode-desc">Get clues on every try</p>
+            </div>
+            <div id="classicCardBadge" class="mode-ribbon-tag">DAILY #1</div>
+          </div>
+        </div>
+
+        <!-- Mode 2: Quote (Coming Soon) -->
+        <div class="mode-card card-quote disabled-mode" title="Quote mode coming soon!">
+          <div class="mode-medal">
+            <div class="medal-ring">
+              <span class="medal-glyph quote-glyph">❝</span>
+            </div>
+          </div>
+          <div class="mode-card-body">
+            <div class="mode-text-group">
+              <h2 class="mode-title">Quote</h2>
+              <p class="mode-desc">Guess with server chat quotes</p>
+            </div>
+            <div class="mode-badge-soon">SOON</div>
+          </div>
+        </div>
+
+        <!-- Mode 3: Voice / Catchphrase (Coming Soon) -->
+        <div class="mode-card card-ability disabled-mode" title="Voice clip mode coming soon!">
+          <div class="mode-medal">
+            <div class="medal-ring">
+              <span class="medal-glyph">🔥</span>
+            </div>
+          </div>
+          <div class="mode-card-body">
+            <div class="mode-text-group">
+              <h2 class="mode-title">Voice Clip</h2>
+              <p class="mode-desc">Guess from sound clips & catchphrases</p>
+            </div>
+            <div class="mode-badge-soon">SOON</div>
+          </div>
+        </div>
+
+        <!-- Mode 4: Emoji (Coming Soon) -->
+        <div class="mode-card card-emoji disabled-mode" title="Emoji mode coming soon!">
+          <div class="mode-medal">
+            <div class="medal-ring">
+              <span class="medal-glyph">😀</span>
+            </div>
+          </div>
+          <div class="mode-card-body">
+            <div class="mode-text-group">
+              <h2 class="mode-title">Emoji</h2>
+              <p class="mode-desc">Guess with a set of emojis</p>
+            </div>
+            <div class="mode-badge-soon">SOON</div>
+          </div>
+        </div>
+
+        <!-- Mode 5: Picture / Splash (Coming Soon) -->
+        <div class="mode-card card-splash disabled-mode" title="Picture mode coming soon!">
+          <div class="mode-medal">
+            <div class="medal-ring">
+              <span class="medal-glyph">🕵️</span>
+            </div>
+          </div>
+          <div class="mode-card-body">
+            <div class="mode-text-group">
+              <h2 class="mode-title">Picture</h2>
+              <p class="mode-desc">Guess from an avatar or photo section</p>
+            </div>
+            <div class="mode-badge-soon">SOON</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Quick Roster CTA below cards -->
+      <div class="home-footer-cta">
+        <button id="browseRosterBtn" class="gold-outline-btn">
+          <span>👥 View All 67 Server Members</span>
+        </button>
+      </div>
+    </section>
+
+
+    <!-- ========================================================
+         VIEW 2: CLASSIC GAME (Search Input & Guesses Board)
+         ======================================================== -->
+    <section id="classicView" class="view-section" style="display: none;">
+      
+      <!-- Classic Mode Mini Header -->
+      <div class="game-header">
+        <div class="game-mode-banner">
+          <div class="mini-medal">?</div>
+          <div class="game-mode-meta">
+            <div class="mode-header-title-row">
+              <h2 id="classicHeaderTitle" class="game-mode-name">CLASSIC MODE</h2>
+              <span id="classicDailyBadge" class="daily-tag-badge">DAILY #<span id="classicDailyNum">1</span></span>
+            </div>
+            <div class="mode-header-sub-row">
+              <span id="classicHeaderHint" class="game-mode-hint">Guess today's Discord member</span>
+              <span id="classicCountdownWrap" class="daily-timer-badge">⏳ Next member in <strong id="classicCountdown">00:00:00</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="header-right-actions">
+          <button id="practiceToggleBtn" class="mode-pill-btn" title="Toggle Practice Mode (Play unlimited random members)">
+            <span id="practiceToggleIcon">🎲</span>
+            <span id="practiceToggleText">Practice Mode</span>
+          </button>
+          <button id="backToHomeBtn" class="back-modes-btn">
+            <span>‹ All Game Modes</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Solved Today Banner (Visible when daily puzzle is solved) -->
+      <div id="alreadySolvedBanner" class="solved-today-banner" style="display: none;">
+        <div class="solved-banner-left">
+          <span class="solved-trophy">👑</span>
+          <div class="solved-banner-text">
+            <h4>TODAY'S DAILY MEMBER SOLVED!</h4>
+            <p>Next member unlocks at midnight in <strong id="solvedCountdownClock">00:00:00</strong></p>
+          </div>
+        </div>
+        <div class="solved-banner-right">
+          <button id="viewSolvedSummaryBtn" class="gold-action-btn small-btn">
+            <span>📊 STATS & SHARE</span>
+          </button>
+          <button id="switchPracticeBtn" class="practice-action-btn small-btn">
+            <span>🎲 PLAY PRACTICE</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- LoLdle Style Input Search Box -->
+      <div class="search-panel">
+        <div class="search-box-wrap">
+          <div class="search-input-container">
+            <span class="search-icon">🔍</span>
+            <input 
+              type="text" 
+              id="memberInput" 
+              class="loldle-input" 
+              placeholder="Type member name or alias... (e.g. lara, chudika, veronika)" 
+              autocomplete="off" 
+              spellcheck="false"
+            />
+            <button id="clearInputBtn" class="clear-btn" aria-label="Clear input" style="display: none;">✕</button>
+
+            <!-- Autocomplete Dropdown List -->
+            <div id="autocompleteDropdown" class="loldle-dropdown" style="display: none;"></div>
+          </div>
+
+          <button id="guessBtn" class="gold-action-btn">
+            <span>GUESS</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Guesses Log Section -->
+      <div class="guesses-container">
+        <div class="guesses-header-bar">
+          <div class="guesses-title-wrap">
+            <h3 class="guesses-title">GUESS HISTORY</h3>
+            <span id="guessCountBadge" class="gold-counter-badge">0 Guesses</span>
+          </div>
+          <span class="categories-note">7 categories compared for each guess</span>
+        </div>
+
+        <!-- Category Columns Header (LoLdle Table Header) -->
+        <div id="categoryColumnsHeader" class="category-columns-bar" style="display: none;">
+          <div class="col-head col-member">ČLAN</div>
+          <div class="col-head">SPOL</div>
+          <div class="col-head">LOKACIJA</div>
+          <div class="col-head">STATUS</div>
+          <div class="col-head">DOLAZAK</div>
+          <div class="col-head">KILAŽA</div>
+          <div class="col-head">OKUPACIJA</div>
+          <div class="col-head">AKTIVNOST</div>
+        </div>
+
+        <div id="guessesList" class="guesses-cards-list">
+          <!-- Empty State -->
+          <div id="emptyGuessesState" class="loldle-empty-card">
+            <div class="empty-crest">?</div>
+            <h4>NO GUESSES YET</h4>
+          </div>
+        </div>
+
+        <!-- Color Indicators Box (Exact match to LoLdle screenshot) -->
+        <div id="colorIndicatorsBox" class="color-indicators-card">
+          <button id="closeLegendBtn" class="legend-close-btn" title="Close Color Indicators">✕</button>
+          <h4 class="legend-title">Color Indicators</h4>
+          <div class="legend-items-row">
+            <div class="legend-item">
+              <div class="legend-sample sample-correct"></div>
+              <span class="legend-label">Correct</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-sample sample-partial"></div>
+              <span class="legend-label">Partial</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-sample sample-incorrect"></div>
+              <span class="legend-label">Incorrect</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-sample sample-higher">
+                <svg class="legend-arrow-ico" viewBox="0 0 24 24"><path fill="currentColor" d="M12 4l-8 8h5v8h6v-8h5z"/></svg>
+              </div>
+              <span class="legend-label">Higher</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-sample sample-lower">
+                <svg class="legend-arrow-ico" viewBox="0 0 24 24"><path fill="currentColor" d="M12 20l8-8h-5V4h-6v8H4z"/></svg>
+              </div>
+              <span class="legend-label">Lower</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Toggle Button if Legend is closed -->
+        <div class="legend-reopen-wrap">
+          <button id="openLegendBtn" class="legend-reopen-btn" style="display: none;">
+            <span>ℹ️ Show Color Indicators</span>
+          </button>
+        </div>
+
+      </div>
+
+    </section>
+
+  </div>
+
+  <!-- VICTORY SCREEN FLASH & CELEBRATION CANVAS -->
+  <div id="victoryFlash" class="victory-screen-flash"></div>
+  <canvas id="victoryCanvas" class="victory-canvas"></canvas>
+
+  <!-- VICTORY MODAL CELEBRATION -->
+  <div id="victoryModal" class="modal-backdrop victory-backdrop" style="display: none;">
+    <div class="modal-box victory-box">
+      <!-- Rotating Sunburst Rays -->
+      <div class="victory-rays"></div>
+
+      <div class="victory-header">
+        <div class="victory-crown-badge">👑</div>
+        <h2 id="victoryHeading" class="victory-title">VICTORY!</h2>
+        <p id="victorySubtitle" class="victory-sub">You correctly guessed today's secret Discord member!</p>
+      </div>
+
+      <div class="victory-member-card">
+        <div class="victory-avatar-wrap">
+          <div id="victoryAvatar" class="victory-avatar">??</div>
+          <div class="avatar-ring-pulse"></div>
+        </div>
+        <div class="victory-meta">
+          <h3 id="victoryMemberName" class="victory-name">Member Name</h3>
+          <p id="victoryAliases" class="victory-aliases">Aliases: None</p>
+          <div class="victory-stats-row">
+            <span id="victoryGuessCount" class="victory-tries-badge">Guessed in 1 try</span>
+            <span class="victory-accuracy-badge">100% Match</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Wordle Next Daily Member Countdown Box -->
+      <div id="victoryCountdownCard" class="victory-countdown-card">
+        <span class="countdown-card-label">NEXT DAILY MEMBER IN</span>
+        <div id="victoryCountdownClock" class="countdown-card-clock">00:00:00</div>
+      </div>
+
+      <!-- Mini Stats Summary in Victory Modal -->
+      <div id="victoryStatsRow" class="victory-stats-summary-grid">
+        <div class="vstat-item">
+          <span class="vstat-num" id="vstatPlayed">0</span>
+          <span class="vstat-lbl">Played</span>
+        </div>
+        <div class="vstat-item">
+          <span class="vstat-num" id="vstatWinPct">0%</span>
+          <span class="vstat-lbl">Win %</span>
+        </div>
+        <div class="vstat-item">
+          <span class="vstat-num" id="vstatStreak">🔥 0</span>
+          <span class="vstat-lbl">Streak</span>
+        </div>
+        <div class="vstat-item">
+          <span class="vstat-num" id="vstatMaxStreak">⭐ 0</span>
+          <span class="vstat-lbl">Max Streak</span>
+        </div>
+      </div>
+
+      <div class="victory-actions">
+        <button id="shareResultBtn" class="share-result-btn">
+          <span class="btn-icon">📋</span>
+          <span>SHARE RESULT</span>
+        </button>
+        <button id="victoryPracticeBtn" class="gold-action-btn victory-replay-btn">
+          <span>🎲 PRACTICE MODE (UNLIMITED)</span>
+        </button>
+        <button id="closeVictoryBtn" class="nav-home-btn small-close-btn">
+          <span>CLOSE & VIEW BOARD</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Wordle Style Stats Modal -->
+  <div id="statsModal" class="modal-backdrop" style="display: none;">
+    <div class="modal-box stats-modal-box">
+      <div class="modal-box-header">
+        <div class="modal-heading">
+          <h3>📊 STATISTICS</h3>
+          <p>Your Antisimpdle performance & streaks</p>
+        </div>
+        <button id="closeStatsModalBtn" class="modal-x-btn" aria-label="Close stats">✕</button>
+      </div>
+
+      <div class="stats-modal-body">
+        <div class="stats-numbers-grid">
+          <div class="stat-box">
+            <span class="stat-value" id="statsValPlayed">0</span>
+            <span class="stat-label">Played</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-value" id="statsValWinPct">0%</span>
+            <span class="stat-label">Win %</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-value" id="statsValCurrentStreak">0</span>
+            <span class="stat-label">Current Streak</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-value" id="statsValMaxStreak">0</span>
+            <span class="stat-label">Max Streak</span>
+          </div>
+        </div>
+
+        <h4 class="guess-dist-title">GUESS DISTRIBUTION</h4>
+        <div id="guessDistributionContainer" class="guess-dist-list">
+          <!-- Rendered dynamically -->
+        </div>
+
+        <div class="stats-timer-section">
+          <div class="stats-timer-box">
+            <span class="stats-timer-label">NEXT DAILY MEMBER IN</span>
+            <div id="statsCountdownClock" class="stats-timer-clock">00:00:00</div>
+          </div>
+          <button id="statsShareBtn" class="share-result-btn" style="display: none;">
+            <span class="btn-icon">📋</span>
+            <span>SHARE TODAY'S RESULT</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="modal-box-footer">
+        <span class="folder-hint">Daily puzzle resets every midnight</span>
+        <button id="statsDoneBtn" class="gold-action-btn small-btn">CLOSE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Members Roster Modal -->
+  <div id="membersModal" class="modal-backdrop" style="display: none;">
+    <div class="modal-box">
+      <div class="modal-box-header">
+        <div class="modal-heading">
+          <h3>SERVER ROSTER (<span id="modalMemberCount">67</span>)</h3>
+          <p>Click any member to search them in Classic mode</p>
+        </div>
+        <button id="closeModalBtn" class="modal-x-btn" aria-label="Close modal">✕</button>
+      </div>
+
+      <div class="modal-search-field">
+        <input 
+          type="text" 
+          id="modalSearchInput" 
+          class="loldle-input modal-filter-input" 
+          placeholder="Filter by name or alias..." 
+        />
+      </div>
+
+      <div id="modalMembersGrid" class="roster-grid">
+        <!-- Rendered via JS -->
+      </div>
+
+      <div class="modal-box-footer">
+        <span class="folder-hint">📁 Organized in <code>members/[member_name]</code></span>
+        <button id="modalDoneBtn" class="gold-action-btn small-btn">CLOSE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Toast Notification -->
+  <div id="gameToast" class="game-toast"></div>
+
+  <!-- Scripts -->
+  <script src="members.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

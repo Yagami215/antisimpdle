@@ -1,0 +1,20 @@
+{
+    "index": 44,
+    "id": "krof",
+    "name": "Krof",
+    "aliases": [
+        "Matej",
+        "Matejko"
+    ],
+    "folder": "members/krof",
+    "categories": {
+        "spol": "Muško",
+        "lokacija": "Rijeka",
+        "status": "Na serveru",
+        "dolazak_na_server": "2019",
+        "kilaza": "80-90 kg",
+        "okupacija": "Student, Zaposlen",
+        "aktivnost": "Visoka"
+    },
+    "image": "members/krof/Screenshot_2.png"
+}

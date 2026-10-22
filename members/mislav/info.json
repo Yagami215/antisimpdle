@@ -1,0 +1,19 @@
+{
+    "index": 65,
+    "id": "mislav",
+    "name": "Mislav",
+    "aliases": [
+        "Pokimane Lover"
+    ],
+    "folder": "members/mislav",
+    "categories": {
+        "spol": "Muško",
+        "lokacija": "Zagreb",
+        "status": "Nije na serveru",
+        "dolazak_na_server": "2021",
+        "kilaza": "?",
+        "okupacija": "?",
+        "aktivnost": "Neaktivan"
+    },
+    "image": "members/mislav/1184367-pokimane.jpg"
+}

@@ -1,0 +1,21 @@
+{
+    "index": 34,
+    "id": "sheldon",
+    "name": "Sheldon",
+    "aliases": [
+        "Ante",
+        "Gljivar",
+        "Something Random"
+    ],
+    "folder": "members/sheldon",
+    "categories": {
+        "spol": "Muško",
+        "lokacija": "Zagreb",
+        "status": "Na serveru",
+        "dolazak_na_server": "2022",
+        "kilaza": "70-80 kg",
+        "okupacija": "Student",
+        "aktivnost": "Neaktivan"
+    },
+    "image": "members/sheldon/1752310881722.jpg"
+}

@@ -1,0 +1,19 @@
+{
+    "index": 37,
+    "id": "blozob",
+    "name": "Blozob",
+    "aliases": [
+        "Tan"
+    ],
+    "folder": "members/blozob",
+    "categories": {
+        "spol": "Muško",
+        "lokacija": "Zagreb",
+        "status": "Na serveru",
+        "dolazak_na_server": "2019",
+        "kilaza": "100+ kg",
+        "okupacija": "Student",
+        "aktivnost": "Neaktivan"
+    },
+    "image": "members/blozob/Screenshot_2.png"
+}

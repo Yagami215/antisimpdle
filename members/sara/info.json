@@ -1,0 +1,19 @@
+{
+    "index": 22,
+    "id": "sara",
+    "name": "Sara",
+    "aliases": [
+        "Sara Borko"
+    ],
+    "folder": "members/sara",
+    "categories": {
+        "spol": "Žensko",
+        "lokacija": "Zagreb",
+        "status": "Na serveru",
+        "dolazak_na_server": "2023",
+        "kilaza": "100+ kg",
+        "okupacija": "Student",
+        "aktivnost": "Niska"
+    },
+    "image": "members/sara/652508f4-e572-4ab7-a218-e3f9cac0b6dc.png"
+}

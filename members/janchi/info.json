@@ -1,0 +1,19 @@
+{
+    "index": 51,
+    "id": "janchi",
+    "name": "Janchi",
+    "aliases": [
+        "Jana"
+    ],
+    "folder": "members/janchi",
+    "categories": {
+        "spol": "Žensko",
+        "lokacija": "Rijeka, Zagreb",
+        "status": "Prognani foid",
+        "dolazak_na_server": "2020",
+        "kilaza": "50-60 kg",
+        "okupacija": "Student",
+        "aktivnost": "Neaktivan"
+    },
+    "image": "members/janchi/Screenshot_1.png"
+}

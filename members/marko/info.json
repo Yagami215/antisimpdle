@@ -1,0 +1,19 @@
+{
+    "index": 32,
+    "id": "marko",
+    "name": "Marko",
+    "aliases": [
+        "Komunist"
+    ],
+    "folder": "members/marko",
+    "categories": {
+        "spol": "Muško",
+        "lokacija": "Zagreb",
+        "status": "Na serveru",
+        "dolazak_na_server": "2025",
+        "kilaza": "70-80 kg",
+        "okupacija": "Student",
+        "aktivnost": "Neaktivan"
+    },
+    "image": "members/marko/aaaaaa.jpg"
+}

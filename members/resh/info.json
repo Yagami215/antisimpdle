@@ -1,0 +1,17 @@
+{
+    "index": 63,
+    "id": "resh",
+    "name": "Resh",
+    "aliases": [],
+    "folder": "members/resh",
+    "categories": {
+        "spol": "Muško",
+        "lokacija": "Rijeka",
+        "status": "Nije na serveru",
+        "dolazak_na_server": "2023",
+        "kilaza": "80-90 kg",
+        "okupacija": "Zaposlen",
+        "aktivnost": "Neaktivan"
+    },
+    "image": "members/resh/Screenshot_1.png"
+}

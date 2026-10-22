@@ -1,0 +1,17 @@
+{
+    "index": 7,
+    "id": "teoma",
+    "name": "Teoma",
+    "aliases": [],
+    "folder": "members/teoma",
+    "categories": {
+        "spol": "Muško",
+        "lokacija": "Rijeka",
+        "status": "Na serveru",
+        "dolazak_na_server": "2026",
+        "kilaza": "70-80 kg",
+        "okupacija": "Zaposlen",
+        "aktivnost": "Neaktivan"
+    },
+    "image": "members/teoma/hqdefault.jpg"
+}

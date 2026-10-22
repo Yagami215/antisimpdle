@@ -1,0 +1,20 @@
+{
+    "index": 19,
+    "id": "neo",
+    "name": "Neo",
+    "aliases": [
+        "Chudeo",
+        "Suprimcrnicigan"
+    ],
+    "folder": "members/neo",
+    "categories": {
+        "spol": "Muško",
+        "lokacija": "Rijeka",
+        "status": "Na serveru",
+        "dolazak_na_server": "2023",
+        "kilaza": "80-90 kg",
+        "okupacija": "Zaposlen",
+        "aktivnost": "Neaktivan"
+    },
+    "image": "members/neo/Screenshot_2.png"
+}

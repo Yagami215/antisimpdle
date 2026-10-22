@@ -1,0 +1,17 @@
+{
+    "index": 29,
+    "id": "geolokijeva_krava",
+    "name": "Geolokijeva Krava",
+    "aliases": [],
+    "folder": "members/geolokijeva krava",
+    "categories": {
+        "spol": "Muško",
+        "lokacija": "Zagreb",
+        "status": "Na serveru",
+        "dolazak_na_server": "2022",
+        "kilaza": "80-90 kg",
+        "okupacija": "Zaposlen",
+        "aktivnost": "Neaktivan"
+    },
+    "image": "members/geolokijeva krava/Screenshot_1.png"
+}

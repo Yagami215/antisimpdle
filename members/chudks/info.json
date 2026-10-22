@@ -1,0 +1,19 @@
+{
+    "index": 11,
+    "id": "chudks",
+    "name": "Chudks",
+    "aliases": [
+        "Bibi"
+    ],
+    "folder": "members/chudks",
+    "categories": {
+        "spol": "Muško",
+        "lokacija": "Rijeka",
+        "status": "Na serveru",
+        "dolazak_na_server": "2026",
+        "kilaza": "?",
+        "okupacija": "Student",
+        "aktivnost": "Neaktivan"
+    },
+    "image": "members/chudks/Screenshot_2.png"
+}

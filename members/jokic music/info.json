@@ -1,0 +1,17 @@
+{
+    "index": 35,
+    "id": "jokic_music",
+    "name": "Jokic Music",
+    "aliases": [],
+    "folder": "members/jokic music",
+    "categories": {
+        "spol": "Muško",
+        "lokacija": "Ether",
+        "status": "Na serveru",
+        "dolazak_na_server": "2024",
+        "kilaza": "0",
+        "okupacija": "Zaposlen",
+        "aktivnost": "Srednja"
+    },
+    "image": "members/jokic music/Screenshot_2.png"
+}

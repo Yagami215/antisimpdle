@@ -1,0 +1,19 @@
+{
+    "index": 45,
+    "id": "mile",
+    "name": "Mile",
+    "aliases": [
+        "Mirza"
+    ],
+    "folder": "members/mile",
+    "categories": {
+        "spol": "Muško",
+        "lokacija": "Vinkovci",
+        "status": "Na serveru",
+        "dolazak_na_server": "2019",
+        "kilaza": "90-100 kg",
+        "okupacija": "Zaposlen",
+        "aktivnost": "Neaktivan"
+    },
+    "image": "members/mile/Screenshot_1.png"
+}

@@ -1,0 +1,1243 @@
+[
+    {
+        "index": 1,
+        "id": "lara",
+        "name": "Lara",
+        "aliases": [],
+        "folder": "members/lara",
+        "categories": {
+            "spol": "Žensko",
+            "lokacija": "Rijeka",
+            "status": "Na serveru",
+            "dolazak_na_server": "2026",
+            "kilaza": "70-80 kg",
+            "okupacija": "?",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/lara/71xyNDMhuqL._AC_UY1000_.jpg"
+    },
+    {
+        "index": 2,
+        "id": "kurijer",
+        "name": "Kurijer",
+        "aliases": [],
+        "folder": "members/kurijer",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Rijeka",
+            "status": "Na serveru",
+            "dolazak_na_server": "2021",
+            "kilaza": "?",
+            "okupacija": "?",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/kurijer/Screenshot_2.png"
+    },
+    {
+        "index": 3,
+        "id": "benki",
+        "name": "Benki",
+        "aliases": [],
+        "folder": "members/benki",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Njemacka",
+            "status": "Na serveru",
+            "dolazak_na_server": "2023",
+            "kilaza": "100+ kg",
+            "okupacija": "Student, Zaposlen",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/benki/Screenshot_1.png"
+    },
+    {
+        "index": 4,
+        "id": "chudika",
+        "name": "Chudika",
+        "aliases": [
+            "Veronika"
+        ],
+        "folder": "members/chudika",
+        "categories": {
+            "spol": "Žensko",
+            "lokacija": "Zagreb, Rijeka",
+            "status": "Na serveru",
+            "dolazak_na_server": "2026",
+            "kilaza": "50-60 kg",
+            "okupacija": "Student",
+            "aktivnost": "Srednja"
+        },
+        "image": "members/chudika/Screenshot_1.png"
+    },
+    {
+        "index": 5,
+        "id": "moji",
+        "name": "Moji",
+        "aliases": [
+            "Damian"
+        ],
+        "folder": "members/moji",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Rijeka",
+            "status": "Na serveru",
+            "dolazak_na_server": "2026",
+            "kilaza": "70-80 kg",
+            "okupacija": "Zaposlen",
+            "aktivnost": "Niska"
+        },
+        "image": "members/moji/Screenshot_2.png"
+    },
+    {
+        "index": 6,
+        "id": "bikibile",
+        "name": "Bikibile",
+        "aliases": [],
+        "folder": "members/bikibile",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Rijeka",
+            "status": "Na serveru",
+            "dolazak_na_server": "2026",
+            "kilaza": "?",
+            "okupacija": "?",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/bikibile/Screenshot_2.png"
+    },
+    {
+        "index": 7,
+        "id": "teoma",
+        "name": "Teoma",
+        "aliases": [],
+        "folder": "members/teoma",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Rijeka",
+            "status": "Na serveru",
+            "dolazak_na_server": "2026",
+            "kilaza": "70-80 kg",
+            "okupacija": "Zaposlen",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/teoma/hqdefault.jpg"
+    },
+    {
+        "index": 8,
+        "id": "moreti",
+        "name": "Moreti",
+        "aliases": [
+            "Chuditi"
+        ],
+        "folder": "members/moreti",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Rijeka",
+            "status": "Na serveru",
+            "dolazak_na_server": "2026",
+            "kilaza": "70-80 kg",
+            "okupacija": "Zaposlen",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/moreti/Screenshot_1.png"
+    },
+    {
+        "index": 9,
+        "id": "dineks",
+        "name": "Dineks",
+        "aliases": [
+            "Dino",
+            "Chudeks"
+        ],
+        "folder": "members/dineks",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Zagreb",
+            "status": "Na serveru",
+            "dolazak_na_server": "2020",
+            "kilaza": "60-70 kg",
+            "okupacija": "Student, Zaposlen",
+            "aktivnost": "Vrlo visoka"
+        },
+        "image": "members/dineks/Screenshot_2021-08-23-23-55-51-086_com.snapchat.android.jpg"
+    },
+    {
+        "index": 10,
+        "id": "didiplaygrape",
+        "name": "Didiplaygrape",
+        "aliases": [
+            "Didi"
+        ],
+        "folder": "members/didiplaygrape",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Rijeka",
+            "status": "Na serveru",
+            "dolazak_na_server": "2026",
+            "kilaza": "?",
+            "okupacija": "?",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/didiplaygrape/Screenshot_1.png"
+    },
+    {
+        "index": 11,
+        "id": "chudks",
+        "name": "Chudks",
+        "aliases": [
+            "Bibi"
+        ],
+        "folder": "members/chudks",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Rijeka",
+            "status": "Na serveru",
+            "dolazak_na_server": "2026",
+            "kilaza": "?",
+            "okupacija": "Student",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/chudks/Screenshot_2.png"
+    },
+    {
+        "index": 12,
+        "id": "bindi",
+        "name": "Bindi",
+        "aliases": [
+            "Luka",
+            "Jerko"
+        ],
+        "folder": "members/bindi",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Rijeka",
+            "status": "Na serveru",
+            "dolazak_na_server": "2019",
+            "kilaza": "100+ kg",
+            "okupacija": "Student",
+            "aktivnost": "Visoka"
+        },
+        "image": "members/bindi/Screenshot_1.png"
+    },
+    {
+        "index": 13,
+        "id": "spoon",
+        "name": "Spoon",
+        "aliases": [],
+        "folder": "members/spoon",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Rijeka",
+            "status": "Na serveru",
+            "dolazak_na_server": "2026",
+            "kilaza": "100+ kg",
+            "okupacija": "Student",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/spoon/Screenshot_1.png"
+    },
+    {
+        "index": 14,
+        "id": "leonard_zadro",
+        "name": "Leonard Zadro",
+        "aliases": [],
+        "folder": "members/leonard zadro",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Rijeka",
+            "status": "Na serveru",
+            "dolazak_na_server": "2026",
+            "kilaza": "70-80 kg",
+            "okupacija": "Zaposlen",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/leonard zadro/IMG_20210801_195558.jpg"
+    },
+    {
+        "index": 15,
+        "id": "gemist_king",
+        "name": "Gemist King",
+        "aliases": [],
+        "folder": "members/gemist king",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Velika Gorica",
+            "status": "Na serveru",
+            "dolazak_na_server": "2022",
+            "kilaza": "80-90 kg",
+            "okupacija": "Student",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/gemist king/Screenshot_2.png"
+    },
+    {
+        "index": 16,
+        "id": "bong",
+        "name": "Bong",
+        "aliases": [
+            "Chudoh"
+        ],
+        "folder": "members/bong",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Gorski kotar, Zagreb",
+            "status": "Na serveru",
+            "dolazak_na_server": "2025",
+            "kilaza": "70-80 kg",
+            "okupacija": "Student",
+            "aktivnost": "Visoka"
+        },
+        "image": "members/bong/Screenshot_1.png"
+    },
+    {
+        "index": 17,
+        "id": "lin",
+        "name": "Lin",
+        "aliases": [
+            "Niko",
+            "Chudin",
+            "Cgpt"
+        ],
+        "folder": "members/lin",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Rijeka",
+            "status": "Na serveru",
+            "dolazak_na_server": "2025",
+            "kilaza": "80-90 kg",
+            "okupacija": "Student, cripto trader",
+            "aktivnost": "Niska"
+        },
+        "image": "members/lin/Screenshot_2.png"
+    },
+    {
+        "index": 18,
+        "id": "lukabiso122",
+        "name": "Lukabiso122",
+        "aliases": [
+            "Luka Biso"
+        ],
+        "folder": "members/lukabiso122",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Rijeka",
+            "status": "Na serveru",
+            "dolazak_na_server": "2025",
+            "kilaza": "?",
+            "okupacija": "Student",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/lukabiso122/Screenshot_1.png"
+    },
+    {
+        "index": 19,
+        "id": "neo",
+        "name": "Neo",
+        "aliases": [
+            "Chudeo",
+            "Suprimcrnicigan"
+        ],
+        "folder": "members/neo",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Rijeka",
+            "status": "Na serveru",
+            "dolazak_na_server": "2023",
+            "kilaza": "80-90 kg",
+            "okupacija": "Zaposlen",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/neo/Screenshot_2.png"
+    },
+    {
+        "index": 20,
+        "id": "borna",
+        "name": "Borna",
+        "aliases": [
+            "Fini Keksi"
+        ],
+        "folder": "members/borna",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Zagreb",
+            "status": "Na serveru",
+            "dolazak_na_server": "2024",
+            "kilaza": "80-90 kg",
+            "okupacija": "Student",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/borna/Screenshot_2.png"
+    },
+    {
+        "index": 21,
+        "id": "francesko",
+        "name": "Francesko",
+        "aliases": [],
+        "folder": "members/francesko",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Zagreb",
+            "status": "Na serveru",
+            "dolazak_na_server": "2024",
+            "kilaza": "60-70 kg",
+            "okupacija": "Studentl, Zaposlen",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/francesko/Screenshot_2.png"
+    },
+    {
+        "index": 22,
+        "id": "sara",
+        "name": "Sara",
+        "aliases": [
+            "Sara Borko"
+        ],
+        "folder": "members/sara",
+        "categories": {
+            "spol": "Žensko",
+            "lokacija": "Zagreb",
+            "status": "Na serveru",
+            "dolazak_na_server": "2023",
+            "kilaza": "100+ kg",
+            "okupacija": "Student",
+            "aktivnost": "Niska"
+        },
+        "image": "members/sara/652508f4-e572-4ab7-a218-e3f9cac0b6dc.png"
+    },
+    {
+        "index": 23,
+        "id": "vigo",
+        "name": "Vigo",
+        "aliases": [],
+        "folder": "members/vigo",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Rijeka",
+            "status": "Na serveru",
+            "dolazak_na_server": "2025",
+            "kilaza": "?",
+            "okupacija": "?",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/vigo/Screenshot_1.png"
+    },
+    {
+        "index": 24,
+        "id": "david",
+        "name": "David",
+        "aliases": [
+            "Chudzoid",
+            "Mingop"
+        ],
+        "folder": "members/david",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Zagreb/Rijeka",
+            "status": "Na serveru",
+            "dolazak_na_server": "2026",
+            "kilaza": "70-80 kg",
+            "okupacija": "Student",
+            "aktivnost": "Visoka"
+        },
+        "image": "members/david/Screenshot_2.png"
+    },
+    {
+        "index": 25,
+        "id": "dasha",
+        "name": "Dasha",
+        "aliases": [],
+        "folder": "members/dasha",
+        "categories": {
+            "spol": "Žensko",
+            "lokacija": "Zagreb",
+            "status": "Na serveru",
+            "dolazak_na_server": "2025",
+            "kilaza": "60-70 kg",
+            "okupacija": "Student",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/dasha/Screenshot_1.png"
+    },
+    {
+        "index": 26,
+        "id": "filp_arapovic",
+        "name": "Filp Arapovic",
+        "aliases": [
+            "Koser",
+            "Koserkurac"
+        ],
+        "folder": "members/filp arapovic",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Rijeka",
+            "status": "Na serveru",
+            "dolazak_na_server": "2023",
+            "kilaza": "100+ kg",
+            "okupacija": "Student",
+            "aktivnost": "Vrlo visoka"
+        },
+        "image": "members/filp arapovic/Screenshot_1.png"
+    },
+    {
+        "index": 27,
+        "id": "antun",
+        "name": "Antun",
+        "aliases": [],
+        "folder": "members/antun",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Zagreb",
+            "status": "Na serveru",
+            "dolazak_na_server": "2023",
+            "kilaza": "70-80 kg",
+            "okupacija": "Student",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/antun/Screenshot_2.png"
+    },
+    {
+        "index": 28,
+        "id": "pforgot",
+        "name": "Pforgot",
+        "aliases": [
+            "Plavao"
+        ],
+        "folder": "members/pforgot",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Zagreb",
+            "status": "Na serveru",
+            "dolazak_na_server": "2023",
+            "kilaza": "60-70 kg",
+            "okupacija": "Student",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/pforgot/Screenshot_2.png"
+    },
+    {
+        "index": 29,
+        "id": "geolokijeva_krava",
+        "name": "Geolokijeva Krava",
+        "aliases": [],
+        "folder": "members/geolokijeva krava",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Zagreb",
+            "status": "Na serveru",
+            "dolazak_na_server": "2022",
+            "kilaza": "80-90 kg",
+            "okupacija": "Zaposlen",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/geolokijeva krava/Screenshot_1.png"
+    },
+    {
+        "index": 30,
+        "id": "vito",
+        "name": "Vito",
+        "aliases": [
+            "Furry",
+            "Chudito",
+            "Vito Magdic"
+        ],
+        "folder": "members/vito",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Zagreb",
+            "status": "Na serveru",
+            "dolazak_na_server": "2023",
+            "kilaza": "70-80 kg",
+            "okupacija": "Student",
+            "aktivnost": "Vrlo visoka"
+        },
+        "image": "members/vito/Screenshot_1.png"
+    },
+    {
+        "index": 31,
+        "id": "kiskill",
+        "name": "Kiskill",
+        "aliases": [
+            "Lovrin Brat"
+        ],
+        "folder": "members/kiskill",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Donja Bistra",
+            "status": "Na serveru",
+            "dolazak_na_server": "2025",
+            "kilaza": "80-90 kg",
+            "okupacija": "Zaposlen",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/kiskill/Screenshot_1.png"
+    },
+    {
+        "index": 32,
+        "id": "marko",
+        "name": "Marko",
+        "aliases": [
+            "Komunist"
+        ],
+        "folder": "members/marko",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Zagreb",
+            "status": "Na serveru",
+            "dolazak_na_server": "2025",
+            "kilaza": "70-80 kg",
+            "okupacija": "Student",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/marko/aaaaaa.jpg"
+    },
+    {
+        "index": 33,
+        "id": "metro",
+        "name": "Metro",
+        "aliases": [
+            "Chatisthissgima"
+        ],
+        "folder": "members/metro",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Velika Gorica",
+            "status": "Na serveru",
+            "dolazak_na_server": "2020",
+            "kilaza": "80-90 kg",
+            "okupacija": "Student",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/metro/Screenshot_2.png"
+    },
+    {
+        "index": 34,
+        "id": "sheldon",
+        "name": "Sheldon",
+        "aliases": [
+            "Ante",
+            "Gljivar",
+            "Something Random"
+        ],
+        "folder": "members/sheldon",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Zagreb",
+            "status": "Na serveru",
+            "dolazak_na_server": "2022",
+            "kilaza": "70-80 kg",
+            "okupacija": "Student",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/sheldon/1752310881722.jpg"
+    },
+    {
+        "index": 35,
+        "id": "jokic_music",
+        "name": "Jokic Music",
+        "aliases": [],
+        "folder": "members/jokic music",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Ether",
+            "status": "Na serveru",
+            "dolazak_na_server": "2024",
+            "kilaza": "0",
+            "okupacija": "Zaposlen",
+            "aktivnost": "Srednja"
+        },
+        "image": "members/jokic music/Screenshot_2.png"
+    },
+    {
+        "index": 36,
+        "id": "jajce",
+        "name": "Jajce",
+        "aliases": [],
+        "folder": "members/jajce",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Rijeka",
+            "status": "Na serveru",
+            "dolazak_na_server": "2019",
+            "kilaza": "70-80 kg",
+            "okupacija": "Zaposlen",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/jajce/Screenshot_1.png"
+    },
+    {
+        "index": 37,
+        "id": "blozob",
+        "name": "Blozob",
+        "aliases": [
+            "Tan"
+        ],
+        "folder": "members/blozob",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Zagreb",
+            "status": "Na serveru",
+            "dolazak_na_server": "2019",
+            "kilaza": "100+ kg",
+            "okupacija": "Student",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/blozob/Screenshot_2.png"
+    },
+    {
+        "index": 38,
+        "id": "nikola",
+        "name": "Nikola",
+        "aliases": [
+            "Yagami",
+            "Chudkola"
+        ],
+        "folder": "members/nikola",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Velika Gorica",
+            "status": "Na serveru",
+            "dolazak_na_server": "2019",
+            "kilaza": "80-90 kg",
+            "okupacija": "Student",
+            "aktivnost": "Vrlo visoka"
+        },
+        "image": "members/nikola/1625661573257.jpg"
+    },
+    {
+        "index": 39,
+        "id": "geoloki",
+        "name": "Geoloki",
+        "aliases": [
+            "Loki",
+            "Borna"
+        ],
+        "folder": "members/geoloki",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Velika Gorica",
+            "status": "Na serveru",
+            "dolazak_na_server": "2024",
+            "kilaza": "80-90 kg",
+            "okupacija": "Zaposlen",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/geoloki/Screenshot_10.png"
+    },
+    {
+        "index": 40,
+        "id": "leo",
+        "name": "Leo",
+        "aliases": [
+            "Wyz",
+            "Najveci Fakecell"
+        ],
+        "folder": "members/leo",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Rijeka, Zagreb",
+            "status": "Na serveru",
+            "dolazak_na_server": "2023",
+            "kilaza": "70-80 kg",
+            "okupacija": "Zaposlen",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/leo/Screenshot_20230220_080849.png"
+    },
+    {
+        "index": 41,
+        "id": "lean",
+        "name": "Lean",
+        "aliases": [
+            "Chmonk",
+            "Blean",
+            "Chudean",
+            "Kralj Swaglinaca"
+        ],
+        "folder": "members/lean",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Rijeka",
+            "status": "Na serveru",
+            "dolazak_na_server": "2022",
+            "kilaza": "100+ kg",
+            "okupacija": "Student, Zaposlen",
+            "aktivnost": "Vrlo visoka"
+        },
+        "image": "members/lean/IMG_20250712_132802_583.png"
+    },
+    {
+        "index": 42,
+        "id": "og_cancle",
+        "name": "Og Cancle",
+        "aliases": [
+            "Jajcetov Frend"
+        ],
+        "folder": "members/og cancle",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Rijeka",
+            "status": "Na serveru",
+            "dolazak_na_server": "2022",
+            "kilaza": "70-80 kg",
+            "okupacija": "Zaposlen",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/og cancle/Screenshot_1.png"
+    },
+    {
+        "index": 43,
+        "id": "frud",
+        "name": "Frud",
+        "aliases": [],
+        "folder": "members/frud",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Vinkovci",
+            "status": "Na serveru",
+            "dolazak_na_server": "2020",
+            "kilaza": "90-100 kg",
+            "okupacija": "Zaposlen",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/frud/Screenshot_1.png"
+    },
+    {
+        "index": 44,
+        "id": "krof",
+        "name": "Krof",
+        "aliases": [
+            "Matej",
+            "Matejko"
+        ],
+        "folder": "members/krof",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Rijeka",
+            "status": "Na serveru",
+            "dolazak_na_server": "2019",
+            "kilaza": "80-90 kg",
+            "okupacija": "Student, Zaposlen",
+            "aktivnost": "Visoka"
+        },
+        "image": "members/krof/Screenshot_2.png"
+    },
+    {
+        "index": 45,
+        "id": "mile",
+        "name": "Mile",
+        "aliases": [
+            "Mirza"
+        ],
+        "folder": "members/mile",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Vinkovci",
+            "status": "Na serveru",
+            "dolazak_na_server": "2019",
+            "kilaza": "90-100 kg",
+            "okupacija": "Zaposlen",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/mile/Screenshot_1.png"
+    },
+    {
+        "index": 46,
+        "id": "riza",
+        "name": "Riza",
+        "aliases": [
+            "Crna Riza",
+            "Gabrijel"
+        ],
+        "folder": "members/riza",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Velika Gorica",
+            "status": "Nije na serveru",
+            "dolazak_na_server": "2020",
+            "kilaza": "60-70 kg",
+            "okupacija": "Student",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/riza/Screenshot_2.png"
+    },
+    {
+        "index": 47,
+        "id": "erik",
+        "name": "Erik",
+        "aliases": [
+            "Cunt",
+            "Kaneki",
+            "Ligma"
+        ],
+        "folder": "members/erik",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Velika Gorica",
+            "status": "Nije na serveru",
+            "dolazak_na_server": "2019",
+            "kilaza": "70-80 kg",
+            "okupacija": "Student, Zaposlen",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/erik/Screenshot_2.png"
+    },
+    {
+        "index": 48,
+        "id": "grle",
+        "name": "Grle",
+        "aliases": [],
+        "folder": "members/grle",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Vinkovci",
+            "status": "Nije na serveru",
+            "dolazak_na_server": "2019",
+            "kilaza": "80-90 kg",
+            "okupacija": "Zaposlen",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/grle/Screenshot_2.png"
+    },
+    {
+        "index": 49,
+        "id": "noa",
+        "name": "Noa",
+        "aliases": [
+            "Ilovetraps"
+        ],
+        "folder": "members/noa",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Rijeka",
+            "status": "Nije na serveru",
+            "dolazak_na_server": "2021",
+            "kilaza": "90-100 kg",
+            "okupacija": "Zaposlen",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/noa/Screenshot_20220219-191214_Instagram.jpg"
+    },
+    {
+        "index": 50,
+        "id": "kola",
+        "name": "Kola",
+        "aliases": [
+            "Sebastian"
+        ],
+        "folder": "members/kola",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Vukovina",
+            "status": "Nije na serveru",
+            "dolazak_na_server": "2022",
+            "kilaza": "80-90 kg",
+            "okupacija": "Student",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/kola/IMG-20220905-WA0000.jpg"
+    },
+    {
+        "index": 51,
+        "id": "janchi",
+        "name": "Janchi",
+        "aliases": [
+            "Jana"
+        ],
+        "folder": "members/janchi",
+        "categories": {
+            "spol": "Žensko",
+            "lokacija": "Rijeka, Zagreb",
+            "status": "Prognani foid",
+            "dolazak_na_server": "2020",
+            "kilaza": "50-60 kg",
+            "okupacija": "Student",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/janchi/Screenshot_1.png"
+    },
+    {
+        "index": 52,
+        "id": "roko",
+        "name": "Roko",
+        "aliases": [
+            "Slatina"
+        ],
+        "folder": "members/roko",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Slatina",
+            "status": "Nije na serveru",
+            "dolazak_na_server": "2019",
+            "kilaza": "100+ kg",
+            "okupacija": "Student",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/roko/1625856182196.avif"
+    },
+    {
+        "index": 53,
+        "id": "laura",
+        "name": "Laura",
+        "aliases": [
+            "Kuromi Chan"
+        ],
+        "folder": "members/laura",
+        "categories": {
+            "spol": "Žensko",
+            "lokacija": "Rijeka",
+            "status": "Nije na serveru",
+            "dolazak_na_server": "2022",
+            "kilaza": "50-60 kg",
+            "okupacija": "Student",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/laura/Screenshot_1.png"
+    },
+    {
+        "index": 54,
+        "id": "filip_metalac",
+        "name": "Filip Metalac",
+        "aliases": [
+            "Alah"
+        ],
+        "folder": "members/filip metalac",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Rijeka",
+            "status": "Nije na serveru",
+            "dolazak_na_server": "2022",
+            "kilaza": "90-100 kg",
+            "okupacija": "Student",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/filip metalac/Screenshot_20.png"
+    },
+    {
+        "index": 55,
+        "id": "lovro",
+        "name": "Lovro",
+        "aliases": [],
+        "folder": "members/lovro",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Donja Bistra",
+            "status": "Nije na serveru",
+            "dolazak_na_server": "2020",
+            "kilaza": "90-100 kg",
+            "okupacija": "Student",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/lovro/Screenshot_22.png"
+    },
+    {
+        "index": 56,
+        "id": "ian",
+        "name": "Ian",
+        "aliases": [],
+        "folder": "members/ian",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Velika Gorica",
+            "status": "Nije na serveru",
+            "dolazak_na_server": "2020",
+            "kilaza": "100+ kg",
+            "okupacija": "Zaposlen",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/ian/IMG_20191020_193204.jpg"
+    },
+    {
+        "index": 57,
+        "id": "vito_juric",
+        "name": "Vito Juric",
+        "aliases": [
+            "Velika Gorica Vito"
+        ],
+        "folder": "members/vito juric",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Velika Gorica",
+            "status": "Nije na serveru",
+            "dolazak_na_server": "2021",
+            "kilaza": "60-70 kg",
+            "okupacija": "Student",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/vito juric/images.jfif"
+    },
+    {
+        "index": 58,
+        "id": "yugo",
+        "name": "Yugo",
+        "aliases": [],
+        "folder": "members/yugo",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Rijeka, Zagreb",
+            "status": "Nije na serveru",
+            "dolazak_na_server": "2022",
+            "kilaza": "60-70 kg",
+            "okupacija": "Student",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/yugo/Screenshot_2.png"
+    },
+    {
+        "index": 59,
+        "id": "doris",
+        "name": "Doris",
+        "aliases": [],
+        "folder": "members/doris",
+        "categories": {
+            "spol": "Žensko",
+            "lokacija": "Velika Gorica",
+            "status": "Prognani foid",
+            "dolazak_na_server": "2019",
+            "kilaza": "60-70 kg",
+            "okupacija": "Zaposlen",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/doris/Screenshot_2025-09-17-09-52-48-546_com.instagram.android-edit.jpg"
+    },
+    {
+        "index": 60,
+        "id": "dorian",
+        "name": "Dorian",
+        "aliases": [],
+        "folder": "members/dorian",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Rijeka",
+            "status": "Banan",
+            "dolazak_na_server": "2025",
+            "kilaza": "?",
+            "okupacija": "?",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/dorian/25b12ffe13623d52450d7f4acecf7b4d.jpg"
+    },
+    {
+        "index": 61,
+        "id": "ksan",
+        "name": "Ksan",
+        "aliases": [],
+        "folder": "members/ksan",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "BiH",
+            "status": "Banan",
+            "dolazak_na_server": "2021",
+            "kilaza": "70-80 kg",
+            "okupacija": "Nezaposlen",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/ksan/Screenshot_1.png"
+    },
+    {
+        "index": 62,
+        "id": "viska12",
+        "name": "Viska12",
+        "aliases": [],
+        "folder": "members/viska12",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Rijeka",
+            "status": "Na serveru",
+            "dolazak_na_server": "2026",
+            "kilaza": "?",
+            "okupacija": "Zaposlen",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/viska12/Screenshot_2.png"
+    },
+    {
+        "index": 63,
+        "id": "resh",
+        "name": "Resh",
+        "aliases": [],
+        "folder": "members/resh",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Rijeka",
+            "status": "Nije na serveru",
+            "dolazak_na_server": "2023",
+            "kilaza": "80-90 kg",
+            "okupacija": "Zaposlen",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/resh/Screenshot_1.png"
+    },
+    {
+        "index": 64,
+        "id": "4thhokage",
+        "name": "4thhokage",
+        "aliases": [],
+        "folder": "members/4thhokage",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Zagreb",
+            "status": "Nije na serveru",
+            "dolazak_na_server": "2021",
+            "kilaza": "?",
+            "okupacija": "?",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/4thhokage/Screenshot_1.png"
+    },
+    {
+        "index": 65,
+        "id": "mislav",
+        "name": "Mislav",
+        "aliases": [
+            "Pokimane Lover"
+        ],
+        "folder": "members/mislav",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Zagreb",
+            "status": "Nije na serveru",
+            "dolazak_na_server": "2021",
+            "kilaza": "?",
+            "okupacija": "?",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/mislav/1184367-pokimane.jpg"
+    },
+    {
+        "index": 66,
+        "id": "toasty",
+        "name": "Toasty",
+        "aliases": [],
+        "folder": "members/toasty",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Zagreb",
+            "status": "Nije na serveru",
+            "dolazak_na_server": "2023",
+            "kilaza": "?",
+            "okupacija": "?",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/toasty/Screenshot_2.png"
+    },
+    {
+        "index": 67,
+        "id": "doks",
+        "name": "Doks",
+        "aliases": [
+            "Dokss",
+            "Scorpion Ratio"
+        ],
+        "folder": "members/doks",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Rijeka",
+            "status": "Nije na serveru",
+            "dolazak_na_server": "2024",
+            "kilaza": "90-100 kg",
+            "okupacija": "Zaposlen",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/doks/Pantheon_0.jpg"
+    }
+]

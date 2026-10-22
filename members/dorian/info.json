@@ -1,0 +1,17 @@
+{
+    "index": 60,
+    "id": "dorian",
+    "name": "Dorian",
+    "aliases": [],
+    "folder": "members/dorian",
+    "categories": {
+        "spol": "Muško",
+        "lokacija": "Rijeka",
+        "status": "Banan",
+        "dolazak_na_server": "2025",
+        "kilaza": "?",
+        "okupacija": "?",
+        "aktivnost": "Neaktivan"
+    },
+    "image": "members/dorian/25b12ffe13623d52450d7f4acecf7b4d.jpg"
+}

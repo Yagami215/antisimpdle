@@ -1,0 +1,19 @@
+{
+    "index": 4,
+    "id": "chudika",
+    "name": "Chudika",
+    "aliases": [
+        "Veronika"
+    ],
+    "folder": "members/chudika",
+    "categories": {
+        "spol": "Žensko",
+        "lokacija": "Zagreb, Rijeka",
+        "status": "Na serveru",
+        "dolazak_na_server": "2026",
+        "kilaza": "50-60 kg",
+        "okupacija": "Student",
+        "aktivnost": "Srednja"
+    },
+    "image": "members/chudika/Screenshot_1.png"
+}

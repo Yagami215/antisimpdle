@@ -1,0 +1,17 @@
+{
+    "index": 27,
+    "id": "antun",
+    "name": "Antun",
+    "aliases": [],
+    "folder": "members/antun",
+    "categories": {
+        "spol": "Muško",
+        "lokacija": "Zagreb",
+        "status": "Na serveru",
+        "dolazak_na_server": "2023",
+        "kilaza": "70-80 kg",
+        "okupacija": "Student",
+        "aktivnost": "Neaktivan"
+    },
+    "image": "members/antun/Screenshot_2.png"
+}

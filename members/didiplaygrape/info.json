@@ -1,0 +1,19 @@
+{
+    "index": 10,
+    "id": "didiplaygrape",
+    "name": "Didiplaygrape",
+    "aliases": [
+        "Didi"
+    ],
+    "folder": "members/didiplaygrape",
+    "categories": {
+        "spol": "Muško",
+        "lokacija": "Rijeka",
+        "status": "Na serveru",
+        "dolazak_na_server": "2026",
+        "kilaza": "?",
+        "okupacija": "?",
+        "aktivnost": "Neaktivan"
+    },
+    "image": "members/didiplaygrape/Screenshot_1.png"
+}

@@ -1,0 +1,17 @@
+{
+    "index": 25,
+    "id": "dasha",
+    "name": "Dasha",
+    "aliases": [],
+    "folder": "members/dasha",
+    "categories": {
+        "spol": "Žensko",
+        "lokacija": "Zagreb",
+        "status": "Na serveru",
+        "dolazak_na_server": "2025",
+        "kilaza": "60-70 kg",
+        "okupacija": "Student",
+        "aktivnost": "Neaktivan"
+    },
+    "image": "members/dasha/Screenshot_1.png"
+}

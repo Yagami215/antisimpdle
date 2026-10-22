@@ -1,0 +1,19 @@
+{
+    "index": 33,
+    "id": "metro",
+    "name": "Metro",
+    "aliases": [
+        "Chatisthissgima"
+    ],
+    "folder": "members/metro",
+    "categories": {
+        "spol": "Muško",
+        "lokacija": "Velika Gorica",
+        "status": "Na serveru",
+        "dolazak_na_server": "2020",
+        "kilaza": "80-90 kg",
+        "okupacija": "Student",
+        "aktivnost": "Neaktivan"
+    },
+    "image": "members/metro/Screenshot_2.png"
+}

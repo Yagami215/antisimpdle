@@ -1,0 +1,17 @@
+{
+    "index": 2,
+    "id": "kurijer",
+    "name": "Kurijer",
+    "aliases": [],
+    "folder": "members/kurijer",
+    "categories": {
+        "spol": "Muško",
+        "lokacija": "Rijeka",
+        "status": "Na serveru",
+        "dolazak_na_server": "2021",
+        "kilaza": "?",
+        "okupacija": "?",
+        "aktivnost": "Neaktivan"
+    },
+    "image": "members/kurijer/Screenshot_2.png"
+}

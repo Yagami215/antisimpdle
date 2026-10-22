@@ -1,0 +1,17 @@
+{
+    "index": 66,
+    "id": "toasty",
+    "name": "Toasty",
+    "aliases": [],
+    "folder": "members/toasty",
+    "categories": {
+        "spol": "Muško",
+        "lokacija": "Zagreb",
+        "status": "Nije na serveru",
+        "dolazak_na_server": "2023",
+        "kilaza": "?",
+        "okupacija": "?",
+        "aktivnost": "Neaktivan"
+    },
+    "image": "members/toasty/Screenshot_2.png"
+}

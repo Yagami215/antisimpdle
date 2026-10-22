@@ -1,0 +1,19 @@
+{
+    "index": 57,
+    "id": "vito_juric",
+    "name": "Vito Juric",
+    "aliases": [
+        "Velika Gorica Vito"
+    ],
+    "folder": "members/vito juric",
+    "categories": {
+        "spol": "Muško",
+        "lokacija": "Velika Gorica",
+        "status": "Nije na serveru",
+        "dolazak_na_server": "2021",
+        "kilaza": "60-70 kg",
+        "okupacija": "Student",
+        "aktivnost": "Neaktivan"
+    },
+    "image": "members/vito juric/images.jfif"
+}

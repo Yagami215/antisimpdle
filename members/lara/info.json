@@ -1,0 +1,17 @@
+{
+    "index": 1,
+    "id": "lara",
+    "name": "Lara",
+    "aliases": [],
+    "folder": "members/lara",
+    "categories": {
+        "spol": "Žensko",
+        "lokacija": "Rijeka",
+        "status": "Na serveru",
+        "dolazak_na_server": "2026",
+        "kilaza": "70-80 kg",
+        "okupacija": "?",
+        "aktivnost": "Neaktivan"
+    },
+    "image": "members/lara/71xyNDMhuqL._AC_UY1000_.jpg"
+}

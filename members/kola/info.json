@@ -1,0 +1,19 @@
+{
+    "index": 50,
+    "id": "kola",
+    "name": "Kola",
+    "aliases": [
+        "Sebastian"
+    ],
+    "folder": "members/kola",
+    "categories": {
+        "spol": "Muško",
+        "lokacija": "Vukovina",
+        "status": "Nije na serveru",
+        "dolazak_na_server": "2022",
+        "kilaza": "80-90 kg",
+        "okupacija": "Student",
+        "aktivnost": "Neaktivan"
+    },
+    "image": "members/kola/IMG-20220905-WA0000.jpg"
+}

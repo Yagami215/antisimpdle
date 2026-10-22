@@ -1,0 +1,19 @@
+{
+    "index": 20,
+    "id": "borna",
+    "name": "Borna",
+    "aliases": [
+        "Fini Keksi"
+    ],
+    "folder": "members/borna",
+    "categories": {
+        "spol": "Muško",
+        "lokacija": "Zagreb",
+        "status": "Na serveru",
+        "dolazak_na_server": "2024",
+        "kilaza": "80-90 kg",
+        "okupacija": "Student",
+        "aktivnost": "Neaktivan"
+    },
+    "image": "members/borna/Screenshot_2.png"
+}

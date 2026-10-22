@@ -1,0 +1,20 @@
+{
+    "index": 12,
+    "id": "bindi",
+    "name": "Bindi",
+    "aliases": [
+        "Luka",
+        "Jerko"
+    ],
+    "folder": "members/bindi",
+    "categories": {
+        "spol": "Muško",
+        "lokacija": "Rijeka",
+        "status": "Na serveru",
+        "dolazak_na_server": "2019",
+        "kilaza": "100+ kg",
+        "okupacija": "Student",
+        "aktivnost": "Visoka"
+    },
+    "image": "members/bindi/Screenshot_1.png"
+}

@@ -1,0 +1,19 @@
+{
+    "index": 54,
+    "id": "filip_metalac",
+    "name": "Filip Metalac",
+    "aliases": [
+        "Alah"
+    ],
+    "folder": "members/filip metalac",
+    "categories": {
+        "spol": "Muško",
+        "lokacija": "Rijeka",
+        "status": "Nije na serveru",
+        "dolazak_na_server": "2022",
+        "kilaza": "90-100 kg",
+        "okupacija": "Student",
+        "aktivnost": "Neaktivan"
+    },
+    "image": "members/filip metalac/Screenshot_20.png"
+}

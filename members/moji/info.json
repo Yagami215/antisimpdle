@@ -1,0 +1,19 @@
+{
+    "index": 5,
+    "id": "moji",
+    "name": "Moji",
+    "aliases": [
+        "Damian"
+    ],
+    "folder": "members/moji",
+    "categories": {
+        "spol": "Muško",
+        "lokacija": "Rijeka",
+        "status": "Na serveru",
+        "dolazak_na_server": "2026",
+        "kilaza": "70-80 kg",
+        "okupacija": "Zaposlen",
+        "aktivnost": "Niska"
+    },
+    "image": "members/moji/Screenshot_2.png"
+}

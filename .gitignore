@@ -1,0 +1,35 @@
+# ==============================================================================
+# Antisimpdle .gitignore
+# Excludes local editor, local development server, and sensitive/temp files
+# ==============================================================================
+
+# Local Editor Files (KEEP LOCAL - DO NOT UPLOAD TO WEBSITE)
+editor.html
+editor.js
+editor.css
+server.py
+start-editor.bat
+init_categories.py
+members.txt
+
+# Python cache & virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+ENV/
+
+# IDE & Editor system files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.bak
+
+# Operating System temporary files
+Thumbs.db
+Desktop.ini
+.DS_Store

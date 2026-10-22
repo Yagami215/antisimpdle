@@ -1,0 +1,20 @@
+{
+    "index": 24,
+    "id": "david",
+    "name": "David",
+    "aliases": [
+        "Chudzoid",
+        "Mingop"
+    ],
+    "folder": "members/david",
+    "categories": {
+        "spol": "Muško",
+        "lokacija": "Zagreb/Rijeka",
+        "status": "Na serveru",
+        "dolazak_na_server": "2026",
+        "kilaza": "70-80 kg",
+        "okupacija": "Student",
+        "aktivnost": "Visoka"
+    },
+    "image": "members/david/Screenshot_2.png"
+}
