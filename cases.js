@@ -1284,6 +1284,7 @@ window.CASES_DATA = {
       "rarityGlow": "rgba(255, 183, 3, 0.8)",
       "orbImage": "case opening/orbs/orb_legendary.png",
       "isVideo": true,
+      "thumbPath": "case opening/legendary/krof i chomnk u teretani.jpg",
       "path": "case opening/legendary/krof i chomnk u teretani.mov",
       "isEncrypted": false
     },

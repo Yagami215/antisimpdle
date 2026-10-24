@@ -7301,11 +7301,13 @@
     if (isRevealed) {
       const cachedUrl = CaseVaultManager.getCachedUrl(item.id);
       const vidBadge = item.isVideo ? `<span class="roulette-card-vid-tag">▶ VID</span>` : '';
+      const thumbSrc = item.thumbPath || cachedUrl || '';
+      const isThumbVideo = item.isVideo && !item.thumbPath;
       card.innerHTML = `
         <div class="roulette-card-thumb-wrap">
-          ${item.isVideo 
+          ${isThumbVideo 
             ? `<video src="${cachedUrl ? escapeHtml(cachedUrl) : ''}" data-vault-item="${item.id}" muted playsinline class="roulette-card-thumb" preload="metadata"></video>`
-            : `<img src="${cachedUrl ? escapeHtml(cachedUrl) : ''}" data-vault-item="${item.id}" alt="${escapeHtml(item.name)}" class="roulette-card-thumb" loading="lazy" />`
+            : `<img src="${thumbSrc ? escapeHtml(thumbSrc) : ''}" data-vault-item="${item.id}" alt="${escapeHtml(item.name)}" class="roulette-card-thumb" loading="lazy" />`
           }
           ${vidBadge}
         </div>
@@ -7315,7 +7317,7 @@
         </div>
         <div class="roulette-card-strip" style="background:${item.rarityColor}; box-shadow:0 0 8px ${item.rarityGlow};"></div>
       `;
-      if (!cachedUrl) {
+      if (!cachedUrl && !item.thumbPath) {
         CaseVaultManager.getItemMediaUrl(item).then(url => {
           if (!url) return;
           const el = card.querySelector(`[data-vault-item="${item.id}"]`);
@@ -8027,7 +8029,7 @@
               </div>
             </div>
           `;
-          if (!cachedUrl) {
+          if (!cachedUrl && !item.thumbPath) {
             CaseVaultManager.getItemMediaUrl(item).then(mediaUrl => {
               if (!mediaUrl || !DOM.casesCollectionGrid) return;
               const el = DOM.casesCollectionGrid.querySelector(`[data-vault-item="${item.id}"]`);
@@ -8215,12 +8217,14 @@
         if (isUnlocked) {
           const cachedUrl = CaseVaultManager.getCachedUrl(item.id);
           const vidTag = item.isVideo ? `<span class="collection-vid-indicator">▶ VIDEO</span>` : '';
+          const thumbSrc = item.thumbPath || cachedUrl || '';
+          const isThumbVideo = item.isVideo && !item.thumbPath;
           itemsHtml += `
             <div class="album-preview-card unlocked" data-item-id="${item.id}" title="${escapeHtml(item.name)} (${escapeHtml(item.rarityName)}) • Click to view">
               <div class="album-preview-thumb-wrap is-unlocked" style="--rarity-color:${item.rarityColor}; border-color:${item.rarityColor}; box-shadow:0 0 10px ${item.rarityGlow};">
-                ${item.isVideo
+                ${isThumbVideo
                   ? `<video src="${cachedUrl ? escapeHtml(cachedUrl) : ''}" data-vault-item="${item.id}" muted playsinline class="album-preview-thumb" preload="metadata"></video>`
-                  : `<img src="${cachedUrl ? escapeHtml(cachedUrl) : ''}" data-vault-item="${item.id}" alt="${escapeHtml(item.name)}" class="album-preview-thumb" loading="lazy" />`
+                  : `<img src="${thumbSrc ? escapeHtml(thumbSrc) : ''}" data-vault-item="${item.id}" alt="${escapeHtml(item.name)}" class="album-preview-thumb" loading="lazy" />`
                 }
                 ${vidTag}
                 <span class="collection-count-badge">x${count}</span>
@@ -8229,7 +8233,7 @@
               <span class="album-preview-rarity" style="color:${item.rarityColor}; font-weight:800; text-shadow:0 0 4px ${item.rarityGlow};">${escapeHtml(item.rarityName.toUpperCase())}</span>
             </div>
           `;
-          if (!cachedUrl) {
+          if (!cachedUrl && !item.thumbPath) {
             CaseVaultManager.getItemMediaUrl(item).then(mediaUrl => {
               if (!mediaUrl) return;
               const els = document.querySelectorAll(`[data-vault-item="${item.id}"]`);
@@ -8457,12 +8461,14 @@
         if (isUnlocked) {
           const cachedUrl = CaseVaultManager.getCachedUrl(item.id);
           const vidTag = item.isVideo ? `<span class="collection-vid-indicator">▶ VIDEO</span>` : '';
+          const thumbSrc = item.thumbPath || cachedUrl || '';
+          const isThumbVideo = item.isVideo && !item.thumbPath;
           gridHtml += `
             <div class="collection-card unlocked rarity-${item.rarity}" data-item-id="${item.id}" style="border-color:${item.rarityColor}; box-shadow:0 0 12px ${item.rarityGlow};">
               <div class="collection-card-thumb-wrap">
-                ${item.isVideo 
+                ${isThumbVideo 
                   ? `<video src="${cachedUrl ? escapeHtml(cachedUrl) : ''}" data-vault-item="${item.id}" muted playsinline class="collection-card-thumb" preload="metadata"></video>`
-                  : `<img src="${cachedUrl ? escapeHtml(cachedUrl) : ''}" data-vault-item="${item.id}" alt="${escapeHtml(item.name)}" class="collection-card-thumb" loading="lazy" />`
+                  : `<img src="${thumbSrc ? escapeHtml(thumbSrc) : ''}" data-vault-item="${item.id}" alt="${escapeHtml(item.name)}" class="collection-card-thumb" loading="lazy" />`
                 }
                 ${vidTag}
                 <span class="collection-count-badge">x${count}</span>
@@ -8473,7 +8479,7 @@
               </div>
             </div>
           `;
-          if (!cachedUrl) {
+          if (!cachedUrl && !item.thumbPath) {
             CaseVaultManager.getItemMediaUrl(item).then(mediaUrl => {
               if (!mediaUrl) return;
               const els = document.querySelectorAll(`[data-vault-item="${item.id}"]`);
