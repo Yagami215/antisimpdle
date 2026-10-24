@@ -134,13 +134,13 @@ module.exports = (req, res) => {
       }
     }
 
-    // Select random item from matching pool (fast mode never gets normal-exclusive items)
+    // Select random item from matching pool (fast mode never gets normal-exclusive items, milestones/albums never drop)
     const matchingItems = Object.values(vaultData.items).filter(
-      it => it.rarity === chosenRarity && (mode === 'normal' || it.exclusiveMode !== 'normal')
+      it => it.rarity === chosenRarity && (mode === 'normal' || it.exclusiveMode !== 'normal') && it.rarity !== 'album' && it.rarity !== 'milestone'
     );
     const winner = matchingItems.length > 0 
       ? matchingItems[Math.floor(Math.random() * matchingItems.length)]
-      : Object.values(vaultData.items).find(it => mode === 'normal' || it.exclusiveMode !== 'normal') || Object.values(vaultData.items)[0];
+      : Object.values(vaultData.items).find(it => (mode === 'normal' || it.exclusiveMode !== 'normal') && it.rarity !== 'album' && it.rarity !== 'milestone') || Object.values(vaultData.items)[0];
 
     const isServerGated = !!winner.serverGated;
     const isWasm = winner.rarity === 'divine' || winner.rarity === 'hell';
@@ -155,14 +155,10 @@ module.exports = (req, res) => {
         .update(`${winner.id}:${winner.numId}`)
         .digest('hex');
       mediaUrl = `/api/media?id=${encodeURIComponent(winner.id)}&token=${encodeURIComponent(token)}`;
-    } else if (isWasm) {
-      // Divine & HELL: Client-side WebAssembly decrypts
+    } else {
+      // All other rarities (Divine & HELL via client WASM, Common to Secret via static paths)
       token = null;
       mediaUrl = null;
-    } else {
-      // Static unencrypted
-      token = null;
-      mediaUrl = winner.path || '';
     }
 
     return res.status(200).json({

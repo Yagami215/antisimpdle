@@ -7092,7 +7092,7 @@
 
     const pool = data.items.filter(item => item.rarity === chosenRarity && (mode === 'normal' || item.exclusiveMode !== 'normal'));
     if (!pool || pool.length === 0) {
-      const fallbackPool = data.items.filter(item => (mode === 'normal' || item.exclusiveMode !== 'normal') && item.rarity !== 'album');
+      const fallbackPool = data.items.filter(item => (mode === 'normal' || item.exclusiveMode !== 'normal') && item.rarity !== 'album' && item.rarity !== 'milestone');
       return fallbackPool[Math.floor(Math.random() * fallbackPool.length)];
     }
     return pool[Math.floor(Math.random() * pool.length)];
@@ -7496,7 +7496,14 @@
           const localItem = window.CASES_DATA.items.find(x => x.id === data.item.id);
           winner = localItem || data.item;
           serverToken = data.token || null;
-          serverMediaUrl = data.mediaUrl ? (data.mediaUrl.startsWith('http') ? data.mediaUrl : `${CASE_API_BASE}${data.mediaUrl}`) : null;
+          // Server media URL is ONLY for server-gated encrypted rarities (Verity & Rainbow)
+          if (winner && winner.serverGated && data.mediaUrl) {
+            serverMediaUrl = data.mediaUrl.startsWith('http')
+              ? data.mediaUrl
+              : `${CASE_API_BASE}${data.mediaUrl.startsWith('/') ? '' : '/'}${data.mediaUrl}`;
+          } else {
+            serverMediaUrl = null;
+          }
         }
       }
     } catch (apiErr) {
@@ -7512,7 +7519,7 @@
       return;
     }
 
-    if (serverMediaUrl) {
+    if (serverMediaUrl && winner.serverGated) {
       CaseVaultManager.setMediaUrl(winner.id, serverMediaUrl);
     }
 
@@ -7788,9 +7795,43 @@
         DOM.casesRevealMediaWrap.innerHTML = `
           <div class="cases-reveal-decrypting" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:${item.rarityColor};">
             <span style="font-size:1.8rem; margin-bottom:8px;">🔒</span>
-            <span style="font-family:var(--font-display); font-weight:700;">Locked Item Asset</span>
+            <span style="font-family:var(--font-display); font-weight:700;">Decrypting Vault Asset...</span>
           </div>
         `;
+        CaseVaultManager.getItemMediaUrl(item).then(url => {
+          if (url && DOM.casesRevealModal && DOM.casesRevealModal.style.display !== 'none' && DOM.casesRevealMediaWrap) {
+            if (item.isYouTube || item.youtubeUrl) {
+              const ytUrl = item.youtubeUrl || url;
+              const embedUrl = item.youtubeEmbedUrl || (ytUrl ? ytUrl.replace('watch?v=', 'embed/') : '');
+              DOM.casesRevealMediaWrap.innerHTML = `
+                <div class="reveal-youtube-player">
+                  <iframe src="${escapeHtml(embedUrl)}" class="lightbox-youtube-iframe" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                  <a href="${escapeHtml(ytUrl)}" target="_blank" rel="noopener noreferrer" class="youtube-external-btn">
+                    <span>▶ Open on YouTube</span>
+                  </a>
+                </div>
+              `;
+            } else if (item.isAudio) {
+              const thumb = item.thumbPath || 'case opening/orbs/orb_secret.png';
+              DOM.casesRevealMediaWrap.innerHTML = `
+                <div class="reveal-audio-player">
+                  <img src="${escapeHtml(thumb)}" alt="${escapeHtml(item.name)}" class="reveal-audio-art" />
+                  <audio src="${escapeHtml(url)}" controls autoplay style="width:90%; margin-top:8px;"></audio>
+                </div>
+              `;
+            } else if (item.isVideo) {
+              DOM.casesRevealMediaWrap.innerHTML = `
+                <video src="${escapeHtml(url)}" autoplay loop controls playsinline></video>
+              `;
+            } else {
+              DOM.casesRevealMediaWrap.innerHTML = `
+                <img src="${escapeHtml(url)}" alt="${escapeHtml(item.name)}" />
+              `;
+            }
+          }
+        }).catch(err => {
+          console.warn('[RevealModal] Failed to decrypt media in background:', err);
+        });
       }
     }
 
@@ -7986,7 +8027,7 @@
               </div>
             </div>
           `;
-          if (!cachedUrl && isThumbVideo) {
+          if (!cachedUrl) {
             CaseVaultManager.getItemMediaUrl(item).then(mediaUrl => {
               if (!mediaUrl || !DOM.casesCollectionGrid) return;
               const el = DOM.casesCollectionGrid.querySelector(`[data-vault-item="${item.id}"]`);
@@ -8655,7 +8696,23 @@
     }
 
     const alreadyClaimed = inv.unlockedItems && !!inv.unlockedItems[rewardItem.id];
+    if (alreadyClaimed) {
+      showToast(`🏆 You already claimed "${rewardItem.name}"!`);
+      if (DOM.casesLightboxModal) {
+        DOM.casesLightboxModal.style.display = 'none';
+        if (DOM.lightboxMediaWrap) DOM.lightboxMediaWrap.innerHTML = '';
+      }
+      openCasesLightbox(rewardItem);
+      return;
+    }
+
     const result = CaseCollectionManager.recordRewardItem(rewardItem);
+
+    // Close lightbox if it was open
+    if (DOM.casesLightboxModal) {
+      DOM.casesLightboxModal.style.display = 'none';
+      if (DOM.lightboxMediaWrap) DOM.lightboxMediaWrap.innerHTML = '';
+    }
 
     if (SoundFX.enabled) {
       SoundFX.playRarityReveal('album');
@@ -8695,7 +8752,23 @@
     }
 
     const alreadyClaimed = inv.unlockedItems && !!inv.unlockedItems[rewardItem.id];
+    if (alreadyClaimed) {
+      showToast(`🏆 You already claimed "${rewardItem.name}"!`);
+      if (DOM.casesLightboxModal) {
+        DOM.casesLightboxModal.style.display = 'none';
+        if (DOM.lightboxMediaWrap) DOM.lightboxMediaWrap.innerHTML = '';
+      }
+      openCasesLightbox(rewardItem);
+      return;
+    }
+
     const result = CaseCollectionManager.recordRewardItem(rewardItem);
+
+    // Close lightbox if it was open
+    if (DOM.casesLightboxModal) {
+      DOM.casesLightboxModal.style.display = 'none';
+      if (DOM.lightboxMediaWrap) DOM.lightboxMediaWrap.innerHTML = '';
+    }
 
     if (SoundFX.enabled) {
       SoundFX.playRarityReveal('milestone');
@@ -8707,7 +8780,7 @@
       renderMilestonesOverview();
     }
 
-    // Decrypt & open reveal modal
+    // Decrypt locally via WebAssembly and open reveal modal
     return CaseVaultManager.getItemMediaUrl(rewardItem).then(mediaUrl => {
       openCasesRevealModal(rewardItem, result, mediaUrl);
       return { rewardItem, result, mediaUrl };
