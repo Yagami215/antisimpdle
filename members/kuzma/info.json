@@ -1,0 +1,17 @@
+{
+    "index": 73,
+    "id": "kuzma",
+    "name": "Kuzma",
+    "aliases": [],
+    "folder": "members/kuzma",
+    "categories": {
+        "spol": "Muško",
+        "lokacija": "Rijeka",
+        "status": "Nije na serveru",
+        "dolazak_na_server": "2022",
+        "kilaza": "70-80 kg",
+        "okupacija": "Student",
+        "aktivnost": "Neaktivan"
+    },
+    "image": "members/kuzma/avatar.png"
+}

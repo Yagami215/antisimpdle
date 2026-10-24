@@ -4,10 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Antisimpdle - Discord Server Guessing Game</title>
+  <link rel="icon" type="image/png" href="icon.png">
+  <link rel="shortcut icon" href="favicon.ico">
+  <link rel="apple-touch-icon" href="icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=112">
 </head>
 <body>
   <!-- Atmospheric Fantasy Background -->
@@ -31,7 +34,7 @@
       <div class="nav-right">
         <button id="viewMembersBtn" class="top-icon-btn" title="Browse Server Members">
           <span class="btn-emoji">👥</span>
-          <span class="btn-label">Members (<span id="totalMembersBadge">67</span>)</span>
+          <span class="btn-label">Members (<span id="totalMembersBadge">76</span>)</span>
         </button>
         <button id="statsBtn" class="top-icon-btn" title="View Statistics & Daily Streak">
           <span class="btn-emoji">📊</span>
@@ -160,16 +163,21 @@
             <div class="mode-text-group">
               <h2 class="mode-title">Open Cases</h2>
             </div>
-            <div id="casesCardBadge" class="mode-ribbon-tag badge-cases-gold">0/25 UNLOCKED</div>
+            <div id="casesCardBadge" class="mode-ribbon-tag badge-cases-gold">0/106 UNLOCKED</div>
           </div>
         </div>
 
       </div>
 
-      <!-- Quick Roster CTA below cards -->
+      <!-- Quick Roster & Update Log CTA below cards -->
       <div class="home-footer-cta">
+        <button id="updateLogBtn" class="gold-outline-btn update-log-btn" title="Pogledaj najnoviji update log">
+          <span class="btn-icon">📜</span>
+          <span class="btn-text">Update Log</span>
+          <span class="update-new-badge">NEW</span>
+        </button>
         <button id="browseRosterBtn" class="gold-outline-btn">
-          <span>👥 View All 67 Server Members</span>
+          <span>👥 View All 76 Server Members</span>
         </button>
       </div>
     </section>
@@ -809,7 +817,7 @@
             <span>📦 Open Case</span>
           </button>
           <button id="casesTabCollectionBtn" class="gold-outline-btn small-btn" title="View Collection">
-            <span>🏆 Collection (<span id="casesNavUnlockedCount">0</span>/25)</span>
+            <span>🏆 Collection (<span id="casesNavUnlockedCount">0</span>/<span id="casesNavTotalCount">106</span>)</span>
           </button>
         </div>
       </div>
@@ -847,7 +855,7 @@
         <!-- Case Title & Subtitle Info (Outside just under the box) -->
         <div class="crate-meta-info" id="crateMetaInfo">
           <h2 class="crate-title">ANTISIMP CASE</h2>
-          <p class="crate-subtitle">Contains 1 of 25 rare member photos, clips & incidents</p>
+          <p class="crate-subtitle">Contains 1 of <span id="casesCrateTotalCount">89</span> rare member photos, clips & incidents</p>
         </div>
 
         <!-- Action Controls -->
@@ -863,7 +871,17 @@
 
         <!-- Drop Rates Legend Bar -->
         <div class="cases-odds-container">
-          <h4 class="odds-title">CHEST DROP PROBABILITIES</h4>
+          <div class="cases-odds-header">
+            <h4 class="odds-title">CASE DROP PROBABILITIES</h4>
+            <div class="odds-mode-toggle" id="casesOddsModeToggle">
+              <button type="button" class="odds-toggle-pill active" data-odds-mode="normal" id="oddsToggleNormalBtn">
+                <span class="odds-toggle-icon">📦</span> Normal Open
+              </button>
+              <button type="button" class="odds-toggle-pill" data-odds-mode="fast" id="oddsToggleFastBtn">
+                <span class="odds-toggle-icon">⚡</span> Fast Open
+              </button>
+            </div>
+          </div>
           <div class="odds-grid" id="casesOddsGrid">
             <!-- Rendered from CASES_DATA -->
           </div>
@@ -881,7 +899,7 @@
             <span class="cstat-label">CASES OPENED</span>
           </div>
           <div class="collection-stat-item">
-            <span class="cstat-num"><span id="cstatUniqueUnlocked">0</span> / 25</span>
+            <span class="cstat-num"><span id="cstatUniqueUnlocked">0</span> / <span id="cstatTotalItems">106</span></span>
             <span class="cstat-label">UNIQUE UNLOCKED</span>
           </div>
           <div class="collection-stat-item">
@@ -890,15 +908,88 @@
           </div>
         </div>
 
-        <!-- Rarity Filters -->
-        <div class="collection-filters" id="collectionFilters">
-          <button class="cfilter-pill active" data-rarity="all">ALL (25)</button>
-          <!-- Dynamic rarity pills -->
+        <!-- Collection Mode Sub-Tabs (All Items vs Albums vs Milestones) -->
+        <div class="collection-view-tabs" id="collectionViewTabs">
+          <button type="button" id="collViewAllBtn" class="cview-tab-btn active"><span class="cview-tab-icon">🖼️</span><span class="cview-tab-text">All Items</span><span class="cview-tab-count">(<span id="cstatAllItemsCount">0/106</span>)</span></button>
+          <button type="button" id="collViewAlbumsBtn" class="cview-tab-btn"><span class="cview-tab-icon">📚</span><span class="cview-tab-text">Albums</span><span class="cview-tab-count">(<span id="cstatAlbumsCount">0/12</span>)</span></button>
+          <button type="button" id="collViewMilestonesBtn" class="cview-tab-btn"><span class="cview-tab-icon">🎯</span><span class="cview-tab-text">Milestones</span><span class="cview-tab-count">(<span id="cstatMilestonesCount">0/5</span>)</span></button>
         </div>
 
-        <!-- Collection Grid -->
-        <div class="collection-grid" id="casesCollectionGrid">
-          <!-- 25 cards (unlocked / locked) -->
+        <!-- Section 1: All Items View (Rarity Filters + 106-item Grid) -->
+        <div id="casesAllItemsView">
+          <!-- Rarity Filters -->
+          <div class="collection-filters" id="collectionFilters">
+            <button class="cfilter-pill active" data-rarity="all">ALL (106)</button>
+            <!-- Dynamic rarity pills -->
+          </div>
+
+          <!-- Collection Grid -->
+          <div class="collection-grid" id="casesCollectionGrid">
+            <!-- 89 cards (unlocked / locked) -->
+          </div>
+        </div>
+
+        <!-- Section 2: Albums View -->
+        <div id="casesAlbumsView" style="display: none;">
+          <!-- 2A. Albums Overview Grid -->
+          <div id="albumsOverviewSection">
+            <div class="albums-summary-bar">
+              <div class="albums-summary-text">
+                <span class="albums-summary-title">THEMED ALBUMS</span>
+                <span class="albums-summary-subtitle">Collect complete picture sets from cases to unlock future exclusive rewards!</span>
+              </div>
+              <div class="albums-summary-badge" id="albumsCompletedBadge">0/12 COMPLETED</div>
+            </div>
+            <div class="albums-grid" id="casesAlbumsGrid">
+              <!-- Rendered dynamically from window.CASES_DATA.albums -->
+            </div>
+          </div>
+
+          <!-- 2B. Single Album Detail View (Drilldown) -->
+          <div id="albumDetailSection" style="display: none;">
+            <div class="album-detail-header">
+              <button type="button" id="backToAlbumsBtn" class="gold-outline-btn small-btn album-back-btn">
+                <span>← Back to Albums</span>
+              </button>
+              <div class="album-detail-meta">
+                <div class="album-detail-title-wrap">
+                  <span class="album-detail-icon" id="albumDetailIcon">📁</span>
+                  <h3 class="album-detail-title" id="albumDetailTitle">Album Name</h3>
+                  <span class="album-status-badge" id="albumDetailBadge">0/0</span>
+                </div>
+                <div class="album-progress-wrap">
+                  <div class="album-progress-track">
+                    <div class="album-progress-fill" id="albumDetailProgressFill" style="width: 0%;"></div>
+                  </div>
+                  <span class="album-progress-text" id="albumDetailProgressText">0% Complete</span>
+                </div>
+                <div class="album-reward-tag" id="albumDetailRewardTag">
+                  <span class="reward-icon">🎁</span>
+                  <span class="reward-text">Reward: Locked (Coming Soon)</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Album Items Grid (Sorted by Rarity!) -->
+            <div class="collection-grid album-items-grid" id="albumItemsGrid">
+              <!-- Cards in this album, sorted by rarity -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Milestones View -->
+        <div id="casesMilestonesView" style="display: none;">
+          <div class="albums-summary-bar">
+            <div class="albums-summary-text">
+              <span class="albums-summary-title">ITEM QUANTITY MILESTONES</span>
+              <span class="albums-summary-subtitle">Collect required quantities of specific items from cases to unlock exclusive rewards!</span>
+            </div>
+            <div class="albums-summary-badge" id="milestonesCompletedBadge">0/5 COMPLETED</div>
+          </div>
+
+          <div class="milestones-grid" id="casesMilestonesGrid">
+            <!-- Dynamic Milestones Cards -->
+          </div>
         </div>
 
         <!-- Collection Footer -->
@@ -1064,7 +1155,7 @@
     <div class="modal-box">
       <div class="modal-box-header">
         <div class="modal-heading">
-          <h3>SERVER ROSTER (<span id="modalMemberCount">67</span>)</h3>
+          <h3>SERVER ROSTER (<span id="modalMemberCount">76</span>)</h3>
           <p>Click any member to search them in Classic mode</p>
         </div>
         <button id="closeModalBtn" class="modal-x-btn" aria-label="Close modal">✕</button>
@@ -1084,7 +1175,6 @@
       </div>
 
       <div class="modal-box-footer">
-        <span class="folder-hint">📁 Organized in <code>members/[member_name]</code></span>
         <button id="modalDoneBtn" class="gold-action-btn small-btn">CLOSE</button>
       </div>
     </div>
@@ -1094,11 +1184,10 @@
   <div id="casesRevealModal" class="modal-backdrop cases-reveal-backdrop" style="display: none;">
     <!-- Rarity Dynamic Animation FX Container -->
     <div id="casesRarityFxContainer" class="cases-rarity-fx"></div>
+    <!-- Glow rays behind card -->
+    <div id="casesRevealRays" class="cases-reveal-rays"></div>
 
     <div id="casesRevealCardBox" class="cases-reveal-box">
-      <!-- Glow rays behind card -->
-      <div id="casesRevealRays" class="cases-reveal-rays"></div>
-
       <div class="reveal-header">
         <span id="casesRevealNewBadge" class="reveal-new-badge">✨ NEW UNLOCK! ✨</span>
         <div id="casesRevealRarityTag" class="reveal-rarity-tag">LEGENDARY</div>
@@ -1140,8 +1229,10 @@
         <button id="closeLightboxBtn" class="modal-x-btn" aria-label="Close modal">✕</button>
       </div>
       <div id="lightboxMediaWrap" class="lightbox-media-wrap">
-        <!-- Image or Video -->
+        <!-- Image, Video, Audio, or YouTube Player -->
       </div>
+      <!-- Milestone Challenge Box in Lightbox -->
+      <div id="lightboxMilestoneContainer" class="lightbox-milestone-wrap" style="display: none; padding: 0 24px 14px;"></div>
       <div class="lightbox-footer">
         <div id="lightboxMetaText" class="lightbox-meta-text">Unboxed: 3 times</div>
         <button id="lightboxDoneBtn" class="gold-action-btn small-btn">CLOSE</button>
@@ -1157,12 +1248,109 @@
   <!-- Audio source for item obtain sound -->
   <audio id="itemObtainAudio" preload="auto" src="case%20opening/item%20obtain.mp3"></audio>
 
+  <!-- UPDATE LOG MODAL -->
+  <div id="updateLogModal" class="modal-backdrop update-log-backdrop" style="display: none;">
+    <div class="modal-box update-log-box">
+      <div class="modal-box-header">
+        <div class="modal-heading">
+          <h3>📜 UPDATE LOG</h3>
+          <p>Pogledaj sve novosti i dodani sadržaj u igri</p>
+        </div>
+        <button id="closeUpdateLogModalBtn" class="modal-x-btn" aria-label="Zatvori update log">✕</button>
+      </div>
+
+      <div class="update-log-modal-body">
+        <div class="update-log-list">
+
+          <!-- Item 1: 43 nove slike za pogodit -->
+          <div class="update-log-item">
+            <div class="update-log-icon-wrap icon-picture">🖼️</div>
+            <div class="update-log-content">
+              <div class="update-log-title">43 nove slike za pogodit</div>
+              <span class="update-log-tag tag-picture">PICTURE MODE</span>
+            </div>
+          </div>
+
+          <!-- Item 2: 6 novih quotova -->
+          <div class="update-log-item">
+            <div class="update-log-icon-wrap icon-quote">💬</div>
+            <div class="update-log-content">
+              <div class="update-log-title">6 novih quotova</div>
+              <span class="update-log-tag tag-quote">QUOTE MODE</span>
+            </div>
+          </div>
+
+          <!-- Item 3: 9 novih membera -->
+          <div class="update-log-item">
+            <div class="update-log-icon-wrap icon-members">👥</div>
+            <div class="update-log-content">
+              <div class="update-log-title">9 novih membera</div>
+              <span class="update-log-tag tag-members">MEMBERS (76)</span>
+            </div>
+          </div>
+
+          <!-- Item 4: 64 nova case itema -->
+          <div class="update-log-item">
+            <div class="update-log-icon-wrap icon-cases">📦</div>
+            <div class="update-log-content">
+              <div class="update-log-title">64 nova case itema</div>
+              <span class="update-log-tag tag-cases">CASE OPENING (106)</span>
+            </div>
+          </div>
+
+          <!-- Item 5: albumi -> 12 novih itema -->
+          <div class="update-log-item">
+            <div class="update-log-icon-wrap icon-albums">📖</div>
+            <div class="update-log-content">
+              <div class="update-log-title">albumi ➔ 12 novih itema</div>
+              <span class="update-log-tag tag-albums">ALBUMI</span>
+            </div>
+          </div>
+
+          <!-- Item 6: milestones -> 5 novih itema -->
+          <div class="update-log-item">
+            <div class="update-log-icon-wrap icon-milestones">🎯</div>
+            <div class="update-log-content">
+              <div class="update-log-title">milestones ➔ 5 novih itema</div>
+              <span class="update-log-tag tag-milestones">MILESTONES</span>
+            </div>
+          </div>
+
+          <!-- Item 7: 7 novih emojiea -->
+          <div class="update-log-item">
+            <div class="update-log-icon-wrap icon-emojis">😀</div>
+            <div class="update-log-content">
+              <div class="update-log-title">7 novih emojiea</div>
+              <span class="update-log-tag tag-emojis">EMOJI MODE</span>
+            </div>
+          </div>
+
+          <!-- Item 8: QQL -->
+          <div class="update-log-item">
+            <div class="update-log-icon-wrap icon-qol">⚡</div>
+            <div class="update-log-content">
+              <div class="update-log-title">QQL</div>
+              <span class="update-log-tag tag-qol">QUALITY OF LIFE & FIXES</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="modal-box-footer">
+        <span class="folder-hint">Antisimpdle • Hvala što igrate!</span>
+        <button id="updateLogDoneBtn" class="gold-action-btn small-btn">ZATVORI</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Scripts -->
   <script src="members.js"></script>
-  <script src="quotes.js"></script>
+  <script src="quotes.js?v=101"></script>
   <script src="emojis.js"></script>
-  <script src="pictures.js"></script>
-  <script src="cases.js"></script>
-  <script src="app.js"></script>
+  <script src="pictures.js?v=101"></script>
+  <script src="cases.js?v=106"></script>
+  <script src="case opening/vault/vault_wasm.js?v=106"></script>
+  <script src="app.js?v=114"></script>
 </body>
 </html>

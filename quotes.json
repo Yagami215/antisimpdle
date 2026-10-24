@@ -5,16 +5,16 @@
     "dialogue": [
       {
         "text": "ugasio sam riot vandal",
-        "authorId": "filp_arapovic",
-        "authorName": "Filp Arapovic",
-        "authorImage": "members/filp arapovic/Screenshot_1.png"
+        "authorId": "filip_arapovic",
+        "authorName": "Filip Arapovic",
+        "authorImage": "members/filip arapovic/Screenshot_1.png"
       }
     ],
     "requiredMemberIds": [
-      "filp_arapovic"
+      "filip_arapovic"
     ],
     "requiredMemberNames": [
-      "Filp Arapovic"
+      "Filip Arapovic"
     ]
   },
   {
@@ -689,16 +689,16 @@
     "dialogue": [
       {
         "text": "koji smo mi server, EUNA?",
-        "authorId": "filp_arapovic",
-        "authorName": "Filp Arapovic",
-        "authorImage": "members/filp arapovic/Screenshot_1.png"
+        "authorId": "filip_arapovic",
+        "authorName": "Filip Arapovic",
+        "authorImage": "members/filip arapovic/Screenshot_1.png"
       }
     ],
     "requiredMemberIds": [
-      "filp_arapovic"
+      "filip_arapovic"
     ],
     "requiredMemberNames": [
-      "Filp Arapovic"
+      "Filip Arapovic"
     ]
   },
   {
@@ -923,16 +923,16 @@
     "dialogue": [
       {
         "text": "fisting sena",
-        "authorId": "filp_arapovic",
-        "authorName": "Filp Arapovic",
-        "authorImage": "members/filp arapovic/Screenshot_1.png"
+        "authorId": "filip_arapovic",
+        "authorName": "Filip Arapovic",
+        "authorImage": "members/filip arapovic/Screenshot_1.png"
       }
     ],
     "requiredMemberIds": [
-      "filp_arapovic"
+      "filip_arapovic"
     ],
     "requiredMemberNames": [
-      "Filp Arapovic"
+      "Filip Arapovic"
     ]
   },
   {
@@ -941,16 +941,16 @@
     "dialogue": [
       {
         "text": "incest lee sin combo",
-        "authorId": "filp_arapovic",
-        "authorName": "Filp Arapovic",
-        "authorImage": "members/filp arapovic/Screenshot_1.png"
+        "authorId": "filip_arapovic",
+        "authorName": "Filip Arapovic",
+        "authorImage": "members/filip arapovic/Screenshot_1.png"
       }
     ],
     "requiredMemberIds": [
-      "filp_arapovic"
+      "filip_arapovic"
     ],
     "requiredMemberNames": [
-      "Filp Arapovic"
+      "Filip Arapovic"
     ]
   },
   {
@@ -2331,6 +2331,114 @@
     "requiredMemberNames": [
       "Vito",
       "Lean"
+    ]
+  },
+  {
+    "id": 123,
+    "type": "single",
+    "dialogue": [
+      {
+        "text": "Žene su za pedere",
+        "authorId": "filip_arapovic",
+        "authorName": "Filip Arapovic",
+        "authorImage": "members/filip arapovic/Screenshot_1.png"
+      }
+    ],
+    "requiredMemberIds": [
+      "filip_arapovic"
+    ],
+    "requiredMemberNames": [
+      "Filip Arapovic"
+    ]
+  },
+  {
+    "id": 124,
+    "type": "single",
+    "dialogue": [
+      {
+        "text": "zamisli bit rođen s kurcem i reć ne ja bi pičku",
+        "authorId": "filip_arapovic",
+        "authorName": "Filip Arapovic",
+        "authorImage": "members/filip arapovic/Screenshot_1.png"
+      }
+    ],
+    "requiredMemberIds": [
+      "filip_arapovic"
+    ],
+    "requiredMemberNames": [
+      "Filip Arapovic"
+    ]
+  },
+  {
+    "id": 125,
+    "type": "single",
+    "dialogue": [
+      {
+        "text": "Zamisli jest žutu hranu da kad pišaš ti ide žuto",
+        "authorId": "krof",
+        "authorName": "Krof",
+        "authorImage": "members/krof/Screenshot_2.png"
+      }
+    ],
+    "requiredMemberIds": [
+      "krof"
+    ],
+    "requiredMemberNames": [
+      "Krof"
+    ]
+  },
+  {
+    "id": 126,
+    "type": "single",
+    "dialogue": [
+      {
+        "text": "Kad igras lee sina se osjecas ko djete s down sindromom dok reze kruh sa skarama",
+        "authorId": "krof",
+        "authorName": "Krof",
+        "authorImage": "members/krof/Screenshot_2.png"
+      }
+    ],
+    "requiredMemberIds": [
+      "krof"
+    ],
+    "requiredMemberNames": [
+      "Krof"
+    ]
+  },
+  {
+    "id": 127,
+    "type": "single",
+    "dialogue": [
+      {
+        "text": "bio je pijan i umocio je slusalice u cokolino",
+        "authorId": "leo",
+        "authorName": "Leo",
+        "authorImage": "members/leo/Screenshot_20230220_080849.png"
+      }
+    ],
+    "requiredMemberIds": [
+      "leo"
+    ],
+    "requiredMemberNames": [
+      "Leo"
+    ]
+  },
+  {
+    "id": 128,
+    "type": "single",
+    "dialogue": [
+      {
+        "text": "mislim da sam skuzio kako je pegging dobio ime",
+        "authorId": "sheldon",
+        "authorName": "Sheldon",
+        "authorImage": "members/sheldon/1752310881722.jpg"
+      }
+    ],
+    "requiredMemberIds": [
+      "sheldon"
+    ],
+    "requiredMemberNames": [
+      "Sheldon"
     ]
   }
 ]

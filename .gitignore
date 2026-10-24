@@ -3,7 +3,7 @@
 # Excludes local editor, local development server, and sensitive/temp files
 # ==============================================================================
 
-# Local Editor Files (KEEP LOCAL - DO NOT UPLOAD TO WEBSITE)
+# Local Editor & Build Scripts (KEEP LOCAL - DO NOT UPLOAD TO WEBSITE)
 editor.html
 editor.js
 editor.css
@@ -11,16 +11,18 @@ server.py
 start-editor.bat
 init_categories.py
 members.txt
+parse_cases.py
+parse_pictures.py
+parse_quotes.py
+kvotes.txt
+vault.wat
 
-# Case Opening Raw Unencrypted Media (Keep private locally - only case opening/vault/ is uploaded)
-case opening/common/
-case opening/uncommon/
-case opening/rare/
-case opening/epic/
-case opening/legendary/
-case opening/mythic/
+# Case Opening Secret Encrypted Media (Keep raw files private - only decrypted via serverless API / WASM)
 case opening/divine/
 case opening/HELL/
+case opening/verity/
+case opening/rainbow/
+case opening/milestones/
 
 # Python cache & virtual environments
 __pycache__/

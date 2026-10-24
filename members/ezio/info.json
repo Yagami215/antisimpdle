@@ -1,0 +1,19 @@
+{
+    "index": 74,
+    "id": "ezio",
+    "name": "Ezio",
+    "aliases": [
+        "Ecio"
+    ],
+    "folder": "members/ezio",
+    "categories": {
+        "spol": "Muško",
+        "lokacija": "Rijeka",
+        "status": "Nije na serveru",
+        "dolazak_na_server": "2022",
+        "kilaza": "70-80 kg",
+        "okupacija": "Student",
+        "aktivnost": "Neaktivan"
+    },
+    "image": "members/ezio/avatar.png"
+}

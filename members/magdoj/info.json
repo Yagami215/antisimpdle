@@ -1,0 +1,19 @@
+{
+    "index": 71,
+    "id": "magdoj",
+    "name": "Magdoj",
+    "aliases": [
+        "Domagoj"
+    ],
+    "folder": "members/magdoj",
+    "categories": {
+        "spol": "Muško",
+        "lokacija": "Zagreb",
+        "status": "Nije na serveru",
+        "dolazak_na_server": "2021",
+        "kilaza": "70-80 kg",
+        "okupacija": "Zaposlen",
+        "aktivnost": "Neaktivan"
+    },
+    "image": "members/magdoj/avatar.png"
+}

@@ -1,0 +1,26 @@
+{
+  "version": 2,
+  "functions": {
+    "api/media.js": {
+      "includeFiles": "api/vault/**,case opening/vault/**"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/open-case",
+      "destination": "/api/open-case.js"
+    },
+    {
+      "source": "/api/media",
+      "destination": "/api/media.js"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/media",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400, immutable" }
+      ]
+    }
+  ]
+}

@@ -31,7 +31,7 @@ You can put photos, avatar pictures (`avatar.png` or `avatar.jpg`), audio clips,
 | 23 | **Vigo** | `members/vigo` | - |
 | 24 | **David** | `members/david` | Chudzoid, Mingop |
 | 25 | **Dasha** | `members/dasha` | - |
-| 26 | **Filp Arapovic** | `members/filp arapovic` | Koser, Koserkurac |
+| 26 | **Filip Arapovic** | `members/filip arapovic` | Koser, Koserkurac, Filp Arapovic |
 | 27 | **Antun** | `members/antun` | - |
 | 28 | **Pforgot** | `members/pforgot` | Plavao |
 | 29 | **Geolokijeva Krava** | `members/geolokijeva krava` | - |
@@ -73,3 +73,12 @@ You can put photos, avatar pictures (`avatar.png` or `avatar.jpg`), audio clips,
 | 65 | **Mislav** | `members/mislav` | Pokimane Lover |
 | 66 | **Toasty** | `members/toasty` | - |
 | 67 | **Doks** | `members/doks` | Dokss, Scorpion Ratio |
+| 68 | **Bornux** | `members/bornux` | - |
+| 69 | **Janchuga** | `members/janchuga` | - |
+| 70 | **Kaja** | `members/kaja` | Kajajuren |
+| 71 | **Magdoj** | `members/magdoj` | Domagoj |
+| 72 | **Dzamijel** | `members/dzamijel` | Danijel, Džamijel |
+| 73 | **Kuzma** | `members/kuzma` | - |
+| 74 | **Ezio** | `members/ezio` | Ecio |
+| 75 | **Antea** | `members/antea` | Dinina bivša, Dinina bivsa |
+| 76 | **Nano** | `members/nano` | Jajcetov brat |

@@ -1,0 +1,20 @@
+{
+    "index": 75,
+    "id": "antea",
+    "name": "Antea",
+    "aliases": [
+        "Dinina bivša",
+        "Dinina bivsa"
+    ],
+    "folder": "members/antea",
+    "categories": {
+        "spol": "Žensko",
+        "lokacija": "Zagreb",
+        "status": "Nije na serveru",
+        "dolazak_na_server": "2023",
+        "kilaza": "80-90 kg",
+        "okupacija": "Student",
+        "aktivnost": "Neaktivan"
+    },
+    "image": "members/antea/avatar.png"
+}

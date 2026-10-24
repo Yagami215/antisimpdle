@@ -220,6 +220,25 @@
         this.playTone(587.33, 'sine', 0.3, 0.1);
         setTimeout(() => this.playTone(880, 'triangle', 0.4, 0.12), 150);
         setTimeout(() => this.playTone(1174.66, 'sine', 0.6, 0.14), 300);
+      } else if (rarity === 'rainbow') {
+        this.playTone(523.25, 'triangle', 0.2, 0.1);
+        setTimeout(() => this.playTone(659.25, 'sine', 0.25, 0.1), 100);
+        setTimeout(() => this.playTone(783.99, 'triangle', 0.3, 0.12), 200);
+        setTimeout(() => this.playTone(1046.50, 'sine', 0.45, 0.15), 320);
+      } else if (rarity === 'album') {
+        this.playTone(523.25, 'triangle', 0.2, 0.1);
+        setTimeout(() => this.playTone(659.25, 'sine', 0.25, 0.1), 100);
+        setTimeout(() => this.playTone(783.99, 'triangle', 0.3, 0.12), 200);
+        setTimeout(() => this.playTone(1046.50, 'sine', 0.5, 0.15), 320);
+      } else if (rarity === 'milestone') {
+        this.playTone(659.25, 'triangle', 0.25, 0.1);
+        setTimeout(() => this.playTone(830.61, 'sine', 0.35, 0.1), 100);
+        setTimeout(() => this.playTone(987.77, 'triangle', 0.45, 0.12), 200);
+        setTimeout(() => this.playTone(1318.51, 'sine', 0.6, 0.16), 320);
+      } else if (rarity === 'secret') {
+        this.playTone(493.88, 'sine', 0.25, 0.1);
+        setTimeout(() => this.playTone(739.99, 'triangle', 0.35, 0.12), 140);
+        setTimeout(() => this.playTone(987.77, 'sine', 0.45, 0.14), 280);
       } else if (rarity === 'mythic') {
         this.playTone(440, 'triangle', 0.2, 0.09);
         setTimeout(() => this.playTone(659.25, 'triangle', 0.25, 0.1), 120);
@@ -230,6 +249,10 @@
         this.playTone(440, 'triangle', 0.12, 0.08);
         setTimeout(() => this.playTone(554.37, 'triangle', 0.14, 0.08), 80);
         setTimeout(() => this.playTone(659.25, 'triangle', 0.22, 0.1), 160);
+      } else if (rarity === 'verity') {
+        this.playTone(392.00, 'triangle', 0.15, 0.09);
+        setTimeout(() => this.playTone(493.88, 'triangle', 0.2, 0.09), 100);
+        setTimeout(() => this.playTone(587.33, 'triangle', 0.28, 0.11), 200);
       } else {
         this.playGuessSuccess();
       }
@@ -1057,6 +1080,7 @@
     guessesHistory: [],
     practiceHistory: [],
     practiceGuessedIds: new Set(),
+    practiceSolvedIds: new Set(),
     practiceIsWon: false,
     selectedDropdownIndex: -1,
     currentMatches: [],
@@ -1075,6 +1099,7 @@
     quotePracticeGuesses: [],
     quotePracticeGuessedIds: new Set(),
     quotePracticeFoundMemberIds: new Set(),
+    quotePracticeSolvedIds: new Set(),
     quotePracticeIsWon: false,
     quoteDailyRevealedClues: new Set(),
     quotePracticeRevealedClues: new Set(),
@@ -1092,6 +1117,7 @@
     emojiDailyIsWon: false,
     emojiPracticeGuesses: [],
     emojiPracticeGuessedIds: new Set(),
+    emojiPracticeSolvedIds: new Set(),
     emojiPracticeIsWon: false,
     emojiDailyRevealedClues: new Set(),
     emojiPracticeRevealedClues: new Set(),
@@ -1111,6 +1137,7 @@
     picturePracticeGuesses: [],
     picturePracticeGuessedIds: new Set(),
     picturePracticeFoundMemberIds: new Set(),
+    picturePracticeSolvedIds: new Set(),
     picturePracticeIsWon: false,
     pictureDailyFocusPoint: { fx: 50, fy: 50 },
     picturePracticeFocusPoint: { fx: 50, fy: 50 },
@@ -1122,7 +1149,10 @@
 
     // Case Opening State
     caseIsSpinning: false,
-    caseActiveFilter: 'all'
+    caseActiveFilter: 'all',
+    oddsDisplayMode: 'normal',
+    collectionActiveTab: 'all',
+    activeAlbumId: null
   };
 
   // --- Active Mode Helpers (Scoping Guesses to Daily vs Practice) ---
@@ -1193,6 +1223,11 @@
     backToHomeBtn: document.getElementById('backToHomeBtn'),
     homeLogoBtn: document.getElementById('homeLogoBtn'),
     browseRosterBtn: document.getElementById('browseRosterBtn'),
+    updateLogBtn: document.getElementById('updateLogBtn'),
+    homeUpdateChipBtn: document.getElementById('homeUpdateChipBtn'),
+    updateLogModal: document.getElementById('updateLogModal'),
+    closeUpdateLogModalBtn: document.getElementById('closeUpdateLogModalBtn'),
+    updateLogDoneBtn: document.getElementById('updateLogDoneBtn'),
 
     // Quote Mode Elements
     playQuoteCard: document.getElementById('playQuoteCard'),
@@ -1342,12 +1377,42 @@
     openCaseBtn: document.getElementById('openCaseBtn'),
     quickOpenCaseBtn: document.getElementById('quickOpenCaseBtn'),
     casesOddsGrid: document.getElementById('casesOddsGrid'),
+    casesOddsModeToggle: document.getElementById('casesOddsModeToggle'),
+    oddsToggleNormalBtn: document.getElementById('oddsToggleNormalBtn'),
+    oddsToggleFastBtn: document.getElementById('oddsToggleFastBtn'),
+    casesNavTotalCount: document.getElementById('casesNavTotalCount'),
+    casesCrateTotalCount: document.getElementById('casesCrateTotalCount'),
     cstatTotalOpened: document.getElementById('cstatTotalOpened'),
     cstatUniqueUnlocked: document.getElementById('cstatUniqueUnlocked'),
+    cstatTotalItems: document.getElementById('cstatTotalItems'),
     cstatPercent: document.getElementById('cstatPercent'),
     collectionFilters: document.getElementById('collectionFilters'),
     casesCollectionGrid: document.getElementById('casesCollectionGrid'),
     resetCollectionBtn: document.getElementById('resetCollectionBtn'),
+    collViewAllBtn: document.getElementById('collViewAllBtn'),
+    collViewAlbumsBtn: document.getElementById('collViewAlbumsBtn'),
+    collViewMilestonesBtn: document.getElementById('collViewMilestonesBtn'),
+    cstatAlbumsCount: document.getElementById('cstatAlbumsCount'),
+    cstatMilestonesCount: document.getElementById('cstatMilestonesCount'),
+    casesAllItemsView: document.getElementById('casesAllItemsView'),
+    casesAlbumsView: document.getElementById('casesAlbumsView'),
+    casesMilestonesView: document.getElementById('casesMilestonesView'),
+    casesMilestonesGrid: document.getElementById('casesMilestonesGrid'),
+    milestonesCompletedBadge: document.getElementById('milestonesCompletedBadge'),
+    lightboxMilestoneContainer: document.getElementById('lightboxMilestoneContainer'),
+    albumsOverviewSection: document.getElementById('albumsOverviewSection'),
+    casesAlbumsGrid: document.getElementById('casesAlbumsGrid'),
+    albumsCompletedBadge: document.getElementById('albumsCompletedBadge'),
+    albumDetailSection: document.getElementById('albumDetailSection'),
+    backToAlbumsBtn: document.getElementById('backToAlbumsBtn'),
+    albumDetailIcon: document.getElementById('albumDetailIcon'),
+    albumDetailTitle: document.getElementById('albumDetailTitle'),
+    albumDetailBadge: document.getElementById('albumDetailBadge'),
+    albumDetailDesc: document.getElementById('albumDetailDesc'),
+    albumDetailProgressFill: document.getElementById('albumDetailProgressFill'),
+    albumDetailProgressText: document.getElementById('albumDetailProgressText'),
+    albumDetailRewardTag: document.getElementById('albumDetailRewardTag'),
+    albumItemsGrid: document.getElementById('albumItemsGrid'),
     casesRevealModal: document.getElementById('casesRevealModal'),
     casesRevealCardBox: document.getElementById('casesRevealCardBox'),
     casesRarityFxContainer: document.getElementById('casesRarityFxContainer'),
@@ -1801,10 +1866,22 @@
 
   function pickNewPracticeTarget() {
     if (!state.members || state.members.length === 0) return;
-    const pool = state.members.filter(m => 
+    let pool = state.members.filter(m => 
       (!state.dailyTargetMember || m.id !== state.dailyTargetMember.id) &&
-      (!state.practiceTargetMember || m.id !== state.practiceTargetMember.id)
+      (!state.practiceTargetMember || m.id !== state.practiceTargetMember.id) &&
+      !state.practiceSolvedIds.has(m.id)
     );
+
+    // If all practice members have been solved in this session, reset the pool cycle
+    if (pool.length === 0) {
+      state.practiceSolvedIds.clear();
+      pool = state.members.filter(m => 
+        (!state.dailyTargetMember || m.id !== state.dailyTargetMember.id) &&
+        (!state.practiceTargetMember || m.id !== state.practiceTargetMember.id)
+      );
+      showToast('🔁 All members solved! Resetting practice pool.');
+    }
+
     const chosen = pool[Math.floor(Math.random() * pool.length)] || state.members[0];
 
     state.practiceTargetMember = chosen;
@@ -1820,6 +1897,14 @@
     if (DOM.practiceSolvedBanner) DOM.practiceSolvedBanner.style.display = 'none';
     if (DOM.victoryModal) DOM.victoryModal.style.display = 'none';
     VictoryCelebration.stop();
+  }
+
+  function restartPractice() {
+    state.practiceSolvedIds.clear();
+    state.practiceTargetMember = null;
+    pickNewPracticeTarget();
+    showToast('🔁 Classic practice restarted!');
+    SoundFX.playTone(440, 'sine', 0.12);
   }
 
   function returnToDailyMode() {
@@ -1847,7 +1932,8 @@
   function updatePracticeUI() {
     if (DOM.classicHeaderTitle) DOM.classicHeaderTitle.textContent = 'CLASSIC • PRACTICE';
     if (DOM.classicDailyBadge) {
-      DOM.classicDailyBadge.textContent = '🎲 PRACTICE';
+      const solvedCount = state.practiceSolvedIds.size;
+      DOM.classicDailyBadge.textContent = solvedCount > 0 ? `🎲 PRACTICE (${solvedCount} SOLVED)` : '🎲 PRACTICE';
       DOM.classicDailyBadge.style.background = 'linear-gradient(135deg, #ff1744, #b71c1c)';
       DOM.classicDailyBadge.style.color = '#ffffff';
     }
@@ -1863,7 +1949,14 @@
         DOM.input.placeholder = '🎉 Practice member solved! Click Next Practice to play again.';
       }
       if (DOM.guessBtn) DOM.guessBtn.disabled = true;
-      if (DOM.practiceSolvedBanner) DOM.practiceSolvedBanner.style.display = 'flex';
+      if (DOM.practiceSolvedBanner) {
+        const msg = DOM.practiceSolvedBanner.querySelector('.solved-banner-text p');
+        if (msg) {
+          const count = state.practiceSolvedIds.size;
+          msg.textContent = `You guessed correctly! (${count} solved this session without repeats). Ready for another?`;
+        }
+        DOM.practiceSolvedBanner.style.display = 'flex';
+      }
     } else {
       if (DOM.input) {
         DOM.input.disabled = false;
@@ -1907,9 +2000,8 @@
         SoundFX.playTone(320, 'sine', 0.15);
       }
     } else {
-      if (confirm('Start a new practice member?')) {
-        pickNewPracticeTarget();
-        SoundFX.playTone(440, 'sine', 0.12);
+      if (confirm('Restart practice mode and reset your solved members?')) {
+        restartPractice();
       }
     }
   }
@@ -2326,6 +2418,25 @@
       DOM.browseRosterBtn.addEventListener('click', openMembersModal);
     }
 
+    // Update Log button & chip listeners
+    if (DOM.updateLogBtn) {
+      DOM.updateLogBtn.addEventListener('click', openUpdateLogModal);
+    }
+    if (DOM.homeUpdateChipBtn) {
+      DOM.homeUpdateChipBtn.addEventListener('click', openUpdateLogModal);
+    }
+    if (DOM.closeUpdateLogModalBtn) {
+      DOM.closeUpdateLogModalBtn.addEventListener('click', closeUpdateLogModal);
+    }
+    if (DOM.updateLogDoneBtn) {
+      DOM.updateLogDoneBtn.addEventListener('click', closeUpdateLogModal);
+    }
+    if (DOM.updateLogModal) {
+      DOM.updateLogModal.addEventListener('click', (e) => {
+        if (e.target === DOM.updateLogModal) closeUpdateLogModal();
+      });
+    }
+
     // Classic Input handling
     DOM.input.addEventListener('input', handleInputChange);
     DOM.input.addEventListener('keydown', handleInputKeydown);
@@ -2698,6 +2809,7 @@
         closePictureDropdown();
         closeMembersModal();
         closeStatsModal();
+        closeUpdateLogModal();
         if (DOM.victoryModal) DOM.victoryModal.style.display = 'none';
         if (DOM.casesRevealModal) closeCasesRevealModal();
         if (DOM.casesLightboxModal) closeCasesLightbox();
@@ -2732,6 +2844,20 @@
     }
     if (DOM.quickOpenCaseBtn) {
       DOM.quickOpenCaseBtn.addEventListener('click', () => startCaseOpening(true));
+    }
+
+    // Odds Grid Mode Toggle Buttons (Normal Open vs Fast Open)
+    if (DOM.oddsToggleNormalBtn) {
+      DOM.oddsToggleNormalBtn.addEventListener('click', () => {
+        renderCasesOddsGrid('normal');
+        SoundFX.playSelect();
+      });
+    }
+    if (DOM.oddsToggleFastBtn) {
+      DOM.oddsToggleFastBtn.addEventListener('click', () => {
+        renderCasesOddsGrid('fast');
+        SoundFX.playSelect();
+      });
     }
 
     // Reveal Modal Actions
@@ -2772,6 +2898,35 @@
     // Reset Collection
     if (DOM.resetCollectionBtn) {
       DOM.resetCollectionBtn.addEventListener('click', resetCasesCollection);
+    }
+
+    // Collection Sub-Tabs (All Items vs Albums)
+    if (DOM.collViewAllBtn) {
+      DOM.collViewAllBtn.addEventListener('click', () => {
+        switchCollectionViewTab('all');
+        SoundFX.playSelect();
+      });
+    }
+    if (DOM.collViewAlbumsBtn) {
+      DOM.collViewAlbumsBtn.addEventListener('click', () => {
+        switchCollectionViewTab('albums');
+        SoundFX.playSelect();
+      });
+    }
+    if (DOM.collViewMilestonesBtn) {
+      DOM.collViewMilestonesBtn.addEventListener('click', () => {
+        switchCollectionViewTab('milestones');
+        SoundFX.playSelect();
+      });
+    }
+    if (DOM.backToAlbumsBtn) {
+      DOM.backToAlbumsBtn.addEventListener('click', () => {
+        state.activeAlbumId = null;
+        if (DOM.albumDetailSection) DOM.albumDetailSection.style.display = 'none';
+        if (DOM.albumsOverviewSection) DOM.albumsOverviewSection.style.display = 'block';
+        renderAlbumsOverview();
+        SoundFX.playSelect();
+      });
     }
 
     // Quick example click buttons
@@ -3087,6 +3242,9 @@
         setDailySolvedUI(true);
       } else {
         state.practiceIsWon = true;
+        if (target) {
+          state.practiceSolvedIds.add(target.id);
+        }
         updatePracticeUI();
       }
 
@@ -3953,10 +4111,22 @@
 
   function pickNewQuotePracticeTarget() {
     if (!state.quotes || state.quotes.length === 0) return;
-    const pool = state.quotes.filter(q => 
+    let pool = state.quotes.filter(q => 
       (!state.quoteDailyTarget || q.id !== state.quoteDailyTarget.id) &&
-      (!state.quotePracticeTarget || q.id !== state.quotePracticeTarget.id)
+      (!state.quotePracticeTarget || q.id !== state.quotePracticeTarget.id) &&
+      !state.quotePracticeSolvedIds.has(q.id)
     );
+
+    // If all practice quotes have been solved in this session, reset the pool cycle
+    if (pool.length === 0) {
+      state.quotePracticeSolvedIds.clear();
+      pool = state.quotes.filter(q => 
+        (!state.quoteDailyTarget || q.id !== state.quoteDailyTarget.id) &&
+        (!state.quotePracticeTarget || q.id !== state.quotePracticeTarget.id)
+      );
+      showToast('🔁 All quotes solved! Resetting practice pool.');
+    }
+
     const chosen = pool[Math.floor(Math.random() * pool.length)] || state.quotes[0];
 
     state.quotePracticeTarget = chosen;
@@ -3975,6 +4145,14 @@
     if (DOM.quotePracticeSolvedBanner) DOM.quotePracticeSolvedBanner.style.display = 'none';
     if (DOM.victoryModal) DOM.victoryModal.style.display = 'none';
     VictoryCelebration.stop();
+  }
+
+  function restartQuotePractice() {
+    state.quotePracticeSolvedIds.clear();
+    state.quotePracticeTarget = null;
+    pickNewQuotePracticeTarget();
+    showToast('🔁 Quote practice restarted!');
+    SoundFX.playTone(440, 'sine', 0.12);
   }
 
   function returnToQuoteDailyMode() {
@@ -4002,7 +4180,8 @@
   function updateQuotePracticeUI() {
     if (DOM.quoteHeaderTitle) DOM.quoteHeaderTitle.textContent = 'QUOTE • PRACTICE';
     if (DOM.quoteDailyBadge) {
-      DOM.quoteDailyBadge.textContent = '🎲 PRACTICE';
+      const solvedCount = state.quotePracticeSolvedIds.size;
+      DOM.quoteDailyBadge.textContent = solvedCount > 0 ? `🎲 PRACTICE (${solvedCount} SOLVED)` : '🎲 PRACTICE';
       DOM.quoteDailyBadge.style.background = 'linear-gradient(135deg, #e6b43a, #996e14)';
       DOM.quoteDailyBadge.style.color = '#000000';
     }
@@ -4017,7 +4196,14 @@
         DOM.quoteMemberInput.placeholder = '🎉 Practice quote solved! Click Next Practice to play again.';
       }
       if (DOM.quoteGuessBtn) DOM.quoteGuessBtn.disabled = true;
-      if (DOM.quotePracticeSolvedBanner) DOM.quotePracticeSolvedBanner.style.display = 'flex';
+      if (DOM.quotePracticeSolvedBanner) {
+        const msg = DOM.quotePracticeSolvedBanner.querySelector('.solved-banner-text p');
+        if (msg) {
+          const count = state.quotePracticeSolvedIds.size;
+          msg.textContent = `You guessed correctly! (${count} solved this session without repeats). Ready for another?`;
+        }
+        DOM.quotePracticeSolvedBanner.style.display = 'flex';
+      }
     } else {
       if (DOM.quoteMemberInput) {
         DOM.quoteMemberInput.disabled = false;
@@ -4333,6 +4519,9 @@
         setQuoteDailySolvedUI(true);
       } else {
         state.quotePracticeIsWon = true;
+        if (targetQuote) {
+          state.quotePracticeSolvedIds.add(targetQuote.id);
+        }
         updateQuotePracticeUI();
       }
 
@@ -4524,9 +4713,8 @@
         SoundFX.playTone(320, 'sine', 0.15);
       }
     } else {
-      if (confirm('Start a new practice quote?')) {
-        pickNewQuotePracticeTarget();
-        SoundFX.playTone(440, 'sine', 0.12);
+      if (confirm('Restart practice mode and reset your solved quotes?')) {
+        restartQuotePractice();
       }
     }
   }
@@ -4986,10 +5174,22 @@
 
   function pickNewEmojiPracticeTarget() {
     if (!state.emojis || state.emojis.length === 0) return;
-    const pool = state.emojis.filter(e => 
+    let pool = state.emojis.filter(e => 
       (!state.emojiDailyTarget || e.id !== state.emojiDailyTarget.id) &&
-      (!state.emojiPracticeTarget || e.id !== state.emojiPracticeTarget.id)
+      (!state.emojiPracticeTarget || e.id !== state.emojiPracticeTarget.id) &&
+      !state.emojiPracticeSolvedIds.has(e.id)
     );
+
+    // If all practice emojis have been solved in this session, reset the pool cycle
+    if (pool.length === 0) {
+      state.emojiPracticeSolvedIds.clear();
+      pool = state.emojis.filter(e => 
+        (!state.emojiDailyTarget || e.id !== state.emojiDailyTarget.id) &&
+        (!state.emojiPracticeTarget || e.id !== state.emojiPracticeTarget.id)
+      );
+      showToast('🔁 All emoji puzzles solved! Resetting practice pool.');
+    }
+
     const chosen = pool[Math.floor(Math.random() * pool.length)] || state.emojis[0];
 
     state.emojiPracticeTarget = chosen;
@@ -5007,6 +5207,14 @@
     if (DOM.emojiPracticeSolvedBanner) DOM.emojiPracticeSolvedBanner.style.display = 'none';
     if (DOM.victoryModal) DOM.victoryModal.style.display = 'none';
     VictoryCelebration.stop();
+  }
+
+  function restartEmojiPractice() {
+    state.emojiPracticeSolvedIds.clear();
+    state.emojiPracticeTarget = null;
+    pickNewEmojiPracticeTarget();
+    showToast('🔁 Emoji practice restarted!');
+    SoundFX.playTone(440, 'sine', 0.12);
   }
 
   function returnToEmojiDailyMode() {
@@ -5034,7 +5242,8 @@
   function updateEmojiPracticeUI() {
     if (DOM.emojiHeaderTitle) DOM.emojiHeaderTitle.textContent = 'EMOJI • PRACTICE';
     if (DOM.emojiDailyBadge) {
-      DOM.emojiDailyBadge.textContent = '🎲 PRACTICE';
+      const solvedCount = state.emojiPracticeSolvedIds.size;
+      DOM.emojiDailyBadge.textContent = solvedCount > 0 ? `🎲 PRACTICE (${solvedCount} SOLVED)` : '🎲 PRACTICE';
       DOM.emojiDailyBadge.style.background = 'linear-gradient(135deg, #e6b43a, #996e14)';
       DOM.emojiDailyBadge.style.color = '#000000';
     }
@@ -5049,7 +5258,14 @@
         DOM.emojiMemberInput.placeholder = '🎉 Practice emoji solved! Click Next Practice to play again.';
       }
       if (DOM.emojiGuessBtn) DOM.emojiGuessBtn.disabled = true;
-      if (DOM.emojiPracticeSolvedBanner) DOM.emojiPracticeSolvedBanner.style.display = 'flex';
+      if (DOM.emojiPracticeSolvedBanner) {
+        const msg = DOM.emojiPracticeSolvedBanner.querySelector('.solved-banner-text p');
+        if (msg) {
+          const count = state.emojiPracticeSolvedIds.size;
+          msg.textContent = `You guessed correctly! (${count} solved this session without repeats). Ready for another?`;
+        }
+        DOM.emojiPracticeSolvedBanner.style.display = 'flex';
+      }
     } else {
       if (DOM.emojiMemberInput) {
         DOM.emojiMemberInput.disabled = false;
@@ -5337,6 +5553,9 @@
         setEmojiDailySolvedUI(true);
       } else {
         state.emojiPracticeIsWon = true;
+        if (target) {
+          state.emojiPracticeSolvedIds.add(target.id);
+        }
         updateEmojiPracticeUI();
       }
 
@@ -5496,9 +5715,8 @@
         SoundFX.playTone(320, 'sine', 0.15);
       }
     } else {
-      if (confirm('Start a new practice emoji puzzle?')) {
-        pickNewEmojiPracticeTarget();
-        SoundFX.playTone(440, 'sine', 0.12);
+      if (confirm('Restart practice mode and reset your solved emoji puzzles?')) {
+        restartEmojiPractice();
       }
     }
   }
@@ -5836,7 +6054,8 @@
 
     if (DOM.pictureHeaderTitle) DOM.pictureHeaderTitle.textContent = 'PRACTICE PICTURE';
     if (DOM.pictureDailyBadge) {
-      DOM.pictureDailyBadge.textContent = 'PRACTICE';
+      const solvedCount = state.picturePracticeSolvedIds.size;
+      DOM.pictureDailyBadge.textContent = solvedCount > 0 ? `🎲 PRACTICE (${solvedCount} SOLVED)` : 'PRACTICE';
       DOM.pictureDailyBadge.style.background = 'linear-gradient(135deg, #9b59b6, #8e44ad)';
       DOM.pictureDailyBadge.style.color = '#ffffff';
     }
@@ -5851,7 +6070,14 @@
         DOM.pictureMemberInput.placeholder = '🎉 Practice picture solved! Click Next Practice to play again.';
       }
       if (DOM.pictureGuessBtn) DOM.pictureGuessBtn.disabled = true;
-      if (DOM.picturePracticeSolvedBanner) DOM.picturePracticeSolvedBanner.style.display = 'flex';
+      if (DOM.picturePracticeSolvedBanner) {
+        const msg = DOM.picturePracticeSolvedBanner.querySelector('.solved-banner-text p');
+        if (msg) {
+          const count = state.picturePracticeSolvedIds.size;
+          msg.textContent = `You guessed correctly! (${count} solved this session without repeats). Ready for another?`;
+        }
+        DOM.picturePracticeSolvedBanner.style.display = 'flex';
+      }
     } else {
       if (DOM.pictureMemberInput) {
         DOM.pictureMemberInput.disabled = false;
@@ -6160,6 +6386,9 @@
         setPictureDailySolvedUI(true);
       } else {
         state.picturePracticeIsWon = true;
+        if (target) {
+          state.picturePracticeSolvedIds.add(target.id);
+        }
         updatePicturePracticeUI();
       }
 
@@ -6332,10 +6561,22 @@
 
   function pickNewPicturePracticeTarget() {
     if (!state.pictures || state.pictures.length === 0) return;
-    const pool = state.pictures.filter(p => 
+    let pool = state.pictures.filter(p => 
       (!state.pictureDailyTarget || p.id !== state.pictureDailyTarget.id) &&
-      (!state.picturePracticeTarget || p.id !== state.picturePracticeTarget.id)
+      (!state.picturePracticeTarget || p.id !== state.picturePracticeTarget.id) &&
+      !state.picturePracticeSolvedIds.has(p.id)
     );
+
+    // If all practice pictures have been solved in this session, reset the pool cycle
+    if (pool.length === 0) {
+      state.picturePracticeSolvedIds.clear();
+      pool = state.pictures.filter(p => 
+        (!state.pictureDailyTarget || p.id !== state.pictureDailyTarget.id) &&
+        (!state.picturePracticeTarget || p.id !== state.picturePracticeTarget.id)
+      );
+      showToast('🔁 All pictures solved! Resetting practice pool.');
+    }
+
     const chosen = pool[Math.floor(Math.random() * pool.length)] || state.pictures[0];
 
     state.picturePracticeTarget = chosen;
@@ -6354,6 +6595,14 @@
     if (DOM.picturePracticeSolvedBanner) DOM.picturePracticeSolvedBanner.style.display = 'none';
     if (DOM.victoryModal) DOM.victoryModal.style.display = 'none';
     VictoryCelebration.stop();
+  }
+
+  function restartPicturePractice() {
+    state.picturePracticeSolvedIds.clear();
+    state.picturePracticeTarget = null;
+    pickNewPicturePracticeTarget();
+    showToast('🔁 Picture practice restarted!');
+    SoundFX.playTone(440, 'sine', 0.12);
   }
 
   function returnToPictureDailyMode() {
@@ -6397,9 +6646,8 @@
         SoundFX.playTone(320, 'sine', 0.15);
       }
     } else {
-      if (confirm('Start a new practice picture puzzle?')) {
-        pickNewPicturePracticeTarget();
-        SoundFX.playTone(440, 'sine', 0.12);
+      if (confirm('Restart practice mode and reset your solved picture puzzles?')) {
+        restartPicturePractice();
       }
     }
   }
@@ -6415,6 +6663,21 @@
 
   function closeMembersModal() {
     DOM.membersModal.style.display = 'none';
+  }
+
+  // --- Update Log Modal ---
+  function openUpdateLogModal() {
+    if (DOM.updateLogModal) {
+      DOM.updateLogModal.style.display = 'flex';
+      SoundFX.playSelect();
+    }
+  }
+
+  function closeUpdateLogModal() {
+    if (DOM.updateLogModal) {
+      DOM.updateLogModal.style.display = 'none';
+      SoundFX.playClick();
+    }
   }
 
   function populateModalRoster(members) {
@@ -6553,26 +6816,163 @@
 
   const CaseCollectionManager = {
     KEY: 'antisimpdle_case_inventory',
+    SCHEMA_VERSION: 2,
+
+    // Mapping table from original 25-item launch on https://antisimp.online/ to the expanded 106-item roster
+    V1_TO_V2_ITEM_MAP: {
+      'loot_1': 'loot_1',   // Chomnk I Big Yahu (common -> common)
+      'loot_2': 'loot_8',   // Kifle (common -> common)
+      'loot_3': 'loot_10',  // Mjau (common -> common)
+      'loot_4': 'loot_19',  // Dino Jede Kekse (uncommon -> uncommon)
+      'loot_5': 'loot_26',  // Og Gang Incident (uncommon -> uncommon)
+      'loot_6': 'loot_29',  // Roko Milkovic Zlatna Medalja (uncommon -> uncommon)
+      'loot_7': 'loot_32',  // Wyz Guza (uncommon -> uncommon)
+      'loot_8': 'loot_35',  // Bindi Gooner (rare -> rare)
+      'loot_9': 'loot_37',  // Dino Gooner (rare -> rare)
+      'loot_10': 'loot_40', // Lean (rare -> rare)
+      'loot_11': 'loot_42', // Mladi Geoloki (rare -> rare)
+      'loot_12': 'loot_43', // Mladi Riza (rare -> rare)
+      'loot_13': 'loot_53', // Bindi Gets Slapped (epic -> epic)
+      'loot_14': 'loot_54', // Bindi Rizz (epic -> epic)
+      'loot_15': 'loot_60', // Kuhanje (epic -> epic)
+      'loot_16': 'loot_62', // Og Jajce (epic -> epic)
+      'loot_17': 'loot_65', // Dinina Cura (legendary -> legendary)
+      'loot_18': 'loot_68', // Kola Incident (legendary -> legendary)
+      'loot_19': 'loot_70', // Nikola Cummanje U Hlace Incident (legendary -> legendary)
+      'loot_20': 'loot_72', // Slika Dinine Kuce (legendary -> legendary)
+      'loot_21': 'loot_74', // Chomnk Ko Dijete (mythic -> mythic)
+      'loot_22': 'loot_78', // Kaneki Login Info (mythic -> mythic)
+      'loot_23': 'loot_79', // Krof I Madison (mythic -> mythic)
+      'loot_24': 'loot_88', // Sara Borko Sise (divine -> divine)
+      'loot_25': 'loot_89'  // Sara Borko Sise Prime (hell -> hell)
+    },
 
     get() {
       try {
         const raw = localStorage.getItem(this.KEY);
-        if (raw) return JSON.parse(raw);
-      } catch (e) {}
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          return this.migrateIfNeeded(parsed, raw);
+        }
+      } catch (e) {
+        console.error('[CaseCollectionManager] Failed to load inventory:', e);
+      }
       return {
+        schemaVersion: this.SCHEMA_VERSION,
         totalOpened: 0,
         unlockedItems: {},
         rarityCounts: {}
       };
     },
 
+    migrateIfNeeded(data, raw) {
+      if (!data || typeof data !== 'object') {
+        return {
+          schemaVersion: this.SCHEMA_VERSION,
+          totalOpened: 0,
+          unlockedItems: {},
+          rarityCounts: {}
+        };
+      }
+
+      // If already at schemaVersion 2 or higher, it's fully up-to-date!
+      if (data.schemaVersion && data.schemaVersion >= this.SCHEMA_VERSION) {
+        return data;
+      }
+
+      const unlocked = data.unlockedItems || {};
+      const keys = Object.keys(unlocked);
+
+      // If inventory is empty, simply stamp schemaVersion 2
+      if (keys.length === 0) {
+        data.schemaVersion = this.SCHEMA_VERSION;
+        this.save(data);
+        return data;
+      }
+
+      // If inventory contains any ID > 25, it was already created on the 106-item roster
+      const hasV2OnlyIds = keys.some(id => {
+        const num = parseInt(id.replace('loot_', ''), 10);
+        return !isNaN(num) && num > 25;
+      });
+
+      if (hasV2OnlyIds) {
+        data.schemaVersion = this.SCHEMA_VERSION;
+        this.save(data);
+        return data;
+      }
+
+      // --- AUTOMATIC SMOOTH IMPORT FROM V1 (25 ITEMS) TO V2 (106 ITEMS) ---
+      // 1. Create a safe raw backup in localStorage so user data is never lost
+      try {
+        if (raw && !localStorage.getItem('antisimpdle_case_inventory_v1_backup')) {
+          localStorage.setItem('antisimpdle_case_inventory_v1_backup', raw);
+        }
+      } catch (e) {
+        console.warn('[CaseCollectionManager] Backup warning:', e);
+      }
+
+      const newUnlocked = {};
+      let migratedCount = 0;
+
+      for (const [oldId, record] of Object.entries(unlocked)) {
+        const newId = this.V1_TO_V2_ITEM_MAP[oldId];
+        if (newId) {
+          newUnlocked[newId] = {
+            ...record,
+            id: newId,
+            count: (record.count && record.count > 0) ? record.count : 1,
+            token: record.token || null,
+            firstUnlocked: record.firstUnlocked || Date.now(),
+            lastUnlocked: record.lastUnlocked || Date.now()
+          };
+          migratedCount++;
+        } else {
+          newUnlocked[oldId] = record;
+        }
+      }
+
+      data.unlockedItems = newUnlocked;
+      data.schemaVersion = this.SCHEMA_VERSION;
+      data.migratedAt = Date.now();
+      data.migratedFrom = 'v1_25_items';
+
+      // 2. Recompute accurate rarityCounts based on new items definition
+      const casesData = window.CASES_DATA;
+      const newRarityCounts = {};
+      if (casesData && Array.isArray(casesData.items)) {
+        for (const [itemId, rec] of Object.entries(newUnlocked)) {
+          const it = casesData.items.find(x => x.id === itemId);
+          if (it && it.rarity) {
+            newRarityCounts[it.rarity] = (newRarityCounts[it.rarity] || 0) + (rec.count || 1);
+          }
+        }
+      }
+      data.rarityCounts = newRarityCounts;
+
+      // 3. Save the migrated inventory seamlessly
+      this.save(data);
+
+      console.log(`[CaseCollectionManager] 🎉 Automatically migrated ${migratedCount} item(s) from v1 to v2!`);
+
+      // 4. Set session notice for a polite toast
+      try {
+        sessionStorage.setItem('antisimpdle_imported_v1_notice', String(migratedCount));
+      } catch (e) {}
+
+      return data;
+    },
+
     save(data) {
       try {
+        if (data && typeof data === 'object') {
+          data.schemaVersion = this.SCHEMA_VERSION;
+        }
         localStorage.setItem(this.KEY, JSON.stringify(data));
       } catch (e) {}
     },
 
-    recordItem(item) {
+    recordItem(item, token = null) {
       const data = this.get();
       data.totalOpened = (data.totalOpened || 0) + 1;
       const now = Date.now();
@@ -6583,6 +6983,34 @@
         data.unlockedItems[item.id] = {
           id: item.id,
           count: 1,
+          token: token,
+          firstUnlocked: now,
+          lastUnlocked: now
+        };
+      } else {
+        existing.count = (existing.count || 0) + 1;
+        existing.lastUnlocked = now;
+        if (token) existing.token = token;
+      }
+
+      if (!data.rarityCounts) data.rarityCounts = {};
+      data.rarityCounts[item.rarity] = (data.rarityCounts[item.rarity] || 0) + 1;
+
+      this.save(data);
+      return { isNew, count: data.unlockedItems[item.id].count, totalOpened: data.totalOpened };
+    },
+
+    recordRewardItem(item) {
+      const data = this.get();
+      const now = Date.now();
+      const existing = data.unlockedItems[item.id];
+      const isNew = !existing;
+
+      if (!existing) {
+        data.unlockedItems[item.id] = {
+          id: item.id,
+          count: 1,
+          token: null,
           firstUnlocked: now,
           lastUnlocked: now
         };
@@ -6595,7 +7023,7 @@
       data.rarityCounts[item.rarity] = (data.rarityCounts[item.rarity] || 0) + 1;
 
       this.save(data);
-      return { isNew, count: data.unlockedItems[item.id].count, totalOpened: data.totalOpened };
+      return { isNew, count: data.unlockedItems[item.id].count, totalOpened: data.totalOpened || 0 };
     },
 
     clear() {
@@ -6606,66 +7034,136 @@
   };
 
   // Roll item based on exact rarity probabilities:
-  // Hell: 0.001%, Divine: 0.1%, Mythic: 0.5%, Legendary: 1%, Epic: 5%, Rare: 15%, Uncommon: 30%, Common: rest (48.399%)
-  function rollCaseItem() {
+  // Normal Open: HELL 0.001%, Divine 0.1%, Rainbow 0.2%, Secret 0.5%, Mythic 1%, Legendary 2%, Epic 5%, Verity 10%, Rare 15%, Uncommon 26%, Common 40.199%
+  // Fast Open: HELL 0.001%, Divine 0.1%, Secret 0.5%, Mythic 1%, Legendary 2%, Epic 5%, Rare 15%, Uncommon 30%, Common 46.399% (Verity & Rainbow = 0%)
+  function rollCaseItem(mode = 'normal') {
     const data = window.CASES_DATA;
     if (!data || !data.items || data.items.length === 0) return null;
 
     const r = Math.random() * 100;
     let chosenRarity = 'common';
 
-    if (r < 0.001) {
-      chosenRarity = 'hell';
-    } else if (r < 0.001 + 0.1) {          // 0.101%
-      chosenRarity = 'divine';
-    } else if (r < 0.101 + 0.5) {          // 0.601%
-      chosenRarity = 'mythic';
-    } else if (r < 0.601 + 1.0) {          // 1.601%
-      chosenRarity = 'legendary';
-    } else if (r < 1.601 + 5.0) {          // 6.601%
-      chosenRarity = 'epic';
-    } else if (r < 6.601 + 15.0) {         // 21.601%
-      chosenRarity = 'rare';
-    } else if (r < 21.601 + 30.0) {        // 51.601%
-      chosenRarity = 'uncommon';
+    if (mode === 'normal') {
+      if (r < 0.001) {
+        chosenRarity = 'hell';        // 0.001%
+      } else if (r < 0.101) {
+        chosenRarity = 'divine';      // 0.1%
+      } else if (r < 0.301) {
+        chosenRarity = 'rainbow';     // 0.2%
+      } else if (r < 0.801) {
+        chosenRarity = 'secret';      // 0.5%
+      } else if (r < 1.801) {
+        chosenRarity = 'mythic';      // 1.0%
+      } else if (r < 3.801) {
+        chosenRarity = 'legendary';   // 2.0%
+      } else if (r < 8.801) {
+        chosenRarity = 'epic';        // 5.0%
+      } else if (r < 18.801) {
+        chosenRarity = 'verity';      // 10.0%
+      } else if (r < 33.801) {
+        chosenRarity = 'rare';        // 15.0%
+      } else if (r < 59.801) {
+        chosenRarity = 'uncommon';    // 26.0%
+      } else {
+        chosenRarity = 'common';      // 40.199%
+      }
     } else {
-      chosenRarity = 'common';
+      // Fast mode: Verity & Rainbow CANNOT drop (0%)
+      if (r < 0.001) {
+        chosenRarity = 'hell';        // 0.001%
+      } else if (r < 0.101) {
+        chosenRarity = 'divine';      // 0.1%
+      } else if (r < 0.601) {
+        chosenRarity = 'secret';      // 0.5%
+      } else if (r < 1.601) {
+        chosenRarity = 'mythic';      // 1.0%
+      } else if (r < 3.601) {
+        chosenRarity = 'legendary';   // 2.0%
+      } else if (r < 8.601) {
+        chosenRarity = 'epic';        // 5.0%
+      } else if (r < 23.601) {
+        chosenRarity = 'rare';        // 15.0%
+      } else if (r < 53.601) {
+        chosenRarity = 'uncommon';    // 30.0%
+      } else {
+        chosenRarity = 'common';      // 46.399%
+      }
     }
 
-    const pool = data.items.filter(item => item.rarity === chosenRarity);
+    const pool = data.items.filter(item => item.rarity === chosenRarity && (mode === 'normal' || item.exclusiveMode !== 'normal'));
     if (!pool || pool.length === 0) {
-      return data.items[Math.floor(Math.random() * data.items.length)];
+      const fallbackPool = data.items.filter(item => (mode === 'normal' || item.exclusiveMode !== 'normal') && item.rarity !== 'album');
+      return fallbackPool[Math.floor(Math.random() * fallbackPool.length)];
     }
     return pool[Math.floor(Math.random() * pool.length)];
   }
 
-  // Format rarity drop chance for display (Common visually displayed as 48% for clarity)
-  function formatRarityChance(r) {
+  // Format rarity drop chance for display based on active odds mode
+  function formatRarityChance(r, mode = state.oddsDisplayMode || 'normal') {
     if (!r) return '';
-    if (r.key === 'common') return '48%';
-    if (r.displayChance) return r.displayChance;
-    return `${r.chance}%`;
+    if (mode === 'normal') {
+      if (r.key === 'common') return '40%';
+      if (r.key === 'uncommon') return '26%';
+      if (r.key === 'verity') return '10%';
+      if (r.key === 'rainbow') return '0.2%';
+      if (r.displayChance) return r.displayChance;
+      return `${r.chance}%`;
+    } else {
+      if (r.key === 'common') return '46%';
+      if (r.key === 'uncommon') return '30%';
+      if (r.key === 'verity') return '0%';
+      if (r.key === 'rainbow') return '0%';
+      if (r.fastDisplayChance) return r.fastDisplayChance;
+      if (r.fastChance != null) return `${r.fastChance}%`;
+      return `${r.chance}%`;
+    }
   }
 
-  // Render static Odds Grid in Cases view (First row: common, uncommon, rare, epic, legendary; Second row: mythic, divine, hell)
-  function renderCasesOddsGrid() {
+  // Render interactive Odds Grid in Cases view (with Normal Open vs Fast Open toggle)
+  function renderCasesOddsGrid(mode = state.oddsDisplayMode || 'normal') {
     if (!DOM.casesOddsGrid || !window.CASES_DATA) return;
-    const rarities = window.CASES_DATA.rarities;
+    state.oddsDisplayMode = mode;
 
-    // First row: common, uncommon, rare, epic, legendary (5 items)
-    const row1Rarities = rarities.slice(0, 5);
-    // Second row: mythic, divine, hell (3 items)
-    const row2Rarities = rarities.slice(5);
+    // Update toggle buttons active state
+    if (DOM.oddsToggleNormalBtn && DOM.oddsToggleFastBtn) {
+      if (mode === 'normal') {
+        DOM.oddsToggleNormalBtn.classList.add('active');
+        DOM.oddsToggleFastBtn.classList.remove('active');
+      } else {
+        DOM.oddsToggleFastBtn.classList.add('active');
+        DOM.oddsToggleNormalBtn.classList.remove('active');
+      }
+    }
 
-    const renderItem = (r) => `
-      <div class="odds-item" title="${escapeHtml(r.name)} (${formatRarityChance(r)})" style="border-color:${r.color}66; box-shadow:0 0 6px ${r.glow};">
-        <div class="odds-rarity-header">
-          <span class="odds-color-dot" style="background:${r.color}; box-shadow:0 0 8px ${r.glow};"></span>
-          <span class="odds-rarity-name" style="color:${r.color};">${escapeHtml(r.name)}</span>
+    // Only include rarities that can actually drop from cases (exclude reward-only tiers like Album and Milestone)
+    const rarities = window.CASES_DATA.rarities.filter(r => !r.isRewardOnly);
+
+    // Row 1: Common, Uncommon, Rare, Verity, Epic, Legendary (6 items)
+    const row1Rarities = rarities.slice(0, 6);
+    // Row 2: Mythic, Secret, Rainbow, Divine, HELL (5 items)
+    const row2Rarities = rarities.slice(6);
+
+    const renderItem = (r) => {
+      const isLockedInFast = mode === 'fast' && (r.key === 'verity' || r.key === 'rainbow');
+      const lockedClass = isLockedInFast ? 'odds-item-locked' : '';
+      const chanceText = formatRarityChance(r, mode);
+      const lockedBadge = isLockedInFast ? `<span class="odds-locked-badge">🔒 NORMAL ONLY</span>` : '';
+
+      const isRainbow = r.key === 'rainbow';
+      return `
+        <div class="odds-item ${lockedClass} rarity-${r.key}" data-rarity="${r.key}" title="${escapeHtml(r.name)} (${chanceText})${isLockedInFast ? ' - Normal Open Only' : ''}" style="${isRainbow ? '' : `border-color:${r.color}66; box-shadow:0 0 8px ${r.glow};`}">
+          <div class="odds-orb-thumb-wrap">
+            <img src="${escapeHtml(r.orbImage)}" alt="${escapeHtml(r.name)} Orb" class="odds-orb-img" style="${isRainbow ? '' : `filter: drop-shadow(0 0 8px ${r.glow});`}" loading="lazy" />
+          </div>
+          <div class="odds-rarity-header">
+            <span class="odds-color-dot" style="${isRainbow ? '' : `background:${r.color}; box-shadow:0 0 8px ${r.glow};`}"></span>
+            <span class="odds-rarity-name" style="${isRainbow ? '' : `color:${r.color};`}">${escapeHtml(r.name)}</span>
+          </div>
+          <span class="odds-chance">${chanceText}</span>
+          ${lockedBadge}
         </div>
-        <span class="odds-chance">${formatRarityChance(r)}</span>
-      </div>
-    `;
+      `;
+    };
 
     let html = `<div class="odds-row odds-row-1">`;
     row1Rarities.forEach(r => { html += renderItem(r); });
@@ -6677,90 +7175,105 @@
   }
 
   // ========================================================
-  // CASE VAULT CRYPTO MANAGER (AES-256-GCM Decryption on Demand)
+  // CASE VAULT MEDIA MANAGER (WebAssembly + Server-Gated Cryptographic Black Box)
   // ========================================================
   const CaseVaultManager = (() => {
-    const mediaCache = new Map(); // itemId -> blobUrl
-    const pendingPromises = new Map(); // itemId -> Promise<blobUrl>
-    const VAULT_SALT = 'antisimpdle_case_vault_v1_salt_2026';
+    const mediaCache = new Map(); // itemId -> mediaUrl
 
-    function hexToBytes(hex) {
-      const bytes = new Uint8Array(hex.length / 2);
-      for (let i = 0; i < hex.length; i += 2) {
-        bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
+    function setMediaUrl(itemId, url) {
+      if (itemId && url) {
+        mediaCache.set(itemId, url);
       }
-      return bytes;
-    }
-
-    async function deriveCryptoKey(item) {
-      const maskedKey = hexToBytes(item.key);
-      const encoder = new TextEncoder();
-      const maskSeed = encoder.encode(`${VAULT_SALT}_mask_${item.id}`);
-      const maskBuffer = await crypto.subtle.digest('SHA-256', maskSeed);
-      const mask = new Uint8Array(maskBuffer);
-
-      const rawKey = new Uint8Array(32);
-      for (let i = 0; i < 32; i++) {
-        rawKey[i] = maskedKey[i] ^ mask[i];
-      }
-      return await crypto.subtle.importKey('raw', rawKey, { name: 'AES-GCM' }, false, ['decrypt']);
-    }
-
-    async function getItemMediaUrl(item) {
-      if (!item) return null;
-      if (mediaCache.has(item.id)) {
-        return mediaCache.get(item.id);
-      }
-      if (pendingPromises.has(item.id)) {
-        return pendingPromises.get(item.id);
-      }
-
-      // If item has no vaultFile, fallback to static path if present
-      if (!item.vaultFile) {
-        return item.path || null;
-      }
-
-      const fetchPromise = (async () => {
-        try {
-          const resp = await fetch(item.vaultFile);
-          if (!resp.ok) throw new Error(`Vault HTTP error ${resp.status}`);
-          const buffer = await resp.arrayBuffer();
-
-          const iv = buffer.slice(0, 12);
-          const ciphertext = buffer.slice(12);
-
-          const cryptoKey = await deriveCryptoKey(item);
-          const decrypted = await crypto.subtle.decrypt(
-            { name: 'AES-GCM', iv: iv, tagLength: 128 },
-            cryptoKey,
-            ciphertext
-          );
-
-          const blob = new Blob([decrypted], { type: item.mimeType || 'image/png' });
-          const blobUrl = URL.createObjectURL(blob);
-          mediaCache.set(item.id, blobUrl);
-          return blobUrl;
-        } catch (err) {
-          console.error(`[CaseVault] Decryption failed for ${item.name}:`, err);
-          return null;
-        } finally {
-          pendingPromises.delete(item.id);
-        }
-      })();
-
-      pendingPromises.set(item.id, fetchPromise);
-      return fetchPromise;
     }
 
     function getCachedUrl(itemId) {
-      return mediaCache.get(itemId) || null;
+      if (!itemId) return null;
+      if (mediaCache.has(itemId)) return mediaCache.get(itemId);
+
+      // 1. For unencrypted items (Common to Secret), use the static file path directly
+      const data = window.CASES_DATA;
+      const itObj = data && data.items ? data.items.find(x => x.id === itemId) : null;
+      if (itObj && !itObj.isEncrypted && itObj.path) {
+        mediaCache.set(itemId, itObj.path);
+        return itObj.path;
+      }
+
+      // 2. Server-gated items (Verity & Rainbow): check if unlocked in inventory
+      if (itObj && itObj.serverGated) {
+        const inv = CaseCollectionManager.get();
+        const record = inv && inv.unlockedItems ? inv.unlockedItems[itemId] : null;
+        if (record && record.token && window.location.protocol !== 'file:') {
+          const mediaUrl = `/api/media?id=${encodeURIComponent(itemId)}&token=${encodeURIComponent(record.token)}`;
+          mediaCache.set(itemId, mediaUrl);
+          return mediaUrl;
+        }
+        return null;
+      }
+
+      return null;
+    }
+
+    // Decrypts encrypted items through WebAssembly (Divine/HELL) or server API (Verity/Rainbow)
+    async function getItemMediaUrl(item) {
+      if (!item) return null;
+      if (mediaCache.has(item.id)) return mediaCache.get(item.id);
+
+      // 1. Unencrypted items (Common to Secret)
+      if (!item.isEncrypted && item.path) {
+        mediaCache.set(item.id, item.path);
+        return item.path;
+      }
+
+      // 2. Encrypted items (Divine, HELL & Milestones): Decrypt via WebAssembly Black Box
+      if (item.isEncrypted && item.vaultFile && item.itemCode && window.WasmVault) {
+        try {
+          if (item.isYouTube || item.mimeType === 'application/json') {
+            const decJson = await window.WasmVault.decryptJson(item.vaultFile, item.itemCode);
+            if (decJson) {
+              item.youtubeUrl = decJson.url;
+              item.youtubeEmbedUrl = decJson.embedUrl;
+              const resultUrl = item.youtubeEmbedUrl || item.youtubeUrl || item.thumbPath || item.path;
+              mediaCache.set(item.id, resultUrl);
+              return resultUrl;
+            }
+          }
+          const blobUrl = await window.WasmVault.decryptFile(item.vaultFile, item.itemCode, item.mimeType || 'image/jpeg');
+          if (blobUrl) {
+            mediaCache.set(item.id, blobUrl);
+            return blobUrl;
+          }
+        } catch (err) {
+          console.error('[CaseVaultManager] WebAssembly decryption error:', err);
+        }
+      }
+
+      // 3. Encrypted items (Verity & Rainbow): Server-gated with HMAC token
+      if (item.serverGated) {
+        const inv = CaseCollectionManager.get();
+        const record = inv && inv.unlockedItems ? inv.unlockedItems[item.id] : null;
+        if (record && record.token && window.location.protocol !== 'file:') {
+          const mediaUrl = `/api/media?id=${encodeURIComponent(item.id)}&token=${encodeURIComponent(record.token)}`;
+          mediaCache.set(item.id, mediaUrl);
+          return mediaUrl;
+        }
+        return null;
+      }
+
+      // 4. Fallback for unencrypted static items
+      if (!item.isEncrypted && item.path) {
+        mediaCache.set(item.id, item.path);
+        return item.path;
+      }
+
+      return null;
     }
 
     function hasDecrypted(itemId) {
-      return mediaCache.has(itemId);
+      return !!getCachedUrl(itemId);
     }
 
     return {
+      setMediaUrl,
       getItemMediaUrl,
       getCachedUrl,
       hasDecrypted
@@ -6899,22 +7412,32 @@
   }
 
   // Start Case Opening (Normal synced to video or Instant Quick Open with NO animation)
-  function startCaseOpening(isFast = false) {
+  async function startCaseOpening(isFast = false) {
     if (state.caseIsSpinning) return;
     if (!window.CASES_DATA || !window.CASES_DATA.items) return;
 
-    // 1. Roll winner
-    const winner = rollCaseItem();
-    if (!winner) {
-      resetCaseOpeningStage();
-      return;
+    state.caseIsSpinning = true;
+    if (DOM.openCaseBtn) {
+      DOM.openCaseBtn.disabled = true;
+      const btnText = DOM.openCaseBtn.querySelector('.btn-text');
+      if (btnText) btnText.textContent = 'OPENING...';
     }
+    if (DOM.quickOpenCaseBtn) DOM.quickOpenCaseBtn.disabled = true;
 
-    // QUICK OPEN: Instant unbox with NO animation!
+    // QUICK OPEN: Instant unbox with NO animation (Verity & Rainbow CANNOT drop!)
     if (isFast) {
+      const winner = rollCaseItem('fast');
+      if (!winner) {
+        resetCaseOpeningStage();
+        return;
+      }
+
+      const mediaPromise = CaseVaultManager.getItemMediaUrl(winner);
+
       // Record immediately to collection
       const result = CaseCollectionManager.recordItem(winner);
       updateCasesCollectionUI();
+      checkMilestoneUnlockTrigger(winner, result);
 
       // Play Item Obtain Audio immediately!
       if (SoundFX.enabled) {
@@ -6927,20 +7450,65 @@
         SoundFX.playRarityReveal(winner.rarity);
       }
 
+      // Await media if decrypting
+      const mediaUrl = await mediaPromise;
+
       // Open Reveal Modal immediately without any delay or animation!
-      openCasesRevealModal(winner, result);
+      openCasesRevealModal(winner, result, mediaUrl);
+      resetCaseOpeningStage();
       return;
     }
 
-    // Normal full cinematic opening with video and rolling over the box
-    state.caseIsSpinning = true;
-    if (DOM.openCaseBtn) {
-      DOM.openCaseBtn.disabled = true;
-      const btnText = DOM.openCaseBtn.querySelector('.btn-text');
-      if (btnText) btnText.textContent = 'OPENING...';
-    }
-    if (DOM.quickOpenCaseBtn) DOM.quickOpenCaseBtn.disabled = true;
+    // NORMAL MODE OPENING:
+    // Rate-limited to ~1 request per 10s via server API (matches ~9.75s animation)
+    let winner = null;
+    let serverToken = null;
+    let serverMediaUrl = null;
 
+    try {
+      const resp = await fetch('/api/open-case', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: 'normal' })
+      });
+
+      if (resp.status === 429) {
+        const errJson = await resp.json().catch(() => ({}));
+        const waitSec = errJson.retryAfter || 10;
+        showToast(`⏳ Opening too fast! Please wait ${waitSec}s for the animation to finish.`);
+        resetCaseOpeningStage();
+        return;
+      }
+
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data && data.item) {
+          const localItem = window.CASES_DATA.items.find(x => x.id === data.item.id);
+          winner = localItem || data.item;
+          serverToken = data.token || null;
+          serverMediaUrl = data.mediaUrl || null;
+        }
+      }
+    } catch (apiErr) {
+      console.warn('[CaseOpening] Server API request failed, fallback to local roll:', apiErr);
+    }
+
+    if (!winner) {
+      winner = rollCaseItem('normal');
+    }
+
+    if (!winner) {
+      resetCaseOpeningStage();
+      return;
+    }
+
+    if (serverMediaUrl) {
+      CaseVaultManager.setMediaUrl(winner.id, serverMediaUrl);
+    }
+
+    const mediaPromise = CaseVaultManager.getItemMediaUrl(winner);
+
+    // Normal full cinematic opening with video and rolling over the box
     // 2. Prepare roulette track: 65 mystery cards with winner at index 45
     const winnerIndex = 45;
     const totalStripCount = 65;
@@ -6954,12 +7522,22 @@
         if (i === winnerIndex) {
           stripItems.push(winner);
         } else {
-          stripItems.push(rollCaseItem());
+          stripItems.push(rollCaseItem('normal'));
         }
       }
 
-      // Pre-decrypt the winner in memory during the spin animation
-      CaseVaultManager.getItemMediaUrl(winner);
+      // Preload winner media in memory during spin
+      mediaPromise.then(url => {
+        if (!url) return;
+        if (winner.isVideo) {
+          const v = document.createElement('video');
+          v.src = url;
+          v.preload = 'auto';
+        } else {
+          const img = new Image();
+          img.src = url;
+        }
+      }).catch(() => {});
 
       const frag = document.createDocumentFragment();
       stripItems.forEach((it, idx) => {
@@ -7054,13 +7632,15 @@
           SoundFX.playRarityReveal(winner.rarity);
         }
 
-        // Record to inventory
-        const result = CaseCollectionManager.recordItem(winner);
+        // Record to inventory (saving HMAC token for server-gated items)
+        const result = CaseCollectionManager.recordItem(winner, serverToken);
         updateCasesCollectionUI();
+        checkMilestoneUnlockTrigger(winner, result);
 
         // Open Reveal Modal after 420ms
-        setTimeout(() => {
-          openCasesRevealModal(winner, result);
+        setTimeout(async () => {
+          const mediaUrl = await mediaPromise;
+          openCasesRevealModal(winner, result, mediaUrl);
         }, 420);
 
       }, durationSec * 1000 + 40);
@@ -7083,8 +7663,23 @@
     }, 4450);
   }
 
+  // Check if unboxing an item crossed a milestone reward threshold
+  function checkMilestoneUnlockTrigger(winner, result) {
+    if (!winner || !window.CASES_DATA || !Array.isArray(window.CASES_DATA.milestones)) return;
+    const ms = window.CASES_DATA.milestones.find(m => m.targetItemId === winner.id);
+    if (ms && result.count >= ms.threshold) {
+      const inv = CaseCollectionManager.get();
+      if (!inv.unlockedItems || !inv.unlockedItems[ms.rewardItemId]) {
+        setTimeout(() => {
+          showToast(`🎯 MILESTONE ACHIEVED! You reached ${ms.threshold.toLocaleString()}x ${winner.name}! Claim "${ms.rewardItemName}" in Collection > Milestones!`);
+          SoundFX.playTone(587.33, 'triangle', 0.25, 0.1);
+        }, 1200);
+      }
+    }
+  }
+
   // Open the Spectacular Unboxing Reveal Modal
-  function openCasesRevealModal(item, result) {
+  function openCasesRevealModal(item, result, mediaUrl = null) {
     if (!DOM.casesRevealModal) return;
 
     // Remove any previous tier animation classes
@@ -7108,10 +7703,17 @@
 
     if (DOM.casesRevealRarityTag) {
       DOM.casesRevealRarityTag.textContent = item.rarityName.toUpperCase();
-      DOM.casesRevealRarityTag.style.background = `${item.rarityColor}28`;
-      DOM.casesRevealRarityTag.style.borderColor = item.rarityColor;
-      DOM.casesRevealRarityTag.style.color = item.rarityColor;
-      DOM.casesRevealRarityTag.style.boxShadow = `0 0 12px ${item.rarityGlow}`;
+      if (item.rarity === 'rainbow') {
+        DOM.casesRevealRarityTag.style.background = 'linear-gradient(90deg, #ff0055, #ff7700, #ffea00, #00e676, #00d4ff, #8b00ff, #ff007f)';
+        DOM.casesRevealRarityTag.style.borderColor = 'transparent';
+        DOM.casesRevealRarityTag.style.color = '#000';
+        DOM.casesRevealRarityTag.style.boxShadow = '0 0 16px rgba(255, 0, 128, 0.8), 0 0 25px rgba(0, 212, 255, 0.6)';
+      } else {
+        DOM.casesRevealRarityTag.style.background = `${item.rarityColor}28`;
+        DOM.casesRevealRarityTag.style.borderColor = item.rarityColor;
+        DOM.casesRevealRarityTag.style.color = item.rarityColor;
+        DOM.casesRevealRarityTag.style.boxShadow = `0 0 12px ${item.rarityGlow}`;
+      }
     }
 
     if (DOM.casesRevealTitle) {
@@ -7120,46 +7722,65 @@
 
     if (DOM.casesRevealMeta) {
       const rObj = window.CASES_DATA.rarities.find(r => r.key === item.rarity);
-      const chanceStr = formatRarityChance(rObj);
-      DOM.casesRevealMeta.textContent = `${item.rarityName} • Drop Chance: ${chanceStr}`;
+      const chanceStr = rObj ? formatRarityChance(rObj, 'normal') : '';
+      if (item.rarity === 'album') {
+        DOM.casesRevealMeta.textContent = `${item.rarityName} • ${item.albumName ? `Reward for: ${item.albumName}` : 'Album Completion Reward'}`;
+      } else if (item.rarity === 'milestone') {
+        DOM.casesRevealMeta.textContent = `Milestone Reward • Unlocked by collecting ${item.milestoneThreshold ? item.milestoneThreshold.toLocaleString() : ''} ${item.milestoneTargetName || ''}`;
+      } else {
+        DOM.casesRevealMeta.textContent = `${item.rarityName} • Drop Chance: ${chanceStr}`;
+      }
     }
 
     if (DOM.casesRevealCountBadge) {
-      DOM.casesRevealCountBadge.textContent = `Total Owned: ${result.count} • Collection Total: ${result.totalOpened} opened`;
+      if (item.rarity === 'album') {
+        DOM.casesRevealCountBadge.textContent = `Album Reward • Total Claimed: ${result.count}`;
+      } else if (item.rarity === 'milestone') {
+        DOM.casesRevealCountBadge.textContent = `Milestone Reward • Claimed: ${result.count}`;
+      } else {
+        DOM.casesRevealCountBadge.textContent = `Total Owned: ${result.count} • Collection Total: ${result.totalOpened} opened`;
+      }
     }
 
     // Media element
+    const activeMediaUrl = mediaUrl || CaseVaultManager.getCachedUrl(item.id);
     if (DOM.casesRevealMediaWrap) {
-      const cachedUrl = CaseVaultManager.getCachedUrl(item.id);
-      if (cachedUrl) {
-        if (item.isVideo) {
+      if (activeMediaUrl) {
+        if (item.isYouTube || item.youtubeUrl) {
+          const ytUrl = item.youtubeUrl || activeMediaUrl;
+          const embedUrl = item.youtubeEmbedUrl || (ytUrl ? ytUrl.replace('watch?v=', 'embed/') : '');
           DOM.casesRevealMediaWrap.innerHTML = `
-            <video src="${escapeHtml(cachedUrl)}" autoplay loop controls playsinline></video>
+            <div class="reveal-youtube-player">
+              <iframe src="${escapeHtml(embedUrl)}" class="lightbox-youtube-iframe" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+              <a href="${escapeHtml(ytUrl)}" target="_blank" rel="noopener noreferrer" class="youtube-external-btn">
+                <span>▶ Open on YouTube</span>
+              </a>
+            </div>
+          `;
+        } else if (item.isAudio) {
+          const thumb = item.thumbPath || 'case opening/orbs/orb_secret.png';
+          DOM.casesRevealMediaWrap.innerHTML = `
+            <div class="reveal-audio-player">
+              <img src="${escapeHtml(thumb)}" alt="${escapeHtml(item.name)}" class="reveal-audio-art" />
+              <audio src="${escapeHtml(activeMediaUrl)}" controls autoplay style="width:90%; margin-top:8px;"></audio>
+            </div>
+          `;
+        } else if (item.isVideo) {
+          DOM.casesRevealMediaWrap.innerHTML = `
+            <video src="${escapeHtml(activeMediaUrl)}" autoplay loop controls playsinline></video>
           `;
         } else {
           DOM.casesRevealMediaWrap.innerHTML = `
-            <img src="${escapeHtml(cachedUrl)}" alt="${escapeHtml(item.name)}" />
+            <img src="${escapeHtml(activeMediaUrl)}" alt="${escapeHtml(item.name)}" />
           `;
         }
       } else {
         DOM.casesRevealMediaWrap.innerHTML = `
           <div class="cases-reveal-decrypting" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:${item.rarityColor};">
-            <span style="font-size:1.8rem; margin-bottom:8px;">🔓</span>
-            <span style="font-family:var(--font-display); font-weight:700;">Decrypting Vault Asset...</span>
+            <span style="font-size:1.8rem; margin-bottom:8px;">🔒</span>
+            <span style="font-family:var(--font-display); font-weight:700;">Locked Item Asset</span>
           </div>
         `;
-        CaseVaultManager.getItemMediaUrl(item).then(mediaUrl => {
-          if (!mediaUrl || !DOM.casesRevealMediaWrap) return;
-          if (item.isVideo) {
-            DOM.casesRevealMediaWrap.innerHTML = `
-              <video src="${escapeHtml(mediaUrl)}" autoplay loop controls playsinline></video>
-            `;
-          } else {
-            DOM.casesRevealMediaWrap.innerHTML = `
-              <img src="${escapeHtml(mediaUrl)}" alt="${escapeHtml(item.name)}" />
-            `;
-          }
-        });
       }
     }
 
@@ -7171,6 +7792,25 @@
     } else if (item.rarity === 'divine') {
       flashVictoryScreen();
       showToast('🌟 DIVINE DROP! 0.1% Heavenly rarity unboxed!');
+    } else if (item.rarity === 'milestone') {
+      VictoryCelebration.start();
+      setTimeout(() => VictoryCelebration.stop(), 4000);
+      showToast(`🎯 MILESTONE REWARD UNLOCKED: ${item.name}! 🎯`);
+    } else if (item.rarity === 'album') {
+      VictoryCelebration.start();
+      setTimeout(() => VictoryCelebration.stop(), 3500);
+      showToast(`🎁 ALBUM REWARD UNLOCKED: ${item.name}! 🎁`);
+    } else if (item.rarity === 'rainbow') {
+      flashVictoryScreen();
+      showToast('🌈 CHROMATIC RAINBOW DROP! 0.2% Ultra Rare item unboxed!');
+    } else if (item.rarity === 'secret') {
+      VictoryCelebration.start();
+      setTimeout(() => VictoryCelebration.stop(), 3500);
+      showToast('✨ SECRET ITEM UNBOXED! ✨');
+    } else if (item.rarity === 'verity') {
+      VictoryCelebration.start();
+      setTimeout(() => VictoryCelebration.stop(), 3000);
+      showToast('☀️ VERITY UNBOXED! 10% Radiant Amber drop!');
     } else if (item.rarity === 'mythic' || item.rarity === 'legendary') {
       VictoryCelebration.start();
       setTimeout(() => VictoryCelebration.stop(), 4000);
@@ -7194,7 +7834,7 @@
     if (!DOM.casesCardBadge) return;
     const inv = CaseCollectionManager.get();
     const data = window.CASES_DATA;
-    const totalItems = (data && data.items) ? data.items.length : 25;
+    const totalItems = (data && data.items) ? data.items.length : 106;
     const unlockedCount = Object.keys(inv.unlockedItems || {}).length;
     DOM.casesCardBadge.textContent = `${unlockedCount}/${totalItems} UNLOCKED`;
     DOM.casesCardBadge.classList.add('badge-cases-gold');
@@ -7207,18 +7847,71 @@
     const data = window.CASES_DATA;
     if (!data || !data.items) return;
 
-    const totalItems = data.items.length; // 25
+    const totalItems = data.items.length; // 106 Total items
+    const droppableCount = data.items.filter(it => it.rarity !== 'album' && it.rarity !== 'milestone').length; // 89
     const unlockedCount = Object.keys(inv.unlockedItems || {}).length;
     const percent = Math.round((unlockedCount / totalItems) * 100);
+
+    const totalAlbums = data.albums ? data.albums.length : 12;
+    let completedAlbumsCount = 0;
+    if (data.albums) {
+      data.albums.forEach(album => {
+        if (getAlbumProgress(album, inv).isCompleted) completedAlbumsCount++;
+      });
+    }
+
+    const totalMilestones = data.milestones ? data.milestones.length : 5;
+    let completedMilestonesCount = 0;
+    if (data.milestones) {
+      data.milestones.forEach(ms => {
+        if (inv.unlockedItems && inv.unlockedItems[ms.rewardItemId]) completedMilestonesCount++;
+      });
+    }
 
     // Update Home Page Badge
     updateCasesHomeBadge();
 
     // Nav and Stats
     if (DOM.casesNavUnlockedCount) DOM.casesNavUnlockedCount.textContent = unlockedCount;
+    if (DOM.casesNavTotalCount) DOM.casesNavTotalCount.textContent = totalItems;
+    if (DOM.casesCrateTotalCount) DOM.casesCrateTotalCount.textContent = droppableCount;
     if (DOM.cstatTotalOpened) DOM.cstatTotalOpened.textContent = inv.totalOpened || 0;
     if (DOM.cstatUniqueUnlocked) DOM.cstatUniqueUnlocked.textContent = unlockedCount;
+    if (DOM.cstatTotalItems) DOM.cstatTotalItems.textContent = totalItems;
     if (DOM.cstatPercent) DOM.cstatPercent.textContent = `${percent}%`;
+
+    // Sub-tab counts in parentheses: (unlocked / total)
+    if (DOM.cstatAllItemsCount) {
+      DOM.cstatAllItemsCount.textContent = `${unlockedCount}/${totalItems}`;
+    }
+    if (DOM.cstatAlbumsCount) {
+      DOM.cstatAlbumsCount.textContent = `${completedAlbumsCount}/${totalAlbums}`;
+    }
+    if (DOM.cstatMilestonesCount) {
+      DOM.cstatMilestonesCount.textContent = `${completedMilestonesCount}/${totalMilestones}`;
+    }
+
+    // Show polite toast notification if old items were smoothly imported
+    try {
+      const importNotice = sessionStorage.getItem('antisimpdle_imported_v1_notice');
+      if (importNotice) {
+        sessionStorage.removeItem('antisimpdle_imported_v1_notice');
+        setTimeout(() => {
+          showToast(`🎉 Collection Updated! Automatically imported ${importNotice} previously collected item(s) to the new expanded cases!`);
+        }, 800);
+      }
+    } catch (e) {}
+
+    // Refresh Active Sub-View
+    if (state.collectionActiveTab === 'albums') {
+      if (state.activeAlbumId) {
+        renderAlbumDetail(state.activeAlbumId);
+      } else {
+        renderAlbumsOverview();
+      }
+    } else if (state.collectionActiveTab === 'milestones') {
+      renderMilestonesOverview();
+    }
 
     // Filter pills
     if (DOM.collectionFilters) {
@@ -7226,7 +7919,7 @@
       data.rarities.forEach(r => {
         const count = data.items.filter(it => it.rarity === r.key).length;
         const isActive = filter === r.key ? 'active' : '';
-        filterHtml += `<button class="cfilter-pill ${isActive}" data-rarity="${r.key}" style="border-color:${r.color}55;">${escapeHtml(r.name.toUpperCase())} (${count})</button>`;
+        filterHtml += `<button class="cfilter-pill ${isActive}" data-rarity="${r.key}">${escapeHtml(r.name.toUpperCase())} (${count})</button>`;
       });
       DOM.collectionFilters.innerHTML = filterHtml;
 
@@ -7255,6 +7948,463 @@
 
         if (isUnlocked) {
           const cachedUrl = CaseVaultManager.getCachedUrl(item.id);
+          let vidTag = '';
+          if (item.isYouTube) {
+            vidTag = '<span class="collection-vid-indicator" style="background:#ff0000;">▶ YOUTUBE</span>';
+          } else if (item.isAudio) {
+            vidTag = '<span class="collection-vid-indicator" style="background:#ffa6dd; color:#1a0515;">🎵 AUDIO</span>';
+          } else if (item.isVideo) {
+            vidTag = '<span class="collection-vid-indicator">▶ VIDEO</span>';
+          }
+
+          const thumbSrc = item.thumbPath || cachedUrl || '';
+          const isThumbVideo = item.isVideo && !item.thumbPath;
+
+          gridHtml += `
+            <div class="collection-card unlocked rarity-${item.rarity}" data-item-id="${item.id}" style="border-color:${item.rarityColor}; box-shadow:0 0 12px ${item.rarityGlow};">
+              <div class="collection-card-thumb-wrap">
+                ${isThumbVideo 
+                  ? `<video src="${cachedUrl ? escapeHtml(cachedUrl) : ''}" data-vault-item="${item.id}" muted playsinline class="collection-card-thumb" preload="metadata"></video>`
+                  : `<img src="${thumbSrc ? escapeHtml(thumbSrc) : ''}" data-vault-item="${item.id}" alt="${escapeHtml(item.name)}" class="collection-card-thumb" loading="lazy" />`
+                }
+                ${vidTag}
+                <span class="collection-count-badge">x${count}</span>
+              </div>
+              <div class="collection-card-meta">
+                <span class="collection-card-name" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</span>
+                <span class="collection-card-rarity" style="color:${item.rarityColor};">${escapeHtml(item.rarityName)}</span>
+              </div>
+            </div>
+          `;
+          if (!cachedUrl && isThumbVideo) {
+            CaseVaultManager.getItemMediaUrl(item).then(mediaUrl => {
+              if (!mediaUrl || !DOM.casesCollectionGrid) return;
+              const el = DOM.casesCollectionGrid.querySelector(`[data-vault-item="${item.id}"]`);
+              if (el) el.src = mediaUrl;
+            });
+          }
+        } else {
+          const isAlbumReward = item.rarity === 'album';
+          const isMilestoneReward = item.rarity === 'milestone';
+          let lockedBadgeText = 'LOCKED';
+          let lockedHint = '';
+          let isClaimable = false;
+          let targetCount = 0;
+          let threshold = 0;
+
+          if (isAlbumReward) {
+            lockedBadgeText = 'ALBUM REWARD';
+            if (item.albumName) {
+              lockedHint = `<span style="font-size:0.62rem; line-height:1.15; color:#00e5ff; margin-top:3px; font-weight:700; text-align:center;">Complete "${escapeHtml(item.albumName)}"</span>`;
+            }
+          } else if (isMilestoneReward) {
+            const ms = (data.milestones || []).find(m => m.rewardItemId === item.id);
+            const targetRecord = ms ? inv.unlockedItems[ms.targetItemId] : null;
+            targetCount = targetRecord ? targetRecord.count : 0;
+            threshold = item.milestoneThreshold || (ms ? ms.threshold : 100);
+            isClaimable = targetCount >= threshold;
+
+            if (isClaimable) {
+              lockedBadgeText = '✨ CLAIM';
+              lockedHint = `<span style="font-size:0.70rem; line-height:1.15; color:#2ecc71; margin-top:3px; font-weight:800; text-align:center;">READY TO CLAIM!</span>`;
+            } else {
+              lockedBadgeText = 'MILESTONE';
+              lockedHint = `<span style="font-size:0.62rem; line-height:1.15; color:#ffa6dd; margin-top:3px; font-weight:700; text-align:center;">${targetCount.toLocaleString()} / ${threshold.toLocaleString()} ${escapeHtml(item.milestoneTargetName || '')}</span>`;
+            }
+          }
+
+          gridHtml += `
+            <div class="collection-card locked rarity-${item.rarity} ${isClaimable ? 'pulse' : ''}" 
+                 data-item-id="${item.id}" 
+                 data-item-name="${escapeHtml(item.name)}" 
+                 data-is-album="${isAlbumReward}" 
+                 data-album-name="${escapeHtml(item.albumName || '')}"
+                 data-is-milestone="${isMilestoneReward}"
+                 data-milestone-id="${item.milestoneId || ''}"
+                 data-is-claimable="${isClaimable}"
+                 data-target-name="${escapeHtml(item.milestoneTargetName || '')}"
+                 data-threshold="${threshold}"
+                 data-curr-count="${targetCount}"
+                 style="border-color:${item.rarityColor}; box-shadow:0 0 10px ${item.rarityGlow};">
+              <div class="collection-card-thumb-wrap">
+                <div class="collection-card-locked-icon" style="color:${item.rarityColor}; text-shadow:0 0 10px ${item.rarityGlow};">🔒</div>
+                <span class="collection-locked-badge">${lockedBadgeText}</span>
+              </div>
+              <div class="collection-card-meta">
+                <span class="collection-card-name" title="${escapeHtml(item.name)}" style="color:#ffffff; font-weight:700;">${escapeHtml(item.name)}</span>
+                <span class="collection-card-rarity" style="color:${item.rarityColor}; font-weight:800; text-shadow:0 0 6px ${item.rarityGlow};">${escapeHtml(item.rarityName.toUpperCase())}</span>
+                ${lockedHint}
+              </div>
+            </div>
+          `;
+        }
+      });
+
+      DOM.casesCollectionGrid.innerHTML = gridHtml;
+
+      // Click card to open Lightbox
+      DOM.casesCollectionGrid.querySelectorAll('.collection-card.unlocked').forEach(card => {
+        card.addEventListener('click', () => {
+          const itId = card.getAttribute('data-item-id');
+          const it = data.items.find(x => x.id === itId);
+          if (it) openCasesLightbox(it);
+        });
+      });
+
+      // Click locked card to show guidance toast or claim
+      DOM.casesCollectionGrid.querySelectorAll('.collection-card.locked').forEach(card => {
+        card.addEventListener('click', () => {
+          const isMilestone = card.getAttribute('data-is-milestone') === 'true';
+          const isAlbum = card.getAttribute('data-is-album') === 'true';
+          const isClaimable = card.getAttribute('data-is-claimable') === 'true';
+          const itId = card.getAttribute('data-item-id');
+          const itName = card.getAttribute('data-item-name');
+          const albName = card.getAttribute('data-album-name');
+
+          if (isMilestone) {
+            const msId = card.getAttribute('data-milestone-id');
+            if (isClaimable) {
+              claimMilestoneReward(msId);
+            } else {
+              const tName = card.getAttribute('data-target-name');
+              const th = parseInt(card.getAttribute('data-threshold') || '0', 10);
+              const curr = parseInt(card.getAttribute('data-curr-count') || '0', 10);
+              showToast(`🔒 "${itName}" is a Milestone Reward! Collect ${th.toLocaleString()} ${tName} to unlock it! (Currently: ${curr.toLocaleString()} / ${th.toLocaleString()})`);
+              SoundFX.playTone(280, 'sine', 0.12);
+            }
+          } else if (isAlbum) {
+            showToast(`🔒 "${itName}" is an Album Reward! Complete "${albName}" to claim it!`);
+            SoundFX.playTone(280, 'sine', 0.12);
+          } else {
+            showToast(`🔒 "${itName}" is locked. Unbox it from cases!`);
+            SoundFX.playTone(280, 'sine', 0.12);
+          }
+        });
+      });
+    }
+  }
+
+  // Switch Collection Sub-Tabs: 'all' vs 'albums' vs 'milestones'
+  function switchCollectionViewTab(tab = 'all') {
+    state.collectionActiveTab = tab;
+    if (tab === 'all') {
+      if (DOM.collViewAllBtn) DOM.collViewAllBtn.classList.add('active');
+      if (DOM.collViewAlbumsBtn) DOM.collViewAlbumsBtn.classList.remove('active');
+      if (DOM.collViewMilestonesBtn) DOM.collViewMilestonesBtn.classList.remove('active');
+      if (DOM.casesAllItemsView) DOM.casesAllItemsView.style.display = 'block';
+      if (DOM.casesAlbumsView) DOM.casesAlbumsView.style.display = 'none';
+      if (DOM.casesMilestonesView) DOM.casesMilestonesView.style.display = 'none';
+    } else if (tab === 'albums') {
+      if (DOM.collViewAlbumsBtn) DOM.collViewAlbumsBtn.classList.add('active');
+      if (DOM.collViewAllBtn) DOM.collViewAllBtn.classList.remove('active');
+      if (DOM.collViewMilestonesBtn) DOM.collViewMilestonesBtn.classList.remove('active');
+      if (DOM.casesAllItemsView) DOM.casesAllItemsView.style.display = 'none';
+      if (DOM.casesAlbumsView) DOM.casesAlbumsView.style.display = 'block';
+      if (DOM.casesMilestonesView) DOM.casesMilestonesView.style.display = 'none';
+
+      if (state.activeAlbumId) {
+        renderAlbumDetail(state.activeAlbumId);
+      } else {
+        renderAlbumsOverview();
+      }
+    } else if (tab === 'milestones') {
+      if (DOM.collViewMilestonesBtn) DOM.collViewMilestonesBtn.classList.add('active');
+      if (DOM.collViewAllBtn) DOM.collViewAllBtn.classList.remove('active');
+      if (DOM.collViewAlbumsBtn) DOM.collViewAlbumsBtn.classList.remove('active');
+      if (DOM.casesAllItemsView) DOM.casesAllItemsView.style.display = 'none';
+      if (DOM.casesAlbumsView) DOM.casesAlbumsView.style.display = 'none';
+      if (DOM.casesMilestonesView) DOM.casesMilestonesView.style.display = 'block';
+
+      renderMilestonesOverview();
+    }
+  }
+
+  // Calculate unlock progress for an album
+  function getAlbumProgress(album, inv) {
+    if (!album || !Array.isArray(album.itemIds)) {
+      return { total: 0, owned: 0, percent: 0, isCompleted: false };
+    }
+    const unlocked = inv && inv.unlockedItems ? inv.unlockedItems : {};
+    const total = album.itemIds.length;
+    let owned = 0;
+    album.itemIds.forEach(id => {
+      if (unlocked[id]) owned++;
+    });
+    const percent = total > 0 ? Math.round((owned / total) * 100) : 0;
+    const isCompleted = total > 0 && owned === total;
+    return { total, owned, percent, isCompleted };
+  }
+
+  // Render Albums Overview Grid (1 in each row, large preview pictures, fewest on top)
+  function renderAlbumsOverview() {
+    const data = window.CASES_DATA;
+    if (!data || !Array.isArray(data.albums)) return;
+    const inv = CaseCollectionManager.get();
+
+    if (DOM.albumsOverviewSection) DOM.albumsOverviewSection.style.display = 'block';
+    if (DOM.albumDetailSection) DOM.albumDetailSection.style.display = 'none';
+
+    let completedAlbumsCount = 0;
+    const totalAlbumsCount = data.albums.length;
+
+    let gridHtml = '';
+    data.albums.forEach(album => {
+      const prog = getAlbumProgress(album, inv);
+      if (prog.isCompleted) completedAlbumsCount++;
+
+      // Render all pictures in the album (large, crisp, clear cards)
+      let itemsHtml = '';
+      album.itemIds.forEach(itId => {
+        const item = data.items.find(x => x.id === itId);
+        if (!item) return;
+        const record = inv.unlockedItems ? inv.unlockedItems[itId] : null;
+        const isUnlocked = !!record;
+        const count = isUnlocked ? record.count : 0;
+
+        if (isUnlocked) {
+          const cachedUrl = CaseVaultManager.getCachedUrl(item.id);
+          const vidTag = item.isVideo ? `<span class="collection-vid-indicator">▶ VIDEO</span>` : '';
+          itemsHtml += `
+            <div class="album-preview-card unlocked" data-item-id="${item.id}" title="${escapeHtml(item.name)} (${escapeHtml(item.rarityName)}) • Click to view">
+              <div class="album-preview-thumb-wrap is-unlocked" style="--rarity-color:${item.rarityColor}; border-color:${item.rarityColor}; box-shadow:0 0 10px ${item.rarityGlow};">
+                ${item.isVideo
+                  ? `<video src="${cachedUrl ? escapeHtml(cachedUrl) : ''}" data-vault-item="${item.id}" muted playsinline class="album-preview-thumb" preload="metadata"></video>`
+                  : `<img src="${cachedUrl ? escapeHtml(cachedUrl) : ''}" data-vault-item="${item.id}" alt="${escapeHtml(item.name)}" class="album-preview-thumb" loading="lazy" />`
+                }
+                ${vidTag}
+                <span class="collection-count-badge">x${count}</span>
+              </div>
+              <span class="album-preview-name" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</span>
+              <span class="album-preview-rarity" style="color:${item.rarityColor}; font-weight:800; text-shadow:0 0 4px ${item.rarityGlow};">${escapeHtml(item.rarityName.toUpperCase())}</span>
+            </div>
+          `;
+          if (!cachedUrl) {
+            CaseVaultManager.getItemMediaUrl(item).then(mediaUrl => {
+              if (!mediaUrl) return;
+              const els = document.querySelectorAll(`[data-vault-item="${item.id}"]`);
+              els.forEach(el => { el.src = mediaUrl; });
+            });
+          }
+        } else {
+          itemsHtml += `
+            <div class="album-preview-card locked" data-item-id="${item.id}" data-item-name="${escapeHtml(item.name)}" title="${escapeHtml(item.name)} (Locked)">
+              <div class="album-preview-thumb-wrap" style="border-color:${item.rarityColor}44; box-shadow:0 0 6px ${item.rarityGlow}33;">
+                <span class="album-preview-locked-icon" style="color:${item.rarityColor}; text-shadow:0 0 8px ${item.rarityGlow};">🔒</span>
+                <span class="album-preview-locked-label">LOCKED</span>
+              </div>
+              <span class="album-preview-name" style="color:#ffffff; font-weight:700;" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</span>
+              <span class="album-preview-rarity" style="color:${item.rarityColor}; font-weight:800; text-shadow:0 0 4px ${item.rarityGlow};">${escapeHtml(item.rarityName.toUpperCase())}</span>
+            </div>
+          `;
+        }
+      });
+
+      const isRewardClaimed = inv.unlockedItems && !!inv.unlockedItems[album.rewardItemId];
+      const rewardName = album.rewardItemName || 'Album Reward';
+
+      const statusBadge = prog.isCompleted
+        ? `<span class="album-status-badge completed">✓ COMPLETED</span>`
+        : `<span class="album-status-badge">${prog.owned}/${prog.total}</span>`;
+
+      let rewardTag = '';
+      if (prog.isCompleted && !isRewardClaimed) {
+        rewardTag = `<button class="album-claim-reward-btn pulse" data-claim-album="${album.id}">🎁 CLAIM: ${escapeHtml(rewardName)}</button>`;
+      } else if (prog.isCompleted && isRewardClaimed) {
+        rewardTag = `<div class="album-reward-tag completed clickable-reward" data-view-reward="${album.rewardItemId}" title="Click to view reward in Lightbox"><span>🎁</span> <span>Unlocked: ${escapeHtml(rewardName)}</span></div>`;
+      } else {
+        rewardTag = `<div class="album-reward-tag" title="Complete album to unlock"><span>🎁</span> <span>Reward: ${escapeHtml(rewardName)} (Locked)</span></div>`;
+      }
+
+      gridHtml += `
+        <div class="album-card ${prog.isCompleted ? 'is-completed' : ''}" data-album-id="${album.id}">
+          <div class="album-card-header">
+            <div class="album-card-icon-title">
+              <span class="album-card-icon">${album.icon || '📁'}</span>
+              <div class="album-card-title-group">
+                <h4 class="album-card-title">${escapeHtml(album.name)}</h4>
+              </div>
+            </div>
+            <div class="album-card-header-actions">
+              ${statusBadge}
+              ${rewardTag}
+            </div>
+          </div>
+          <div class="album-progress-wrap">
+            <div class="album-progress-track">
+              <div class="album-progress-fill" style="width: ${prog.percent}%;"></div>
+            </div>
+            <span class="album-progress-text">${prog.percent}%</span>
+          </div>
+          <div class="album-pictures-section">
+            <span class="album-pictures-label">Album Pictures (${prog.owned}/${prog.total}):</span>
+            <div class="album-preview-items-grid">
+              ${itemsHtml}
+            </div>
+          </div>
+        </div>
+      `;
+    });
+
+    if (DOM.casesAlbumsGrid) {
+      DOM.casesAlbumsGrid.innerHTML = gridHtml;
+      DOM.casesAlbumsGrid.querySelectorAll('.album-card').forEach(card => {
+        // Claim reward button click
+        card.querySelectorAll('.album-claim-reward-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const aId = btn.getAttribute('data-claim-album');
+            claimAlbumReward(aId);
+          });
+        });
+
+        // Clickable claimed reward tag click -> open lightbox
+        card.querySelectorAll('.clickable-reward').forEach(tag => {
+          tag.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const rewId = tag.getAttribute('data-view-reward');
+            const rewItem = data.items.find(x => x.id === rewId);
+            if (rewItem) openCasesLightbox(rewItem);
+          });
+        });
+
+        // Unlocked picture click -> open lightbox
+        card.querySelectorAll('.album-preview-card.unlocked').forEach(pCard => {
+          pCard.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const itId = pCard.getAttribute('data-item-id');
+            const it = data.items.find(x => x.id === itId);
+            if (it) openCasesLightbox(it);
+          });
+        });
+
+        // Locked picture click -> show toast
+        card.querySelectorAll('.album-preview-card.locked').forEach(pCard => {
+          pCard.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const itName = pCard.getAttribute('data-item-name');
+            showToast(`🔒 "${itName}" is locked. Unbox it from cases to add it to your album!`);
+            SoundFX.playTone(280, 'sine', 0.12);
+          });
+        });
+
+        // Clicking the album card opens album detail view
+        card.addEventListener('click', () => {
+          const aId = card.getAttribute('data-album-id');
+          state.activeAlbumId = aId;
+          renderAlbumDetail(aId);
+          SoundFX.playSelect();
+        });
+      });
+    }
+
+    if (DOM.albumsCompletedBadge) {
+      DOM.albumsCompletedBadge.textContent = `${completedAlbumsCount}/${totalAlbumsCount} COMPLETED`;
+      if (DOM.cstatAlbumsCount) {
+        DOM.cstatAlbumsCount.textContent = `${completedAlbumsCount}/${totalAlbumsCount}`;
+      }
+      if (completedAlbumsCount === totalAlbumsCount && totalAlbumsCount > 0) {
+        DOM.albumsCompletedBadge.style.background = 'linear-gradient(135deg, rgba(46, 204, 113, 0.3), rgba(39, 174, 96, 0.3))';
+        DOM.albumsCompletedBadge.style.borderColor = '#2ecc71';
+        DOM.albumsCompletedBadge.style.color = '#a8ff78';
+      } else {
+        DOM.albumsCompletedBadge.style.background = '';
+        DOM.albumsCompletedBadge.style.borderColor = '';
+        DOM.albumsCompletedBadge.style.color = '';
+      }
+    }
+  }
+
+  // Render Single Album Detail View (Items sorted by rarity)
+  function renderAlbumDetail(albumId) {
+    const data = window.CASES_DATA;
+    if (!data || !Array.isArray(data.albums)) return;
+    const album = data.albums.find(a => a.id === albumId);
+    if (!album) return;
+
+    const inv = CaseCollectionManager.get();
+    const prog = getAlbumProgress(album, inv);
+
+    if (DOM.albumsOverviewSection) DOM.albumsOverviewSection.style.display = 'none';
+    if (DOM.albumDetailSection) DOM.albumDetailSection.style.display = 'block';
+
+    if (DOM.albumDetailIcon) DOM.albumDetailIcon.textContent = album.icon || '📁';
+    if (DOM.albumDetailTitle) DOM.albumDetailTitle.textContent = album.name;
+
+    if (DOM.albumDetailBadge) {
+      DOM.albumDetailBadge.textContent = prog.isCompleted ? '✓ COMPLETED' : `${prog.owned}/${prog.total}`;
+      if (prog.isCompleted) {
+        DOM.albumDetailBadge.classList.add('completed');
+      } else {
+        DOM.albumDetailBadge.classList.remove('completed');
+      }
+    }
+
+    if (DOM.albumDetailProgressFill) {
+      DOM.albumDetailProgressFill.style.width = `${prog.percent}%`;
+      if (prog.isCompleted) {
+        DOM.albumDetailProgressFill.classList.add('is-completed');
+      } else {
+        DOM.albumDetailProgressFill.classList.remove('is-completed');
+      }
+    }
+
+    if (DOM.albumDetailProgressText) {
+      DOM.albumDetailProgressText.textContent = `${prog.percent}% Complete (${prog.owned}/${prog.total})`;
+    }
+
+    if (DOM.albumDetailRewardTag) {
+      const isRewardClaimed = inv.unlockedItems && !!inv.unlockedItems[album.rewardItemId];
+      const rewardName = album.rewardItemName || 'Album Reward';
+
+      if (prog.isCompleted && !isRewardClaimed) {
+        DOM.albumDetailRewardTag.className = 'album-reward-container';
+        DOM.albumDetailRewardTag.onclick = null;
+        DOM.albumDetailRewardTag.innerHTML = `
+          <button class="album-claim-reward-btn pulse" data-claim-album="${album.id}">
+            🎁 CLAIM ALBUM REWARD: ${escapeHtml(rewardName)}
+          </button>
+        `;
+        const claimBtn = DOM.albumDetailRewardTag.querySelector('.album-claim-reward-btn');
+        if (claimBtn) {
+          claimBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            claimAlbumReward(album.id);
+          });
+        }
+      } else if (prog.isCompleted && isRewardClaimed) {
+        DOM.albumDetailRewardTag.className = 'album-reward-tag completed clickable-reward';
+        DOM.albumDetailRewardTag.innerHTML = `
+          <span class="reward-icon">🎁</span>
+          <span class="reward-text">Reward Unlocked: ${escapeHtml(rewardName)} (Click to view)</span>
+        `;
+        DOM.albumDetailRewardTag.onclick = (e) => {
+          e.stopPropagation();
+          const rewItem = data.items.find(x => x.id === album.rewardItemId);
+          if (rewItem) openCasesLightbox(rewItem);
+        };
+      } else {
+        DOM.albumDetailRewardTag.className = 'album-reward-tag';
+        DOM.albumDetailRewardTag.onclick = null;
+        DOM.albumDetailRewardTag.innerHTML = `
+          <span class="reward-icon">🎁</span>
+          <span class="reward-text">Reward: ${escapeHtml(rewardName)} (Collect all ${prog.total} items to unlock)</span>
+        `;
+      }
+    }
+
+    // Render items pre-sorted by rarity
+    if (DOM.albumItemsGrid) {
+      let gridHtml = '';
+      album.itemIds.forEach(itId => {
+        const item = data.items.find(x => x.id === itId);
+        if (!item) return;
+
+        const record = inv.unlockedItems ? inv.unlockedItems[item.id] : null;
+        const isUnlocked = !!record;
+        const count = isUnlocked ? record.count : 0;
+
+        if (isUnlocked) {
+          const cachedUrl = CaseVaultManager.getCachedUrl(item.id);
           const vidTag = item.isVideo ? `<span class="collection-vid-indicator">▶ VIDEO</span>` : '';
           gridHtml += `
             <div class="collection-card unlocked rarity-${item.rarity}" data-item-id="${item.id}" style="border-color:${item.rarityColor}; box-shadow:0 0 12px ${item.rarityGlow};">
@@ -7274,9 +8424,9 @@
           `;
           if (!cachedUrl) {
             CaseVaultManager.getItemMediaUrl(item).then(mediaUrl => {
-              if (!mediaUrl || !DOM.casesCollectionGrid) return;
-              const el = DOM.casesCollectionGrid.querySelector(`[data-vault-item="${item.id}"]`);
-              if (el) el.src = mediaUrl;
+              if (!mediaUrl) return;
+              const els = document.querySelectorAll(`[data-vault-item="${item.id}"]`);
+              els.forEach(el => { el.src = mediaUrl; });
             });
           }
         } else {
@@ -7295,10 +8445,10 @@
         }
       });
 
-      DOM.casesCollectionGrid.innerHTML = gridHtml;
+      DOM.albumItemsGrid.innerHTML = gridHtml;
 
       // Click card to open Lightbox
-      DOM.casesCollectionGrid.querySelectorAll('.collection-card.unlocked').forEach(card => {
+      DOM.albumItemsGrid.querySelectorAll('.collection-card.unlocked').forEach(card => {
         card.addEventListener('click', () => {
           const itId = card.getAttribute('data-item-id');
           const it = data.items.find(x => x.id === itId);
@@ -7308,7 +8458,39 @@
     }
   }
 
-  // Open Lightbox for full picture or video playback
+  // Render Media in Lightbox (supports Image, Video, Audio, YouTube)
+  function renderLightboxMedia(item, url) {
+    if (item.isYouTube || item.youtubeUrl) {
+      const ytUrl = item.youtubeUrl || url;
+      const embedUrl = item.youtubeEmbedUrl || (ytUrl ? ytUrl.replace('watch?v=', 'embed/') : '');
+      return `
+        <div class="lightbox-youtube-player">
+          <iframe src="${escapeHtml(embedUrl)}" class="lightbox-youtube-iframe" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+          <a href="${escapeHtml(ytUrl)}" target="_blank" rel="noopener noreferrer" class="youtube-external-btn">
+            <span>▶ Open on YouTube: ${escapeHtml(item.name)}</span>
+          </a>
+        </div>
+      `;
+    }
+    if (item.isAudio) {
+      const thumb = item.thumbPath || 'case opening/orbs/orb_secret.png';
+      return `
+        <div class="lightbox-audio-player">
+          <img src="${escapeHtml(thumb)}" alt="${escapeHtml(item.name)}" class="lightbox-audio-art" />
+          <div class="lightbox-audio-controls-wrap">
+            <div class="audio-title" style="font-family:var(--font-display); font-size:1.25rem; font-weight:800; color:#fff;">${escapeHtml(item.name)}</div>
+            <audio src="${escapeHtml(url)}" controls autoplay class="lightbox-audio-elem"></audio>
+          </div>
+        </div>
+      `;
+    }
+    if (item.isVideo) {
+      return `<video src="${escapeHtml(url)}" controls autoplay loop playsinline></video>`;
+    }
+    return `<img src="${escapeHtml(url)}" alt="${escapeHtml(item.name)}" />`;
+  }
+
+  // Open Lightbox for full picture, video, audio or YouTube playback
   function openCasesLightbox(item) {
     if (!DOM.casesLightboxModal) return;
     const inv = CaseCollectionManager.get();
@@ -7327,44 +8509,92 @@
 
     if (DOM.lightboxMetaText) {
       const rObj = window.CASES_DATA.rarities.find(r => r.key === item.rarity);
-      const chanceStr = formatRarityChance(rObj);
+      const chanceStr = rObj ? formatRarityChance(rObj, 'normal') : '';
       const dateStr = new Date(record.firstUnlocked).toLocaleDateString();
-      DOM.lightboxMetaText.textContent = `Rarity: ${item.rarityName} (${chanceStr}) • Unboxed: ${record.count} times • First found: ${dateStr}`;
+      if (item.rarity === 'album') {
+        DOM.lightboxMetaText.textContent = `Rarity: ${item.rarityName} (Album Reward) • Reward for: ${item.albumName || 'Album'} • Unlocked: ${record.count}x • First obtained: ${dateStr}`;
+      } else if (item.rarity === 'milestone') {
+        DOM.lightboxMetaText.textContent = `Rarity: Milestone Reward • Unlocked by collecting ${item.milestoneThreshold ? item.milestoneThreshold.toLocaleString() : ''} ${item.milestoneTargetName || ''} • First obtained: ${dateStr}`;
+      } else {
+        DOM.lightboxMetaText.textContent = `Rarity: ${item.rarityName} (${chanceStr}) • Unboxed: ${record.count} times • First found: ${dateStr}`;
+      }
     }
 
+    const activeMediaUrl = CaseVaultManager.getCachedUrl(item.id);
     if (DOM.lightboxMediaWrap) {
-      const cachedUrl = CaseVaultManager.getCachedUrl(item.id);
-      if (cachedUrl) {
-        if (item.isVideo) {
-          DOM.lightboxMediaWrap.innerHTML = `
-            <video src="${escapeHtml(cachedUrl)}" controls autoplay loop playsinline></video>
-          `;
-        } else {
-          DOM.lightboxMediaWrap.innerHTML = `
-            <img src="${escapeHtml(cachedUrl)}" alt="${escapeHtml(item.name)}" />
-          `;
-        }
+      if (activeMediaUrl) {
+        DOM.lightboxMediaWrap.innerHTML = renderLightboxMedia(item, activeMediaUrl);
       } else {
         DOM.lightboxMediaWrap.innerHTML = `
           <div class="lightbox-decrypting" style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:200px; color:${item.rarityColor};">
-            <span style="font-size:2rem; margin-bottom:8px;">🔓</span>
-            <span style="font-family:var(--font-display); font-weight:700;">Decrypting Secure Media...</span>
+            <span style="font-size:2rem; margin-bottom:8px;">🔒</span>
+            <span style="font-family:var(--font-display); font-weight:700;">Decrypting Vault Asset...</span>
           </div>
         `;
-        CaseVaultManager.getItemMediaUrl(item).then(mediaUrl => {
-          if (!mediaUrl || !DOM.lightboxMediaWrap) return;
-          if (item.isVideo) {
-            DOM.lightboxMediaWrap.innerHTML = `
-              <video src="${escapeHtml(mediaUrl)}" controls autoplay loop playsinline></video>
-            `;
-          } else {
-            DOM.lightboxMediaWrap.innerHTML = `
-              <img src="${escapeHtml(mediaUrl)}" alt="${escapeHtml(item.name)}" />
-            `;
+        CaseVaultManager.getItemMediaUrl(item).then(url => {
+          if (url && DOM.casesLightboxModal && DOM.casesLightboxModal.style.display !== 'none') {
+            if (DOM.lightboxMediaWrap) {
+              DOM.lightboxMediaWrap.innerHTML = renderLightboxMedia(item, url);
+            }
           }
         });
       }
     }
+
+    // Milestone Challenge Container in Lightbox
+    if (DOM.lightboxMilestoneContainer) {
+      const ms = (window.CASES_DATA.milestones || []).find(m => m.targetItemId === item.id);
+      if (ms) {
+        const currCount = record.count || 0;
+        const threshold = ms.threshold;
+        const pct = Math.min(100, Math.round((currCount / threshold) * 100));
+        const isClaimed = inv.unlockedItems && !!inv.unlockedItems[ms.rewardItemId];
+        const isClaimable = !isClaimed && currCount >= threshold;
+
+        DOM.lightboxMilestoneContainer.style.display = 'block';
+        DOM.lightboxMilestoneContainer.innerHTML = `
+          <div class="lightbox-milestone-challenge">
+            <div class="milestone-challenge-header">
+              <span class="milestone-icon">🎯</span>
+              <span>MILESTONE CHALLENGE</span>
+            </div>
+            <div class="milestone-challenge-desc">
+              Collect <strong>${threshold.toLocaleString()}</strong> copies to unlock <strong>${escapeHtml(ms.rewardItemName)}</strong>!
+            </div>
+            <div class="milestone-progress-bar-wrap">
+              <div class="milestone-progress-bar" style="width:${pct}%;"></div>
+            </div>
+            <div class="milestone-progress-text">
+              <span>${currCount.toLocaleString()} / ${threshold.toLocaleString()} (${pct}%)</span>
+              ${isClaimable ? `<button class="milestone-claim-btn pulse" data-lb-claim-milestone="${ms.id}">✨ CLAIM REWARD!</button>` : ''}
+              ${isClaimed ? `<span class="milestone-claimed-tag" data-lb-view-reward="${ms.rewardItemId}">🏆 Reward Unlocked (Click to view)</span>` : ''}
+            </div>
+          </div>
+        `;
+
+        const claimBtn = DOM.lightboxMilestoneContainer.querySelector('[data-lb-claim-milestone]');
+        if (claimBtn) {
+          claimBtn.addEventListener('click', () => {
+            claimMilestoneReward(ms.id);
+          });
+        }
+        const viewTag = DOM.lightboxMilestoneContainer.querySelector('[data-lb-view-reward]');
+        if (viewTag) {
+          viewTag.addEventListener('click', () => {
+            const rew = window.CASES_DATA.items.find(x => x.id === ms.rewardItemId);
+            if (rew) openCasesLightbox(rew);
+          });
+        }
+      } else {
+        DOM.lightboxMilestoneContainer.style.display = 'none';
+        DOM.lightboxMilestoneContainer.innerHTML = '';
+      }
+    }
+
+    DOM.casesLightboxModal.classList.remove('rarity-rainbow', 'rarity-milestone', 'rarity-album');
+    if (item.rarity === 'rainbow') DOM.casesLightboxModal.classList.add('rarity-rainbow');
+    if (item.rarity === 'milestone') DOM.casesLightboxModal.classList.add('rarity-milestone');
+    if (item.rarity === 'album') DOM.casesLightboxModal.classList.add('rarity-album');
 
     DOM.casesLightboxModal.style.display = 'flex';
     SoundFX.playSelect();
@@ -7372,9 +8602,14 @@
 
   function closeCasesLightbox() {
     if (DOM.casesLightboxModal) {
+      DOM.casesLightboxModal.classList.remove('rarity-rainbow', 'rarity-milestone', 'rarity-album');
       DOM.casesLightboxModal.style.display = 'none';
       if (DOM.lightboxMediaWrap) {
         DOM.lightboxMediaWrap.innerHTML = '';
+      }
+      if (DOM.lightboxMilestoneContainer) {
+        DOM.lightboxMilestoneContainer.style.display = 'none';
+        DOM.lightboxMilestoneContainer.innerHTML = '';
       }
     }
   }
@@ -7386,6 +8621,175 @@
       showToast('🗑️ Cases collection has been reset to 0.');
       SoundFX.playTone(320, 'sine', 0.15);
     }
+  }
+
+  // Claim an Album Completion Reward
+  function claimAlbumReward(albumId) {
+    const data = window.CASES_DATA;
+    if (!data || !Array.isArray(data.albums)) return;
+    const album = data.albums.find(a => a.id === albumId);
+    if (!album) return;
+
+    const inv = CaseCollectionManager.get();
+    const prog = getAlbumProgress(album, inv);
+    if (!prog.isCompleted) {
+      showToast(`🔒 Complete "${album.name}" (${prog.owned}/${prog.total}) to claim the reward!`);
+      SoundFX.playTone(280, 'sine', 0.12);
+      return;
+    }
+
+    const rewardItem = data.items.find(x => x.id === album.rewardItemId);
+    if (!rewardItem) {
+      showToast('⚠️ Reward item not found.');
+      return;
+    }
+
+    const alreadyClaimed = inv.unlockedItems && !!inv.unlockedItems[rewardItem.id];
+    const result = CaseCollectionManager.recordRewardItem(rewardItem);
+
+    if (SoundFX.enabled) {
+      SoundFX.playRarityReveal('album');
+    }
+
+    // Refresh UI
+    updateCasesCollectionUI(state.caseActiveFilter || 'all');
+
+    // Decrypt & open reveal modal
+    return CaseVaultManager.getItemMediaUrl(rewardItem).then(mediaUrl => {
+      openCasesRevealModal(rewardItem, result, mediaUrl);
+      return { rewardItem, result, mediaUrl };
+    });
+  }
+
+  // Claim an Item Quantity Milestone Reward
+  function claimMilestoneReward(milestoneId) {
+    const data = window.CASES_DATA;
+    if (!data || !Array.isArray(data.milestones)) return;
+    const ms = data.milestones.find(m => m.id === milestoneId);
+    if (!ms) return;
+
+    const inv = CaseCollectionManager.get();
+    const targetRecord = inv.unlockedItems[ms.targetItemId];
+    const targetCount = targetRecord ? targetRecord.count : 0;
+
+    if (targetCount < ms.threshold) {
+      showToast(`🔒 Collect ${ms.threshold.toLocaleString()} ${ms.targetItemName} to claim this reward! (${targetCount.toLocaleString()}/${ms.threshold.toLocaleString()})`);
+      SoundFX.playTone(280, 'sine', 0.12);
+      return;
+    }
+
+    const rewardItem = data.items.find(x => x.id === ms.rewardItemId);
+    if (!rewardItem) {
+      showToast('⚠️ Milestone reward item not found.');
+      return;
+    }
+
+    const alreadyClaimed = inv.unlockedItems && !!inv.unlockedItems[rewardItem.id];
+    const result = CaseCollectionManager.recordRewardItem(rewardItem);
+
+    if (SoundFX.enabled) {
+      SoundFX.playRarityReveal('milestone');
+    }
+
+    // Refresh UI
+    updateCasesCollectionUI(state.caseActiveFilter || 'all');
+    if (state.collectionActiveTab === 'milestones') {
+      renderMilestonesOverview();
+    }
+
+    // Decrypt & open reveal modal
+    return CaseVaultManager.getItemMediaUrl(rewardItem).then(mediaUrl => {
+      openCasesRevealModal(rewardItem, result, mediaUrl);
+      return { rewardItem, result, mediaUrl };
+    });
+  }
+
+  // Render Milestones Overview Section
+  function renderMilestonesOverview() {
+    const data = window.CASES_DATA;
+    if (!DOM.casesMilestonesGrid || !data || !Array.isArray(data.milestones)) return;
+
+    const inv = CaseCollectionManager.get();
+    let completedCount = 0;
+    let html = '';
+
+    data.milestones.forEach(ms => {
+      const targetRecord = inv.unlockedItems[ms.targetItemId];
+      const targetCount = targetRecord ? targetRecord.count : 0;
+      const threshold = ms.threshold;
+      const isCompleted = targetCount >= threshold;
+      const isClaimed = inv.unlockedItems && !!inv.unlockedItems[ms.rewardItemId];
+      if (isClaimed) completedCount++;
+      const pct = Math.min(100, Math.round((targetCount / threshold) * 100));
+
+      const targetItem = data.items.find(x => x.id === ms.targetItemId);
+      const rewardItem = data.items.find(x => x.id === ms.rewardItemId);
+      const targetThumb = targetItem ? targetItem.path : '';
+      const rewardThumb = rewardItem ? (rewardItem.thumbPath || rewardItem.path) : '';
+
+      let actionBtn = '';
+      if (isClaimed) {
+        actionBtn = `<button class="gold-action-btn small-btn view-reward-btn" data-view-reward="${ms.rewardItemId}">🏆 View Reward</button>`;
+      } else if (isCompleted) {
+        actionBtn = `<button class="milestone-claim-btn pulse" data-claim-milestone="${ms.id}">✨ CLAIM REWARD!</button>`;
+      } else {
+        actionBtn = `<span class="milestone-locked-pill" style="font-size:0.75rem; color:#8e9bb0; padding:5px 12px; background:rgba(255,255,255,0.06); border-radius:6px; font-weight:700;">🔒 ${pct}% PROGRESS</span>`;
+      }
+
+      html += `
+        <div class="milestone-overview-card ${isClaimed ? 'completed' : ''}">
+          <div class="milestone-card-left">
+            <div class="milestone-card-thumb-wrap" style="border-color:${targetItem ? targetItem.rarityColor : '#fff'};">
+              <img src="${escapeHtml(targetThumb)}" alt="${escapeHtml(ms.targetItemName)}" class="milestone-card-thumb" />
+            </div>
+            <div class="milestone-card-info">
+              <div class="milestone-card-title">${escapeHtml(ms.rewardItemName)}</div>
+              <div class="milestone-card-req">
+                Collect <strong>${threshold.toLocaleString()}x ${escapeHtml(ms.targetItemName)}</strong>
+              </div>
+              <div class="milestone-progress-bar-wrap" style="margin-top:4px;">
+                <div class="milestone-progress-bar" style="width:${pct}%;"></div>
+              </div>
+              <div class="milestone-progress-text">
+                <span>${targetCount.toLocaleString()} / ${threshold.toLocaleString()} (${pct}%)</span>
+                ${isClaimed ? '<span style="color:#2ecc71; font-weight:700;">Claimed</span>' : ''}
+              </div>
+            </div>
+          </div>
+          <div class="milestone-card-right">
+            ${actionBtn}
+          </div>
+        </div>
+      `;
+    });
+
+    DOM.casesMilestonesGrid.innerHTML = html;
+
+    if (DOM.milestonesCompletedBadge) {
+      DOM.milestonesCompletedBadge.textContent = `${completedCount}/${data.milestones.length} COMPLETED`;
+    }
+    if (DOM.cstatMilestonesCount) {
+      DOM.cstatMilestonesCount.textContent = `${completedCount}/${data.milestones.length}`;
+    }
+
+    // Bind claim button clicks
+    DOM.casesMilestonesGrid.querySelectorAll('[data-claim-milestone]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const msId = btn.getAttribute('data-claim-milestone');
+        claimMilestoneReward(msId);
+      });
+    });
+
+    // Bind view reward button clicks
+    DOM.casesMilestonesGrid.querySelectorAll('[data-view-reward]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const rewId = btn.getAttribute('data-view-reward');
+        const rewItem = data.items.find(x => x.id === rewId);
+        if (rewItem) openCasesLightbox(rewItem);
+      });
+    });
   }
 
   // Expose for testing & celebration controls
@@ -7410,7 +8814,14 @@
     createRouletteCard,
     updateCasesCollectionUI,
     updateCasesHomeBadge,
+    switchCollectionViewTab,
+    renderAlbumsOverview,
+    renderAlbumDetail,
+    claimAlbumReward,
+    claimMilestoneReward,
+    renderMilestonesOverview,
     CaseCollectionManager,
+    CaseVaultManager,
     openCasesRevealModal,
     openCasesLightbox
   };

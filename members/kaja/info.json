@@ -1,0 +1,19 @@
+{
+    "index": 70,
+    "id": "kaja",
+    "name": "Kaja",
+    "aliases": [
+        "Kajajuren"
+    ],
+    "folder": "members/kaja",
+    "categories": {
+        "spol": "Žensko",
+        "lokacija": "Varaždin",
+        "status": "Nije na serveru",
+        "dolazak_na_server": "2020",
+        "kilaza": "50-60 kg",
+        "okupacija": "Student",
+        "aktivnost": "Neaktivan"
+    },
+    "image": "members/kaja/avatar.png"
+}

@@ -120,9 +120,9 @@
   },
   {
     "id": 9,
-    "memberId": "filp_arapovic",
-    "memberName": "Filp Arapovic",
-    "memberImage": "members/filp arapovic/Screenshot_1.png",
+    "memberId": "filip_arapovic",
+    "memberName": "Filip Arapovic",
+    "memberImage": "members/filip arapovic/Screenshot_1.png",
     "emojis": [
       "♟️",
       "💯",
@@ -319,6 +319,103 @@
       "💅",
       "💩",
       "👣"
+    ]
+  },
+  {
+    "id": 25,
+    "memberId": "leonard_zadro",
+    "memberName": "Leonard Zadro",
+    "memberImage": "members/leonard zadro/IMG_20210801_195558.jpg",
+    "emojis": [
+      "🏳️‍🌈",
+      "🏳️‍🌈",
+      "🏳️‍🌈",
+      "🌽",
+      "🌌",
+      "🚀"
+    ]
+  },
+  {
+    "id": 26,
+    "memberId": "lin",
+    "memberName": "Lin",
+    "memberImage": "members/lin/Screenshot_2.png",
+    "emojis": [
+      "💸",
+      "💲",
+      "👷",
+      "🔫",
+      "👑"
+    ]
+  },
+  {
+    "id": 27,
+    "memberId": "marko",
+    "memberName": "Marko",
+    "memberImage": "members/marko/aaaaaa.jpg",
+    "emojis": [
+      "🔴",
+      "🔨",
+      "⚒️",
+      "🎮",
+      "🐦"
+    ]
+  },
+  {
+    "id": 28,
+    "memberId": "riza",
+    "memberName": "Riza",
+    "memberImage": "members/riza/Screenshot_2.png",
+    "emojis": [
+      "🌴",
+      "⚫",
+      "🍙",
+      "🚿"
+    ]
+  },
+  {
+    "id": 29,
+    "memberId": "erik",
+    "memberName": "Erik",
+    "memberImage": "members/erik/Screenshot_2.png",
+    "emojis": [
+      "🍁",
+      "🔥",
+      "👌",
+      "🏃",
+      "💨",
+      "🚲",
+      "🐱",
+      "👤"
+    ]
+  },
+  {
+    "id": 30,
+    "memberId": "grle",
+    "memberName": "Grle",
+    "memberImage": "members/grle/Screenshot_2.png",
+    "emojis": [
+      "📖",
+      "🈂️",
+      "🉐",
+      "🈚",
+      "👹",
+      "🖥️"
+    ]
+  },
+  {
+    "id": 31,
+    "memberId": "antea",
+    "memberName": "Antea",
+    "memberImage": "members/antea/avatar.png",
+    "emojis": [
+      "👧🏻",
+      "🎂",
+      "⚠️",
+      "🍿",
+      "🌶️",
+      "🍞",
+      "🌭"
     ]
   }
 ]

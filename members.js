@@ -461,13 +461,14 @@ window.MEMBERS_DATA = [
     },
     {
         "index": 26,
-        "id": "filp_arapovic",
-        "name": "Filp Arapovic",
+        "id": "filip_arapovic",
+        "name": "Filip Arapovic",
         "aliases": [
             "Koser",
-            "Koserkurac"
+            "Koserkurac",
+            "Filp Arapovic"
         ],
-        "folder": "members/filp arapovic",
+        "folder": "members/filip arapovic",
         "categories": {
             "spol": "Muško",
             "lokacija": "Rijeka",
@@ -477,7 +478,7 @@ window.MEMBERS_DATA = [
             "okupacija": "Student",
             "aktivnost": "Vrlo visoka"
         },
-        "image": "members/filp arapovic/Screenshot_1.png"
+        "image": "members/filip arapovic/Screenshot_1.png"
     },
     {
         "index": 27,
@@ -547,7 +548,7 @@ window.MEMBERS_DATA = [
             "lokacija": "Zagreb",
             "status": "Na serveru",
             "dolazak_na_server": "2023",
-            "kilaza": "70-80 kg",
+            "kilaza": "60-70 kg",
             "okupacija": "Student",
             "aktivnost": "Vrlo visoka"
         },
@@ -737,7 +738,7 @@ window.MEMBERS_DATA = [
             "spol": "Muško",
             "lokacija": "Rijeka, Zagreb",
             "status": "Na serveru",
-            "dolazak_na_server": "2023",
+            "dolazak_na_server": "2020",
             "kilaza": "70-80 kg",
             "okupacija": "Zaposlen",
             "aktivnost": "Neaktivan"
@@ -759,7 +760,7 @@ window.MEMBERS_DATA = [
             "spol": "Muško",
             "lokacija": "Rijeka",
             "status": "Na serveru",
-            "dolazak_na_server": "2022",
+            "dolazak_na_server": "2020",
             "kilaza": "100+ kg",
             "okupacija": "Student, Zaposlen",
             "aktivnost": "Vrlo visoka"
@@ -1212,10 +1213,10 @@ window.MEMBERS_DATA = [
         "folder": "members/toasty",
         "categories": {
             "spol": "Muško",
-            "lokacija": "Zagreb",
+            "lokacija": "Križevci",
             "status": "Nije na serveru",
             "dolazak_na_server": "2023",
-            "kilaza": "?",
+            "kilaza": "60-70 kg",
             "okupacija": "?",
             "aktivnost": "Neaktivan"
         },
@@ -1240,5 +1241,172 @@ window.MEMBERS_DATA = [
             "aktivnost": "Neaktivan"
         },
         "image": "members/doks/Pantheon_0.jpg"
+    },
+    {
+        "index": 68,
+        "id": "bornux",
+        "name": "Bornux",
+        "aliases": [],
+        "folder": "members/bornux",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Zagreb",
+            "status": "Nije na serveru",
+            "dolazak_na_server": "2021",
+            "kilaza": "70-80 kg",
+            "okupacija": "Zaposlen",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/bornux/avatar.jpg"
+    },
+    {
+        "index": 69,
+        "id": "janchuga",
+        "name": "Janchuga",
+        "aliases": [],
+        "folder": "members/janchuga",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Zagreb",
+            "status": "Nije na serveru",
+            "dolazak_na_server": "2021",
+            "kilaza": "70-80 kg",
+            "okupacija": "Student",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/janchuga/avatar.png"
+    },
+    {
+        "index": 70,
+        "id": "kaja",
+        "name": "Kaja",
+        "aliases": [
+            "Kajajuren"
+        ],
+        "folder": "members/kaja",
+        "categories": {
+            "spol": "Žensko",
+            "lokacija": "Varaždin",
+            "status": "Nije na serveru",
+            "dolazak_na_server": "2020",
+            "kilaza": "50-60 kg",
+            "okupacija": "Student",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/kaja/avatar.png"
+    },
+    {
+        "index": 71,
+        "id": "magdoj",
+        "name": "Magdoj",
+        "aliases": [
+            "Domagoj"
+        ],
+        "folder": "members/magdoj",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Zagreb",
+            "status": "Nije na serveru",
+            "dolazak_na_server": "2021",
+            "kilaza": "70-80 kg",
+            "okupacija": "Zaposlen",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/magdoj/avatar.png"
+    },
+    {
+        "index": 72,
+        "id": "dzamijel",
+        "name": "Dzamijel",
+        "aliases": [
+            "Danijel",
+            "Džamijel"
+        ],
+        "folder": "members/dzamijel",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Beograd",
+            "status": "Nije na serveru",
+            "dolazak_na_server": "2020",
+            "kilaza": "100+ kg",
+            "okupacija": "Zaposlen",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/dzamijel/avatar.png"
+    },
+    {
+        "index": 73,
+        "id": "kuzma",
+        "name": "Kuzma",
+        "aliases": [],
+        "folder": "members/kuzma",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Rijeka",
+            "status": "Nije na serveru",
+            "dolazak_na_server": "2022",
+            "kilaza": "70-80 kg",
+            "okupacija": "Student",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/kuzma/avatar.png"
+    },
+    {
+        "index": 74,
+        "id": "ezio",
+        "name": "Ezio",
+        "aliases": [
+            "Ecio"
+        ],
+        "folder": "members/ezio",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Rijeka",
+            "status": "Nije na serveru",
+            "dolazak_na_server": "2022",
+            "kilaza": "70-80 kg",
+            "okupacija": "Student",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/ezio/avatar.png"
+    },
+    {
+        "index": 75,
+        "id": "antea",
+        "name": "Antea",
+        "aliases": [
+            "Dinina bivša",
+            "Dinina bivsa"
+        ],
+        "folder": "members/antea",
+        "categories": {
+            "spol": "Žensko",
+            "lokacija": "Zagreb",
+            "status": "Nije na serveru",
+            "dolazak_na_server": "2023",
+            "kilaza": "80-90 kg",
+            "okupacija": "Student",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/antea/avatar.png"
+    },
+    {
+        "index": 76,
+        "id": "nano",
+        "name": "Nano",
+        "aliases": [
+            "Jajcetov brat"
+        ],
+        "folder": "members/nano",
+        "categories": {
+            "spol": "Muško",
+            "lokacija": "Rijeka",
+            "status": "Nije na serveru",
+            "dolazak_na_server": "2020",
+            "kilaza": "70-80 kg",
+            "okupacija": "Zaposlen",
+            "aktivnost": "Neaktivan"
+        },
+        "image": "members/nano/avatar.png"
     }
 ];

@@ -2,6 +2,18 @@
 window.PICTURES_DATA = [
   {
     "id": 1,
+    "filename": "bindi.jpg",
+    "image": "slike/bindi.jpg",
+    "type": "single",
+    "requiredMemberIds": [
+      "bindi"
+    ],
+    "requiredMemberNames": [
+      "Bindi"
+    ]
+  },
+  {
+    "id": 2,
     "filename": "bindi.png",
     "image": "slike/bindi.png",
     "type": "single",
@@ -13,7 +25,19 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 2,
+    "id": 3,
+    "filename": "bornux.jpg",
+    "image": "slike/bornux.jpg",
+    "type": "single",
+    "requiredMemberIds": [
+      "bornux"
+    ],
+    "requiredMemberNames": [
+      "Bornux"
+    ]
+  },
+  {
+    "id": 4,
     "filename": "dineks (2).jpg",
     "image": "slike/dineks (2).jpg",
     "type": "single",
@@ -25,7 +49,7 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 3,
+    "id": 5,
     "filename": "dineks (3).jpg",
     "image": "slike/dineks (3).jpg",
     "type": "single",
@@ -37,7 +61,7 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 4,
+    "id": 6,
     "filename": "dineks (4).jpg",
     "image": "slike/dineks (4).jpg",
     "type": "single",
@@ -49,7 +73,7 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 5,
+    "id": 7,
     "filename": "dineks 3.jpg",
     "image": "slike/dineks 3.jpg",
     "type": "single",
@@ -61,7 +85,7 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 6,
+    "id": 8,
     "filename": "dineks 4.jpg",
     "image": "slike/dineks 4.jpg",
     "type": "single",
@@ -73,7 +97,7 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 7,
+    "id": 9,
     "filename": "dineks.jpg",
     "image": "slike/dineks.jpg",
     "type": "single",
@@ -85,7 +109,7 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 8,
+    "id": 10,
     "filename": "dineks.png",
     "image": "slike/dineks.png",
     "type": "single",
@@ -97,7 +121,7 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 9,
+    "id": 11,
     "filename": "dinkes.jpg",
     "image": "slike/dinkes.jpg",
     "type": "single",
@@ -109,7 +133,55 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 10,
+    "id": 12,
+    "filename": "dino (2).jpg",
+    "image": "slike/dino (2).jpg",
+    "type": "single",
+    "requiredMemberIds": [
+      "dineks"
+    ],
+    "requiredMemberNames": [
+      "Dineks"
+    ]
+  },
+  {
+    "id": 13,
+    "filename": "dino (2).png",
+    "image": "slike/dino (2).png",
+    "type": "single",
+    "requiredMemberIds": [
+      "dineks"
+    ],
+    "requiredMemberNames": [
+      "Dineks"
+    ]
+  },
+  {
+    "id": 14,
+    "filename": "dino.jpg",
+    "image": "slike/dino.jpg",
+    "type": "single",
+    "requiredMemberIds": [
+      "dineks"
+    ],
+    "requiredMemberNames": [
+      "Dineks"
+    ]
+  },
+  {
+    "id": 15,
+    "filename": "dino.png",
+    "image": "slike/dino.png",
+    "type": "single",
+    "requiredMemberIds": [
+      "dineks"
+    ],
+    "requiredMemberNames": [
+      "Dineks"
+    ]
+  },
+  {
+    "id": 16,
     "filename": "doris.jpg",
     "image": "slike/doris.jpg",
     "type": "single",
@@ -121,7 +193,7 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 11,
+    "id": 17,
     "filename": "erik.jpg",
     "image": "slike/erik.jpg",
     "type": "single",
@@ -133,19 +205,91 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 12,
+    "id": 18,
+    "filename": "filip arapovic (2).jpg",
+    "image": "slike/filip arapovic (2).jpg",
+    "type": "single",
+    "requiredMemberIds": [
+      "filip_arapovic"
+    ],
+    "requiredMemberNames": [
+      "Filip Arapovic"
+    ]
+  },
+  {
+    "id": 19,
+    "filename": "filip arapovic (2).png",
+    "image": "slike/filip arapovic (2).png",
+    "type": "single",
+    "requiredMemberIds": [
+      "filip_arapovic"
+    ],
+    "requiredMemberNames": [
+      "Filip Arapovic"
+    ]
+  },
+  {
+    "id": 20,
+    "filename": "filip arapovic (3).jpg",
+    "image": "slike/filip arapovic (3).jpg",
+    "type": "single",
+    "requiredMemberIds": [
+      "filip_arapovic"
+    ],
+    "requiredMemberNames": [
+      "Filip Arapovic"
+    ]
+  },
+  {
+    "id": 21,
+    "filename": "filip arapovic (4).jpg",
+    "image": "slike/filip arapovic (4).jpg",
+    "type": "single",
+    "requiredMemberIds": [
+      "filip_arapovic"
+    ],
+    "requiredMemberNames": [
+      "Filip Arapovic"
+    ]
+  },
+  {
+    "id": 22,
+    "filename": "filip arapovic 2.jpg",
+    "image": "slike/filip arapovic 2.jpg",
+    "type": "single",
+    "requiredMemberIds": [
+      "filip_arapovic"
+    ],
+    "requiredMemberNames": [
+      "Filip Arapovic"
+    ]
+  },
+  {
+    "id": 23,
     "filename": "filip arapovic.jpg",
     "image": "slike/filip arapovic.jpg",
     "type": "single",
     "requiredMemberIds": [
-      "filp_arapovic"
+      "filip_arapovic"
     ],
     "requiredMemberNames": [
-      "Filp Arapovic"
+      "Filip Arapovic"
     ]
   },
   {
-    "id": 13,
+    "id": 24,
+    "filename": "filip arapovic.png",
+    "image": "slike/filip arapovic.png",
+    "type": "single",
+    "requiredMemberIds": [
+      "filip_arapovic"
+    ],
+    "requiredMemberNames": [
+      "Filip Arapovic"
+    ]
+  },
+  {
+    "id": 25,
     "filename": "filip metalac.png",
     "image": "slike/filip metalac.png",
     "type": "single",
@@ -157,7 +301,43 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 14,
+    "id": 26,
+    "filename": "filip metalac.webp",
+    "image": "slike/filip metalac.webp",
+    "type": "single",
+    "requiredMemberIds": [
+      "filip_metalac"
+    ],
+    "requiredMemberNames": [
+      "Filip Metalac"
+    ]
+  },
+  {
+    "id": 27,
+    "filename": "geoloki (2).png",
+    "image": "slike/geoloki (2).png",
+    "type": "single",
+    "requiredMemberIds": [
+      "geoloki"
+    ],
+    "requiredMemberNames": [
+      "Geoloki"
+    ]
+  },
+  {
+    "id": 28,
+    "filename": "geoloki (3).png",
+    "image": "slike/geoloki (3).png",
+    "type": "single",
+    "requiredMemberIds": [
+      "geoloki"
+    ],
+    "requiredMemberNames": [
+      "Geoloki"
+    ]
+  },
+  {
+    "id": 29,
     "filename": "geoloki 2.jpg",
     "image": "slike/geoloki 2.jpg",
     "type": "single",
@@ -169,7 +349,7 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 15,
+    "id": 30,
     "filename": "geoloki 3.jpg",
     "image": "slike/geoloki 3.jpg",
     "type": "single",
@@ -181,7 +361,7 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 16,
+    "id": 31,
     "filename": "geoloki 4.jpg",
     "image": "slike/geoloki 4.jpg",
     "type": "single",
@@ -193,7 +373,21 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 17,
+    "id": 32,
+    "filename": "geoloki i jajce.png",
+    "image": "slike/geoloki i jajce.png",
+    "type": "multi",
+    "requiredMemberIds": [
+      "geoloki",
+      "jajce"
+    ],
+    "requiredMemberNames": [
+      "Geoloki",
+      "Jajce"
+    ]
+  },
+  {
+    "id": 33,
     "filename": "geoloki.jpg",
     "image": "slike/geoloki.jpg",
     "type": "single",
@@ -205,7 +399,59 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 18,
+    "id": 34,
+    "filename": "geoloki.png",
+    "image": "slike/geoloki.png",
+    "type": "single",
+    "requiredMemberIds": [
+      "geoloki"
+    ],
+    "requiredMemberNames": [
+      "Geoloki"
+    ]
+  },
+  {
+    "id": 35,
+    "filename": "geoloki.webp",
+    "image": "slike/geoloki.webp",
+    "type": "single",
+    "requiredMemberIds": [
+      "geoloki"
+    ],
+    "requiredMemberNames": [
+      "Geoloki"
+    ]
+  },
+  {
+    "id": 36,
+    "filename": "grle.jpg",
+    "image": "slike/grle.jpg",
+    "type": "single",
+    "requiredMemberIds": [
+      "grle"
+    ],
+    "requiredMemberNames": [
+      "Grle"
+    ]
+  },
+  {
+    "id": 37,
+    "filename": "jajce i krof i leo.webp",
+    "image": "slike/jajce i krof i leo.webp",
+    "type": "multi",
+    "requiredMemberIds": [
+      "jajce",
+      "krof",
+      "leo"
+    ],
+    "requiredMemberNames": [
+      "Jajce",
+      "Krof",
+      "Leo"
+    ]
+  },
+  {
+    "id": 38,
     "filename": "janchi.png",
     "image": "slike/janchi.png",
     "type": "single",
@@ -217,7 +463,19 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 19,
+    "id": 39,
+    "filename": "kaja.png",
+    "image": "slike/kaja.png",
+    "type": "single",
+    "requiredMemberIds": [
+      "kaja"
+    ],
+    "requiredMemberNames": [
+      "Kaja"
+    ]
+  },
+  {
+    "id": 40,
     "filename": "kola (2).jpg",
     "image": "slike/kola (2).jpg",
     "type": "single",
@@ -229,7 +487,7 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 20,
+    "id": 41,
     "filename": "kola.jpg",
     "image": "slike/kola.jpg",
     "type": "single",
@@ -241,7 +499,43 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 21,
+    "id": 42,
+    "filename": "kola.png",
+    "image": "slike/kola.png",
+    "type": "single",
+    "requiredMemberIds": [
+      "kola"
+    ],
+    "requiredMemberNames": [
+      "Kola"
+    ]
+  },
+  {
+    "id": 43,
+    "filename": "kola.webp",
+    "image": "slike/kola.webp",
+    "type": "single",
+    "requiredMemberIds": [
+      "kola"
+    ],
+    "requiredMemberNames": [
+      "Kola"
+    ]
+  },
+  {
+    "id": 44,
+    "filename": "krof (9).jpg",
+    "image": "slike/krof (9).jpg",
+    "type": "single",
+    "requiredMemberIds": [
+      "krof"
+    ],
+    "requiredMemberNames": [
+      "Krof"
+    ]
+  },
+  {
+    "id": 45,
     "filename": "krof 1.jpg",
     "image": "slike/krof 1.jpg",
     "type": "single",
@@ -253,7 +547,7 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 22,
+    "id": 46,
     "filename": "krof 10.jpg",
     "image": "slike/krof 10.jpg",
     "type": "single",
@@ -265,7 +559,7 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 23,
+    "id": 47,
     "filename": "krof 11.png",
     "image": "slike/krof 11.png",
     "type": "single",
@@ -277,7 +571,7 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 24,
+    "id": 48,
     "filename": "krof 2.jpg",
     "image": "slike/krof 2.jpg",
     "type": "single",
@@ -289,7 +583,7 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 25,
+    "id": 49,
     "filename": "krof 3.jpg",
     "image": "slike/krof 3.jpg",
     "type": "single",
@@ -301,7 +595,7 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 26,
+    "id": 50,
     "filename": "krof 4.jpg",
     "image": "slike/krof 4.jpg",
     "type": "single",
@@ -313,7 +607,7 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 27,
+    "id": 51,
     "filename": "krof 5.jpg",
     "image": "slike/krof 5.jpg",
     "type": "single",
@@ -325,7 +619,7 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 28,
+    "id": 52,
     "filename": "krof 6.jpg",
     "image": "slike/krof 6.jpg",
     "type": "single",
@@ -337,7 +631,7 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 29,
+    "id": 53,
     "filename": "krof 7.jpg",
     "image": "slike/krof 7.jpg",
     "type": "single",
@@ -349,7 +643,7 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 30,
+    "id": 54,
     "filename": "krof 8.jpg",
     "image": "slike/krof 8.jpg",
     "type": "single",
@@ -361,7 +655,7 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 31,
+    "id": 55,
     "filename": "krof 9.png",
     "image": "slike/krof 9.png",
     "type": "single",
@@ -373,7 +667,7 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 32,
+    "id": 56,
     "filename": "krof and bindi.png",
     "image": "slike/krof and bindi.png",
     "type": "multi",
@@ -387,7 +681,21 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 33,
+    "id": 57,
+    "filename": "krof i jajce.jpg",
+    "image": "slike/krof i jajce.jpg",
+    "type": "multi",
+    "requiredMemberIds": [
+      "krof",
+      "jajce"
+    ],
+    "requiredMemberNames": [
+      "Krof",
+      "Jajce"
+    ]
+  },
+  {
+    "id": 58,
     "filename": "krof.jpg",
     "image": "slike/krof.jpg",
     "type": "single",
@@ -399,7 +707,19 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 34,
+    "id": 59,
+    "filename": "krof.png",
+    "image": "slike/krof.png",
+    "type": "single",
+    "requiredMemberIds": [
+      "krof"
+    ],
+    "requiredMemberNames": [
+      "Krof"
+    ]
+  },
+  {
+    "id": 60,
     "filename": "lean (2).jpg",
     "image": "slike/lean (2).jpg",
     "type": "single",
@@ -411,7 +731,19 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 35,
+    "id": 61,
+    "filename": "lean (2).png",
+    "image": "slike/lean (2).png",
+    "type": "single",
+    "requiredMemberIds": [
+      "lean"
+    ],
+    "requiredMemberNames": [
+      "Lean"
+    ]
+  },
+  {
+    "id": 62,
     "filename": "lean (3).jpg",
     "image": "slike/lean (3).jpg",
     "type": "single",
@@ -423,7 +755,43 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 36,
+    "id": 63,
+    "filename": "lean (3).png",
+    "image": "slike/lean (3).png",
+    "type": "single",
+    "requiredMemberIds": [
+      "lean"
+    ],
+    "requiredMemberNames": [
+      "Lean"
+    ]
+  },
+  {
+    "id": 64,
+    "filename": "lean (4).jpg",
+    "image": "slike/lean (4).jpg",
+    "type": "single",
+    "requiredMemberIds": [
+      "lean"
+    ],
+    "requiredMemberNames": [
+      "Lean"
+    ]
+  },
+  {
+    "id": 65,
+    "filename": "lean (4).png",
+    "image": "slike/lean (4).png",
+    "type": "single",
+    "requiredMemberIds": [
+      "lean"
+    ],
+    "requiredMemberNames": [
+      "Lean"
+    ]
+  },
+  {
+    "id": 66,
     "filename": "lean.jpg",
     "image": "slike/lean.jpg",
     "type": "single",
@@ -435,7 +803,7 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 37,
+    "id": 67,
     "filename": "lean.png",
     "image": "slike/lean.png",
     "type": "single",
@@ -447,7 +815,19 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 38,
+    "id": 68,
+    "filename": "leo (2).jpg",
+    "image": "slike/leo (2).jpg",
+    "type": "single",
+    "requiredMemberIds": [
+      "leo"
+    ],
+    "requiredMemberNames": [
+      "Leo"
+    ]
+  },
+  {
+    "id": 69,
     "filename": "leo (2).png",
     "image": "slike/leo (2).png",
     "type": "single",
@@ -459,7 +839,35 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 39,
+    "id": 70,
+    "filename": "leo i lean (2).jpg",
+    "image": "slike/leo i lean (2).jpg",
+    "type": "multi",
+    "requiredMemberIds": [
+      "leo",
+      "lean"
+    ],
+    "requiredMemberNames": [
+      "Leo",
+      "Lean"
+    ]
+  },
+  {
+    "id": 71,
+    "filename": "leo i lean.jpg",
+    "image": "slike/leo i lean.jpg",
+    "type": "multi",
+    "requiredMemberIds": [
+      "leo",
+      "lean"
+    ],
+    "requiredMemberNames": [
+      "Leo",
+      "Lean"
+    ]
+  },
+  {
+    "id": 72,
     "filename": "leo.jpg",
     "image": "slike/leo.jpg",
     "type": "single",
@@ -471,7 +879,7 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 40,
+    "id": 73,
     "filename": "leo.png",
     "image": "slike/leo.png",
     "type": "single",
@@ -483,7 +891,19 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 41,
+    "id": 74,
+    "filename": "leo.webp",
+    "image": "slike/leo.webp",
+    "type": "single",
+    "requiredMemberIds": [
+      "leo"
+    ],
+    "requiredMemberNames": [
+      "Leo"
+    ]
+  },
+  {
+    "id": 75,
     "filename": "lovro.png",
     "image": "slike/lovro.png",
     "type": "single",
@@ -495,7 +915,19 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 42,
+    "id": 76,
+    "filename": "neo.webp",
+    "image": "slike/neo.webp",
+    "type": "single",
+    "requiredMemberIds": [
+      "neo"
+    ],
+    "requiredMemberNames": [
+      "Neo"
+    ]
+  },
+  {
+    "id": 77,
     "filename": "nikola and geoloki.jpg",
     "image": "slike/nikola and geoloki.jpg",
     "type": "multi",
@@ -509,7 +941,7 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 43,
+    "id": 78,
     "filename": "nikola.jpg",
     "image": "slike/nikola.jpg",
     "type": "single",
@@ -521,7 +953,69 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 44,
+    "id": 79,
+    "filename": "noa (2).png",
+    "image": "slike/noa (2).png",
+    "type": "single",
+    "requiredMemberIds": [
+      "noa"
+    ],
+    "requiredMemberNames": [
+      "Noa"
+    ]
+  },
+  {
+    "id": 80,
+    "filename": "noa i krof.webp",
+    "image": "slike/noa i krof.webp",
+    "type": "multi",
+    "requiredMemberIds": [
+      "noa",
+      "krof"
+    ],
+    "requiredMemberNames": [
+      "Noa",
+      "Krof"
+    ]
+  },
+  {
+    "id": 81,
+    "filename": "noa.png",
+    "image": "slike/noa.png",
+    "type": "single",
+    "requiredMemberIds": [
+      "noa"
+    ],
+    "requiredMemberNames": [
+      "Noa"
+    ]
+  },
+  {
+    "id": 82,
+    "filename": "riza (2).jpg",
+    "image": "slike/riza (2).jpg",
+    "type": "single",
+    "requiredMemberIds": [
+      "riza"
+    ],
+    "requiredMemberNames": [
+      "Riza"
+    ]
+  },
+  {
+    "id": 83,
+    "filename": "riza (3).jpg",
+    "image": "slike/riza (3).jpg",
+    "type": "single",
+    "requiredMemberIds": [
+      "riza"
+    ],
+    "requiredMemberNames": [
+      "Riza"
+    ]
+  },
+  {
+    "id": 84,
     "filename": "riza.jpg",
     "image": "slike/riza.jpg",
     "type": "single",
@@ -533,7 +1027,7 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 45,
+    "id": 85,
     "filename": "riza.png",
     "image": "slike/riza.png",
     "type": "single",
@@ -545,7 +1039,7 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 46,
+    "id": 86,
     "filename": "sara.jpg",
     "image": "slike/sara.jpg",
     "type": "single",
@@ -557,7 +1051,7 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 47,
+    "id": 87,
     "filename": "sheldon (2).jpg",
     "image": "slike/sheldon (2).jpg",
     "type": "single",
@@ -569,7 +1063,7 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 48,
+    "id": 88,
     "filename": "sheldon (3).jpg",
     "image": "slike/sheldon (3).jpg",
     "type": "single",
@@ -581,7 +1075,19 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 49,
+    "id": 89,
+    "filename": "sheldon (5).jpg",
+    "image": "slike/sheldon (5).jpg",
+    "type": "single",
+    "requiredMemberIds": [
+      "sheldon"
+    ],
+    "requiredMemberNames": [
+      "Sheldon"
+    ]
+  },
+  {
+    "id": 90,
     "filename": "sheldon(4).jpg",
     "image": "slike/sheldon(4).jpg",
     "type": "single",
@@ -593,7 +1099,7 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 50,
+    "id": 91,
     "filename": "sheldon.jpg",
     "image": "slike/sheldon.jpg",
     "type": "single",
@@ -605,7 +1111,7 @@ window.PICTURES_DATA = [
     ]
   },
   {
-    "id": 51,
+    "id": 92,
     "filename": "vito juric.jpg",
     "image": "slike/vito juric.jpg",
     "type": "single",
@@ -614,6 +1120,30 @@ window.PICTURES_DATA = [
     ],
     "requiredMemberNames": [
       "Vito Juric"
+    ]
+  },
+  {
+    "id": 93,
+    "filename": "vito.webp",
+    "image": "slike/vito.webp",
+    "type": "single",
+    "requiredMemberIds": [
+      "vito"
+    ],
+    "requiredMemberNames": [
+      "Vito"
+    ]
+  },
+  {
+    "id": 94,
+    "filename": "veronika.png",
+    "image": "slike/veronika.png",
+    "type": "single",
+    "requiredMemberIds": [
+      "chudika"
+    ],
+    "requiredMemberNames": [
+      "Chudika"
     ]
   }
 ];

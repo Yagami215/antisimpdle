@@ -1,0 +1,17 @@
+{
+    "index": 69,
+    "id": "janchuga",
+    "name": "Janchuga",
+    "aliases": [],
+    "folder": "members/janchuga",
+    "categories": {
+        "spol": "Muško",
+        "lokacija": "Zagreb",
+        "status": "Nije na serveru",
+        "dolazak_na_server": "2021",
+        "kilaza": "70-80 kg",
+        "okupacija": "Student",
+        "aktivnost": "Neaktivan"
+    },
+    "image": "members/janchuga/avatar.png"
+}
