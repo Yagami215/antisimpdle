@@ -7174,8 +7174,18 @@
     DOM.casesOddsGrid.innerHTML = html;
   }
 
+  // Serverless backend API base URL (Vercel)
+  // When running locally on localhost, use relative '' to hit local server.py
+  // When running on Vercel itself, use relative ''
+  // When running on GitHub Pages (antisimp.online or *.github.io), point to Vercel backend!
+  const CASE_API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? ''
+    : (window.location.hostname.includes('vercel.app')
+      ? ''
+      : 'https://antisimpdle.vercel.app');
+
   // ========================================================
-  // CASE VAULT MEDIA MANAGER (WebAssembly + Server-Gated Cryptographic Black Box)
+  // CASE VAULT MEDIA MANAGER (WebAssembly + Vercel Server-Gated API)
   // ========================================================
   const CaseVaultManager = (() => {
     const mediaCache = new Map(); // itemId -> mediaUrl
@@ -7198,12 +7208,12 @@
         return itObj.path;
       }
 
-      // 2. Server-gated items (Verity & Rainbow): check if unlocked in inventory
+      // 2. Server-gated items (Verity & Rainbow): check if unlocked in inventory with token
       if (itObj && itObj.serverGated) {
         const inv = CaseCollectionManager.get();
         const record = inv && inv.unlockedItems ? inv.unlockedItems[itemId] : null;
-        if (record && record.token && window.location.protocol !== 'file:') {
-          const mediaUrl = `/api/media?id=${encodeURIComponent(itemId)}&token=${encodeURIComponent(record.token)}`;
+        if (record && record.token) {
+          const mediaUrl = `${CASE_API_BASE}/api/media?id=${encodeURIComponent(itemId)}&token=${encodeURIComponent(record.token)}`;
           mediaCache.set(itemId, mediaUrl);
           return mediaUrl;
         }
@@ -7213,7 +7223,7 @@
       return null;
     }
 
-    // Decrypts encrypted items through WebAssembly (Divine/HELL) or server API (Verity/Rainbow)
+    // Decrypts encrypted items through WebAssembly (Divine/HELL/Milestones) or Vercel server API (Verity/Rainbow)
     async function getItemMediaUrl(item) {
       if (!item) return null;
       if (mediaCache.has(item.id)) return mediaCache.get(item.id);
@@ -7224,7 +7234,7 @@
         return item.path;
       }
 
-      // 2. Encrypted items (Divine, HELL & Milestones): Decrypt via WebAssembly Black Box
+      // 2. WebAssembly Client-Side Encrypted items (Divine, HELL & Milestones): Decrypt purely in browser memory
       if (item.isEncrypted && item.vaultFile && item.itemCode && window.WasmVault) {
         try {
           if (item.isYouTube || item.mimeType === 'application/json') {
@@ -7247,12 +7257,12 @@
         }
       }
 
-      // 3. Encrypted items (Verity & Rainbow): Server-gated with HMAC token
+      // 3. Server-Gated Encrypted items (Verity & Rainbow): Decrypt via Vercel Server API
       if (item.serverGated) {
         const inv = CaseCollectionManager.get();
         const record = inv && inv.unlockedItems ? inv.unlockedItems[item.id] : null;
-        if (record && record.token && window.location.protocol !== 'file:') {
-          const mediaUrl = `/api/media?id=${encodeURIComponent(item.id)}&token=${encodeURIComponent(record.token)}`;
+        if (record && record.token) {
+          const mediaUrl = `${CASE_API_BASE}/api/media?id=${encodeURIComponent(item.id)}&token=${encodeURIComponent(record.token)}`;
           mediaCache.set(item.id, mediaUrl);
           return mediaUrl;
         }
@@ -7466,7 +7476,7 @@
     let serverMediaUrl = null;
 
     try {
-      const resp = await fetch('/api/open-case', {
+      const resp = await fetch(`${CASE_API_BASE}/api/open-case`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mode: 'normal' })
@@ -7486,7 +7496,7 @@
           const localItem = window.CASES_DATA.items.find(x => x.id === data.item.id);
           winner = localItem || data.item;
           serverToken = data.token || null;
-          serverMediaUrl = data.mediaUrl || null;
+          serverMediaUrl = data.mediaUrl ? (data.mediaUrl.startsWith('http') ? data.mediaUrl : `${CASE_API_BASE}${data.mediaUrl}`) : null;
         }
       }
     } catch (apiErr) {
