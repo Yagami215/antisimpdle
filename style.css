@@ -3925,6 +3925,12 @@ kbd {
 .roulette-card.rarity-hell .roulette-orb-thumb {
   filter: drop-shadow(0 0 20px rgba(255, 0, 0, 0.95));
 }
+.roulette-card.rarity-cruelty .roulette-orb-thumb {
+  filter: drop-shadow(0 0 12px rgba(157, 2, 8, 0.9));
+}
+.roulette-card.rarity-glitch .roulette-orb-thumb {
+  filter: drop-shadow(0 0 18px rgba(0, 255, 196, 0.95)) drop-shadow(0 0 8px rgba(0, 230, 255, 0.7));
+}
 
 .roulette-card:hover .roulette-mystery-thumb {
   transform: scale(1.08);
@@ -4329,9 +4335,42 @@ kbd {
 }
 
 .cfilter-pill[data-rarity="all"] {
-  background: linear-gradient(135deg, #ff1744 0%, #b30024 100%);
-  border-color: #ff758f;
+  background: #141414;
+  border-color: #383838;
   color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+}
+
+.cfilter-pill[data-rarity="all"]:hover {
+  background: #222222;
+  border-color: #555555;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+.cfilter-pill[data-rarity="all"].active {
+  background: #000000 !important;
+  border-color: #777777 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 16px rgba(255, 255, 255, 0.6) !important;
+}
+
+.cfilter-pill[data-rarity="cruelty"] {
+  background: linear-gradient(135deg, #800000 0%, #4a0000 100%);
+  border-color: #9d0208;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+.cfilter-pill[data-rarity="cruelty"]:hover {
+  background: linear-gradient(135deg, #9d0208 0%, #5c0000 100%);
+  border-color: #bd0208;
+  box-shadow: 0 0 12px rgba(157, 2, 8, 0.7);
+}
+
+.cfilter-pill[data-rarity="cruelty"].active {
+  background: #800000 !important;
+  border-color: #ff4d6d !important;
+  box-shadow: 0 0 18px rgba(157, 2, 8, 0.95) !important;
 }
 
 .cfilter-pill[data-rarity="common"] {
@@ -4397,6 +4436,25 @@ kbd {
   color: #002b25;
 }
 
+.cfilter-pill[data-rarity="glitch"] {
+  background: linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%);
+  border-color: #a855f7;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+.cfilter-pill[data-rarity="glitch"]:hover {
+  background: linear-gradient(135deg, #8b5cf6 0%, #5b21b6 100%);
+  border-color: #c084fc;
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.7);
+}
+
+.cfilter-pill[data-rarity="glitch"].active {
+  background: #6d28d9 !important;
+  border-color: #e9d5ff !important;
+  box-shadow: 0 0 18px rgba(168, 85, 247, 0.95) !important;
+}
+
 .cfilter-pill[data-rarity="hell"] {
   background: #ff0000;
   border-color: #ff6666;
@@ -4457,8 +4515,8 @@ kbd {
 .collection-card-thumb-wrap {
   position: relative;
   width: 100%;
-  flex: 1 1 auto;
-  min-height: 120px;
+  aspect-ratio: 1 / 1.45;
+  min-height: 230px;
   background: #050106;
   overflow: hidden;
 }
@@ -4468,8 +4526,9 @@ kbd {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex: 1 1 auto;
-  min-height: 110px;
+  width: 100%;
+  aspect-ratio: 1 / 1.45;
+  min-height: 230px;
 }
 
 .collection-card-thumb {
@@ -6104,9 +6163,11 @@ kbd {
     grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
     gap: 10px;
   }
-  .collection-card-thumb-wrap {
+  .collection-card-thumb-wrap,
+  .collection-card.locked .collection-card-thumb-wrap {
     height: auto;
-    min-height: 90px;
+    aspect-ratio: 1 / 1.45;
+    min-height: 160px;
   }
 }
 
@@ -6226,4 +6287,412 @@ kbd {
   color: #ffffff;
 }
 
+/* ========================================================
+   VOICE MODE STYLES (Matching Core Fantasy Theme)
+   ======================================================== */
 
+.voice-mini-medal {
+  color: #120308;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.voice-mini-medal .voice-medal-icon {
+  width: 22px;
+  height: 22px;
+  fill: #120308;
+  display: block;
+}
+
+/* Audio Stage */
+.voice-audio-stage {
+  position: relative;
+  width: 100%;
+  max-width: 620px;
+  margin: 10px auto 14px auto;
+  padding: 24px 20px 20px 20px;
+  background: linear-gradient(180deg, rgba(22, 6, 15, 0.92) 0%, rgba(12, 3, 8, 0.96) 100%);
+  border: 1px solid rgba(255, 23, 68, 0.35);
+  border-radius: 14px;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1), 0 10px 30px rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  overflow: hidden;
+}
+
+/* Wave visualizer */
+.voice-wave-visualizer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 48px;
+  width: 100%;
+  padding: 0 10px;
+}
+
+.voice-wave-visualizer .wave-bar {
+  display: block;
+  width: 4px;
+  height: 8px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #fce28b 0%, #e6b43a 100%);
+  box-shadow: 0 0 6px rgba(247, 213, 127, 0.45);
+  transition: height 0.25s ease, background 0.3s ease;
+}
+
+.voice-wave-visualizer.playing .wave-bar {
+  animation: voiceWaveBounce 0.9s ease-in-out infinite alternate;
+}
+
+.voice-wave-visualizer .wave-bar:nth-child(1)  { height: 10px; animation-delay: 0.05s; }
+.voice-wave-visualizer .wave-bar:nth-child(2)  { height: 16px; animation-delay: 0.15s; }
+.voice-wave-visualizer .wave-bar:nth-child(3)  { height: 26px; animation-delay: 0.3s; }
+.voice-wave-visualizer .wave-bar:nth-child(4)  { height: 18px; animation-delay: 0.45s; }
+.voice-wave-visualizer .wave-bar:nth-child(5)  { height: 32px; animation-delay: 0.1s; }
+.voice-wave-visualizer .wave-bar:nth-child(6)  { height: 42px; animation-delay: 0.25s; }
+.voice-wave-visualizer .wave-bar:nth-child(7)  { height: 28px; animation-delay: 0.5s; }
+.voice-wave-visualizer .wave-bar:nth-child(8)  { height: 38px; animation-delay: 0.35s; }
+.voice-wave-visualizer .wave-bar:nth-child(9)  { height: 44px; animation-delay: 0.15s; }
+.voice-wave-visualizer .wave-bar:nth-child(10) { height: 24px; animation-delay: 0.4s; }
+.voice-wave-visualizer .wave-bar:nth-child(11) { height: 34px; animation-delay: 0.2s; }
+.voice-wave-visualizer .wave-bar:nth-child(12) { height: 20px; animation-delay: 0.5s; }
+.voice-wave-visualizer .wave-bar:nth-child(13) { height: 14px; animation-delay: 0.3s; }
+.voice-wave-visualizer .wave-bar:nth-child(14) { height: 8px;  animation-delay: 0.1s; }
+
+@keyframes voiceWaveBounce {
+  0% {
+    transform: scaleY(0.3);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scaleY(1.3);
+    opacity: 1;
+    background: linear-gradient(180deg, #fff2c6 0%, #ff1744 100%);
+    box-shadow: 0 0 10px rgba(255, 23, 68, 0.7);
+  }
+  100% {
+    transform: scaleY(0.5);
+    opacity: 0.7;
+  }
+}
+
+/* Player main controls */
+.voice-player-main {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.voice-play-circle-btn {
+  width: 54px;
+  height: 54px;
+  min-width: 54px;
+  border-radius: 50%;
+  border: 2px solid #ff809b;
+  background: linear-gradient(180deg, #ff4d6d 0%, #ff1744 50%, #b30024 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.7), 0 0 18px var(--neon-red-glow);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0;
+}
+
+.voice-play-circle-btn:hover {
+  transform: scale(1.08);
+  border-color: #ffffff;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.8), 0 0 28px rgba(255, 23, 68, 0.85);
+}
+
+.voice-play-circle-btn:active {
+  transform: scale(0.96);
+}
+
+.voice-play-circle-btn .play-icon {
+  font-size: 1.35rem;
+  line-height: 1;
+  margin-left: 3px;
+}
+
+.voice-play-circle-btn.is-playing .play-icon {
+  margin-left: 0;
+}
+
+.voice-progress-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.voice-time-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: monospace;
+  font-size: 0.78rem;
+  color: var(--text-sub);
+}
+
+.voice-time-row .time-digit {
+  color: var(--text-gold);
+  font-weight: 700;
+}
+
+.voice-track-tag {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.voice-progress-bar-wrap {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: height 0.15s ease;
+}
+
+.voice-progress-bar-wrap:hover {
+  height: 10px;
+  border-color: rgba(255, 23, 68, 0.5);
+}
+
+.voice-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #ff1744 0%, #f7d57f 100%);
+  border-radius: 6px;
+  transition: width 0.1s linear;
+  box-shadow: 0 0 8px rgba(247, 213, 127, 0.6);
+}
+
+.voice-aux-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.voice-aux-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  color: var(--text-sub);
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.voice-aux-btn:hover {
+  background: rgba(255, 23, 68, 0.18);
+  border-color: var(--border-neon-red);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.voice-aux-btn:active {
+  transform: translateY(1px);
+}
+
+.voice-aux-btn.speed-btn {
+  font-family: monospace;
+  font-size: 0.75rem;
+  min-width: 38px;
+}
+
+.victory-voice-box {
+  width: 100%;
+  max-width: 440px;
+  margin: 12px auto 16px;
+  padding: 12px 18px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 2px solid rgba(247, 213, 127, 0.45);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8), 0 0 20px rgba(247, 213, 127, 0.25);
+  background: #0a0207;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.victory-voice-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--text-gold);
+}
+
+.victory-voice-time-digit {
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: var(--text-sub);
+}
+
+.victory-voice-player-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.victory-replay-play-btn {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+}
+
+.victory-voice-track-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.victory-voice-filename {
+  font-family: var(--font-display);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+
+/* -------------------------------------------------------------
+   Cruelty (#9d0208) & Glitch (#00ffc4) Rarity Visual Enhancements
+   ------------------------------------------------------------- */
+@keyframes glitchBorderShift {
+  0% {
+    box-shadow: 0 0 12px rgba(0, 255, 196, 0.7), inset 0 0 8px rgba(0, 255, 196, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 22px rgba(0, 255, 196, 0.95), 0 0 32px rgba(0, 230, 255, 0.4), inset 0 0 12px rgba(0, 255, 196, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 12px rgba(0, 255, 196, 0.7), inset 0 0 8px rgba(0, 255, 196, 0.25);
+  }
+}
+
+.collection-card.rarity-glitch {
+  border-color: #00ffc4 !important;
+  animation: glitchBorderShift 2.5s ease-in-out infinite !important;
+}
+
+.collection-card.rarity-glitch:hover {
+  box-shadow: 0 0 26px rgba(0, 255, 196, 0.95), 0 0 40px rgba(0, 230, 255, 0.7) !important;
+}
+
+.roulette-card.rarity-glitch {
+  border-color: #00ffc4 !important;
+  box-shadow: 0 0 14px rgba(0, 255, 196, 0.75) !important;
+}
+
+.collection-card.rarity-cruelty {
+  border-color: #9d0208 !important;
+  box-shadow: 0 0 12px rgba(157, 2, 8, 0.75) !important;
+}
+
+.collection-card.rarity-cruelty:hover {
+  box-shadow: 0 0 22px rgba(157, 2, 8, 0.95), 0 0 35px rgba(157, 2, 8, 0.6) !important;
+}
+
+.roulette-card.rarity-cruelty {
+  border-color: #9d0208 !important;
+  box-shadow: 0 0 12px rgba(157, 2, 8, 0.8) !important;
+}
+
+/* Glitch card outline & text in Case Drop Probabilities */
+.odds-item[data-rarity="glitch"],
+.odds-item.rarity-glitch {
+  border-color: #a855f7 !important;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.65) !important;
+}
+
+.odds-item[data-rarity="glitch"]:hover,
+.odds-item.rarity-glitch:hover {
+  border-color: #c084fc !important;
+  box-shadow: 0 0 18px rgba(168, 85, 247, 0.85) !important;
+}
+
+.odds-item[data-rarity="glitch"] .odds-rarity-name,
+.odds-item.rarity-glitch .odds-rarity-name {
+  color: #a855f7 !important;
+}
+
+.odds-item[data-rarity="glitch"] .odds-color-dot,
+.odds-item.rarity-glitch .odds-color-dot {
+  background: #a855f7 !important;
+  box-shadow: 0 0 8px rgba(168, 85, 247, 0.85) !important;
+}
+
+/* Cruelty collection card - Maroon Red */
+.collection-card.rarity-cruelty {
+  border-color: #800000 !important;
+  box-shadow: 0 0 12px rgba(128, 0, 0, 0.75) !important;
+}
+
+.collection-card.rarity-cruelty:hover {
+  border-color: #9d0208 !important;
+  box-shadow: 0 0 22px rgba(157, 2, 8, 0.95), 0 0 35px rgba(128, 0, 0, 0.6) !important;
+}
+
+.collection-card.locked.rarity-cruelty {
+  border-color: #4a0000 !important;
+}
+
+.collection-card.rarity-cruelty .collection-card-rarity {
+  color: #c00000 !important;
+}
+
+/* Glitch collection card - Purple */
+.collection-card.rarity-glitch {
+  border-color: #a855f7 !important;
+  box-shadow: 0 0 14px rgba(168, 85, 247, 0.75), inset 0 0 8px rgba(168, 85, 247, 0.25) !important;
+}
+
+.collection-card.rarity-glitch:hover {
+  border-color: #c084fc !important;
+  box-shadow: 0 0 26px rgba(168, 85, 247, 0.95), 0 0 40px rgba(192, 132, 252, 0.7) !important;
+}
+
+.collection-card.locked.rarity-glitch {
+  border-color: #581c87 !important;
+}
+
+.collection-card.rarity-glitch .collection-card-rarity {
+  color: #a855f7 !important;
+}
+
+
+/* Classic Mode Clues Panel */
+#classicCluesContainer {
+  max-width: 680px;
+}

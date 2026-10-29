@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=112">
+  <link rel="stylesheet" href="style.css?v=126">
 </head>
 <body>
   <!-- Atmospheric Fantasy Background -->
@@ -105,18 +105,20 @@
           </div>
         </div>
 
-        <!-- Mode 3: Voice / Catchphrase (Coming Soon) -->
-        <div class="mode-card card-ability disabled-mode" title="Voice clip mode coming soon!">
+        <!-- Mode 3: Voice (Active) -->
+        <div id="playVoiceCard" class="mode-card card-voice active-mode" role="button" tabindex="0">
           <div class="mode-medal">
             <div class="medal-ring">
-              <span class="medal-glyph">🔥</span>
+              <svg class="medal-glyph-svg" viewBox="0 0 24 24" width="28" height="28" fill="#f7d57f" aria-hidden="true">
+                <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15c-.08-.49-.49-.85-.98-.85-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V20c0 .55.45 1 1 1s1-.45 1-1v-2.08c3.02-.43 5.42-2.78 5.91-5.78.1-.6-.39-1.14-1-1.14z"/>
+              </svg>
             </div>
           </div>
           <div class="mode-card-body">
             <div class="mode-text-group">
-              <h2 class="mode-title">Voice Clip</h2>
+              <h2 class="mode-title">Voice</h2>
             </div>
-            <div class="mode-badge-soon">SOON</div>
+            <div id="voiceCardBadge" class="mode-ribbon-tag">DAILY #1</div>
           </div>
         </div>
 
@@ -163,7 +165,7 @@
             <div class="mode-text-group">
               <h2 class="mode-title">Open Cases</h2>
             </div>
-            <div id="casesCardBadge" class="mode-ribbon-tag badge-cases-gold">0/106 UNLOCKED</div>
+            <div id="casesCardBadge" class="mode-ribbon-tag badge-cases-gold">0/114 UNLOCKED</div>
           </div>
         </div>
 
@@ -248,6 +250,19 @@
           <button id="nextPracticeBtn" class="practice-action-btn small-btn">
             <span>🔄 NEXT PRACTICE MEMBER</span>
           </button>
+        </div>
+      </div>
+
+      <!-- Classic Member Clues Panel (Unlocks at 5, 7, and 10 guesses) -->
+      <div id="classicCluesContainer" class="quote-clues-container">
+        <div class="quote-clues-header">
+          <span class="quote-clues-title">💡 HINTS & CLUES</span>
+          <span id="classicCluesCounter" class="quote-clues-counter">0 / 3 Available</span>
+        </div>
+        <div class="quote-clues-grid">
+          <div id="classicClue1" class="quote-clue-card locked" data-clue-index="1" role="button" tabindex="0" title="Clue 1: Location"></div>
+          <div id="classicClue2" class="quote-clue-card locked" data-clue-index="2" role="button" tabindex="0" title="Clue 2: Joined Server"></div>
+          <div id="classicClue3" class="quote-clue-card locked" data-clue-index="3" role="button" tabindex="0" title="Clue 3: First Letter"></div>
         </div>
       </div>
 
@@ -505,7 +520,201 @@
 
     </section>
 
-    
+    <!-- ========================================================
+         VIEW 3B: VOICE GAME (Audio Clip Guessing)
+         ======================================================== -->
+    <section id="voiceView" class="view-section" style="display: none;">
+      
+      <!-- Voice Mode Header -->
+      <div class="game-header">
+        <div class="game-mode-banner">
+          <div class="mini-medal voice-mini-medal" title="Voice Mode">
+            <svg class="voice-medal-icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+              <path fill="currentColor" d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15c-.08-.49-.49-.85-.98-.85-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V20c0 .55.45 1 1 1s1-.45 1-1v-2.08c3.02-.43 5.42-2.78 5.91-5.78.1-.6-.39-1.14-1-1.14z"/>
+            </svg>
+          </div>
+          <div class="game-mode-meta">
+            <div class="mode-header-title-row">
+              <h2 id="voiceHeaderTitle" class="game-mode-name">VOICE MODE</h2>
+              <span id="voiceDailyBadge" class="daily-tag-badge">DAILY #<span id="voiceDailyNum">1</span></span>
+            </div>
+            <div class="mode-header-sub-row">
+              <span id="voiceHeaderHint" class="game-mode-hint">Who is speaking in this audio clip?</span>
+              <span id="voiceCountdownWrap" class="daily-timer-badge">⏳ Next voice in <strong id="voiceCountdown">00:00:00</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="header-right-actions">
+          <button id="voicePracticeToggleBtn" class="mode-pill-btn" title="Toggle Practice Mode (Play unlimited random voice clips)">
+            <span id="voicePracticeToggleIcon">🎲</span>
+            <span id="voicePracticeToggleText">Practice Mode</span>
+          </button>
+          <button id="backToHomeFromVoiceBtn" class="back-modes-btn">
+            <span>‹ All Game Modes</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Solved Today Banner -->
+      <div id="alreadySolvedVoiceBanner" class="solved-today-banner" style="display: none;">
+        <div class="solved-banner-left">
+          <span class="solved-trophy">👑</span>
+          <div class="solved-banner-text">
+            <h4>TODAY'S DAILY VOICE SOLVED!</h4>
+            <p>Next voice unlocks at midnight in <strong id="solvedVoiceCountdownClock">00:00:00</strong></p>
+          </div>
+        </div>
+        <div class="solved-banner-right">
+          <button id="viewSolvedVoiceSummaryBtn" class="gold-action-btn small-btn">
+            <span>📊 STATS & SHARE</span>
+          </button>
+          <button id="switchVoicePracticeBtn" class="practice-action-btn small-btn">
+            <span>🎲 PLAY PRACTICE</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Solved Practice Voice Banner -->
+      <div id="voicePracticeSolvedBanner" class="solved-today-banner practice-solved-banner" style="display: none;">
+        <div class="solved-banner-left">
+          <span class="solved-trophy">🎉</span>
+          <div class="solved-banner-text">
+            <h4>PRACTICE VOICE SOLVED!</h4>
+            <p>You guessed correctly! Ready for another voice clip?</p>
+          </div>
+        </div>
+        <div class="solved-banner-right">
+          <button id="nextVoicePracticeBtn" class="practice-action-btn small-btn">
+            <span>🔄 NEXT PRACTICE VOICE</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Voice Presentation Card -->
+      <div class="quote-display-card voice-display-card">
+        <!-- Multi-Speaker Tracker (visible if multiple members speak) -->
+        <div id="voiceSpeakersTracker" class="conv-speakers-tracker" style="display: none;">
+          <div class="tracker-header">
+            <span class="tracker-title">SPEAKERS TO GUESS</span>
+            <span id="voiceTrackerProgress" class="tracker-count">0 / 2 FOUND</span>
+          </div>
+          <div id="voiceTrackerChips" class="tracker-chips-row">
+            <!-- Chips rendered dynamically -->
+          </div>
+        </div>
+
+        <!-- Custom Audio Player Stage -->
+        <div class="voice-audio-stage">
+          <div class="voice-audio-glow-ring"></div>
+          
+          <div class="voice-wave-visualizer" id="voiceWaveVisualizer" title="Audio Equalizer">
+            <span class="wave-bar"></span>
+            <span class="wave-bar"></span>
+            <span class="wave-bar"></span>
+            <span class="wave-bar"></span>
+            <span class="wave-bar"></span>
+            <span class="wave-bar"></span>
+            <span class="wave-bar"></span>
+            <span class="wave-bar"></span>
+            <span class="wave-bar"></span>
+            <span class="wave-bar"></span>
+            <span class="wave-bar"></span>
+            <span class="wave-bar"></span>
+            <span class="wave-bar"></span>
+            <span class="wave-bar"></span>
+          </div>
+
+          <div class="voice-player-main">
+            <button id="voicePlayBtn" class="voice-play-circle-btn" aria-label="Play or Pause Voice Clip" title="Play Voice Clip">
+              <span id="voicePlayIcon" class="play-icon">▶</span>
+            </button>
+            <div class="voice-progress-container">
+              <div class="voice-time-row">
+                <span id="voiceCurrentTime" class="time-digit">0:00</span>
+                <span class="voice-track-tag">VOICE RECORDING</span>
+                <span id="voiceDuration" class="time-digit">0:00</span>
+              </div>
+              <div id="voiceProgressBarWrap" class="voice-progress-bar-wrap" role="slider" aria-label="Audio timeline" tabindex="0">
+                <div id="voiceProgressBar" class="voice-progress-bar" style="width: 0%;"></div>
+              </div>
+            </div>
+            <div class="voice-aux-controls">
+              <button id="voiceRestartBtn" class="voice-aux-btn" title="Restart Audio" aria-label="Restart">
+                <span>↺</span>
+              </button>
+              <button id="voiceSpeedBtn" class="voice-aux-btn speed-btn" title="Playback Speed" aria-label="Playback speed">
+                <span id="voiceSpeedText">1x</span>
+              </button>
+            </div>
+          </div>
+          <audio id="voiceAudioPlayer" preload="auto"></audio>
+        </div>
+
+        <!-- Solved Author Reveal Area -->
+        <div id="voiceAuthorReveal" class="quote-author-reveal" style="display: none;">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+
+      <!-- Voice Clues Panel (Unlocks at 5, 7, and 10 guesses) -->
+      <div id="voiceCluesContainer" class="quote-clues-container">
+        <div class="quote-clues-header">
+          <span class="quote-clues-title">💡 HINTS & CLUES</span>
+          <span id="voiceCluesCounter" class="quote-clues-counter">0 / 3 Available</span>
+        </div>
+        <div class="quote-clues-grid">
+          <div id="voiceClue1" class="quote-clue-card locked" data-clue-index="1" role="button" tabindex="0" title="Clue 1: Location"></div>
+          <div id="voiceClue2" class="quote-clue-card locked" data-clue-index="2" role="button" tabindex="0" title="Clue 2: Joined Server"></div>
+          <div id="voiceClue3" class="quote-clue-card locked" data-clue-index="3" role="button" tabindex="0" title="Clue 3: First Letter"></div>
+        </div>
+      </div>
+
+      <!-- Search and Guess Box (LoLdle input style) -->
+      <div class="search-panel">
+        <div class="search-box-wrap">
+          <div class="search-input-container">
+            <span class="search-icon">🔍</span>
+            <input 
+              type="text" 
+              id="voiceMemberInput" 
+              class="loldle-input" 
+              placeholder="Guess who is speaking... (e.g. lara, vito, krof, lean)" 
+              autocomplete="off" 
+              spellcheck="false"
+            />
+            <button id="voiceClearInputBtn" class="clear-btn" aria-label="Clear input" style="display: none;">✕</button>
+
+            <!-- Autocomplete Dropdown List -->
+            <div id="voiceAutocompleteDropdown" class="loldle-dropdown" style="display: none;"></div>
+          </div>
+
+          <button id="voiceGuessBtn" class="gold-action-btn">
+            <span>GUESS</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Guesses Log Section -->
+      <div class="guesses-container">
+        <div class="guesses-header-bar">
+          <div class="guesses-title-wrap">
+            <h3 class="guesses-title">GUESS HISTORY</h3>
+            <span id="voiceGuessCountBadge" class="gold-counter-badge">0 Guesses</span>
+          </div>
+          <span id="voiceHistorySubtext" class="categories-note">Guess member names to solve</span>
+        </div>
+
+        <div id="voiceGuessesList" class="quote-guesses-list">
+          <!-- Empty State -->
+          <div id="voiceEmptyGuessesState" class="loldle-empty-card">
+            <div class="empty-crest">🎤</div>
+            <h4>NO GUESSES YET</h4>
+          </div>
+        </div>
+      </div>
+
+    </section>
 
     <!-- ========================================================
          VIEW 4: EMOJI GAME (Set of Emojis Representation)
@@ -817,7 +1026,7 @@
             <span>📦 Open Case</span>
           </button>
           <button id="casesTabCollectionBtn" class="gold-outline-btn small-btn" title="View Collection">
-            <span>🏆 Collection (<span id="casesNavUnlockedCount">0</span>/<span id="casesNavTotalCount">106</span>)</span>
+            <span>🏆 Collection (<span id="casesNavUnlockedCount">0</span>/<span id="casesNavTotalCount">114</span>)</span>
           </button>
         </div>
       </div>
@@ -899,7 +1108,7 @@
             <span class="cstat-label">CASES OPENED</span>
           </div>
           <div class="collection-stat-item">
-            <span class="cstat-num"><span id="cstatUniqueUnlocked">0</span> / <span id="cstatTotalItems">106</span></span>
+            <span class="cstat-num"><span id="cstatUniqueUnlocked">0</span> / <span id="cstatTotalItems">114</span></span>
             <span class="cstat-label">UNIQUE UNLOCKED</span>
           </div>
           <div class="collection-stat-item">
@@ -910,16 +1119,16 @@
 
         <!-- Collection Mode Sub-Tabs (All Items vs Albums vs Milestones) -->
         <div class="collection-view-tabs" id="collectionViewTabs">
-          <button type="button" id="collViewAllBtn" class="cview-tab-btn active"><span class="cview-tab-icon">🖼️</span><span class="cview-tab-text">All Items</span><span class="cview-tab-count">(<span id="cstatAllItemsCount">0/106</span>)</span></button>
-          <button type="button" id="collViewAlbumsBtn" class="cview-tab-btn"><span class="cview-tab-icon">📚</span><span class="cview-tab-text">Albums</span><span class="cview-tab-count">(<span id="cstatAlbumsCount">0/12</span>)</span></button>
+          <button type="button" id="collViewAllBtn" class="cview-tab-btn active"><span class="cview-tab-icon">🖼️</span><span class="cview-tab-text">All Items</span><span class="cview-tab-count">(<span id="cstatAllItemsCount">0/114</span>)</span></button>
+          <button type="button" id="collViewAlbumsBtn" class="cview-tab-btn"><span class="cview-tab-icon">📚</span><span class="cview-tab-text">Albums</span><span class="cview-tab-count">(<span id="cstatAlbumsCount">0/13</span>)</span></button>
           <button type="button" id="collViewMilestonesBtn" class="cview-tab-btn"><span class="cview-tab-icon">🎯</span><span class="cview-tab-text">Milestones</span><span class="cview-tab-count">(<span id="cstatMilestonesCount">0/5</span>)</span></button>
         </div>
 
-        <!-- Section 1: All Items View (Rarity Filters + 106-item Grid) -->
+        <!-- Section 1: All Items View (Rarity Filters + 114-item Grid) -->
         <div id="casesAllItemsView">
           <!-- Rarity Filters -->
           <div class="collection-filters" id="collectionFilters">
-            <button class="cfilter-pill active" data-rarity="all">ALL (106)</button>
+            <button class="cfilter-pill active" data-rarity="all">ALL (114)</button>
             <!-- Dynamic rarity pills -->
           </div>
 
@@ -938,7 +1147,7 @@
                 <span class="albums-summary-title">THEMED ALBUMS</span>
                 <span class="albums-summary-subtitle">Collect complete picture sets from cases to unlock future exclusive rewards!</span>
               </div>
-              <div class="albums-summary-badge" id="albumsCompletedBadge">0/12 COMPLETED</div>
+              <div class="albums-summary-badge" id="albumsCompletedBadge">0/13 COMPLETED</div>
             </div>
             <div class="albums-grid" id="casesAlbumsGrid">
               <!-- Rendered dynamically from window.CASES_DATA.albums -->
@@ -1040,6 +1249,9 @@
       <!-- Solved Quote Box -->
       <div id="victoryQuoteBox" class="victory-quote-box" style="display: none;"></div>
 
+      <!-- Solved Voice Box -->
+      <div id="victoryVoiceBox" class="victory-voice-box" style="display: none;"></div>
+
       <!-- Solved Emoji Box -->
       <div id="victoryEmojiBox" class="victory-emoji-box" style="display: none;"></div>
 
@@ -1102,6 +1314,7 @@
       <div class="stats-tabs-bar">
         <button id="statsTabClassic" class="stats-tab-btn active">CLASSIC MODE</button>
         <button id="statsTabQuote" class="stats-tab-btn">QUOTE MODE</button>
+        <button id="statsTabVoice" class="stats-tab-btn">VOICE MODE</button>
         <button id="statsTabEmoji" class="stats-tab-btn">EMOJI MODE</button>
         <button id="statsTabPicture" class="stats-tab-btn">PICTURE MODE</button>
       </div>
@@ -1294,15 +1507,15 @@
             <div class="update-log-icon-wrap icon-cases">📦</div>
             <div class="update-log-content">
               <div class="update-log-title">64 nova case itema</div>
-              <span class="update-log-tag tag-cases">CASE OPENING (106)</span>
+              <span class="update-log-tag tag-cases">CASE OPENING (114)</span>
             </div>
           </div>
 
-          <!-- Item 5: albumi -> 12 novih itema -->
+          <!-- Item 5: albumi -> 13 novih itema -->
           <div class="update-log-item">
             <div class="update-log-icon-wrap icon-albums">📖</div>
             <div class="update-log-content">
-              <div class="update-log-title">albumi ➔ 12 novih itema</div>
+              <div class="update-log-title">albumi ➔ 13 novih itema</div>
               <span class="update-log-tag tag-albums">ALBUMI</span>
             </div>
           </div>
@@ -1347,10 +1560,11 @@
   <!-- Scripts -->
   <script src="members.js"></script>
   <script src="quotes.js?v=101"></script>
+  <script src="voices.js?v=101"></script>
   <script src="emojis.js"></script>
   <script src="pictures.js?v=101"></script>
-  <script src="cases.js?v=106"></script>
-  <script src="case opening/vault/vault_wasm.js?v=106"></script>
-  <script src="app.js?v=114"></script>
+  <script src="cases.js?v=117"></script>
+  <script src="case opening/vault/vault_wasm.js?v=117"></script>
+  <script src="app.js?v=135"></script>
 </body>
 </html>

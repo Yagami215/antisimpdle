@@ -216,6 +216,15 @@
       if (rarity === 'hell') {
         this.playTone(110, 'sawtooth', 0.8, 0.18);
         setTimeout(() => this.playTone(85, 'sawtooth', 1.2, 0.22), 200);
+      } else if (rarity === 'glitch') {
+        this.playTone(740, 'square', 0.12, 0.15);
+        setTimeout(() => this.playTone(1480, 'sawtooth', 0.15, 0.18), 70);
+        setTimeout(() => this.playTone(554, 'square', 0.18, 0.16), 140);
+        setTimeout(() => this.playTone(1108, 'sawtooth', 0.35, 0.18), 220);
+      } else if (rarity === 'cruelty') {
+        this.playTone(130.81, 'sawtooth', 0.3, 0.14);
+        setTimeout(() => this.playTone(164.81, 'sawtooth', 0.35, 0.14), 90);
+        setTimeout(() => this.playTone(196.00, 'triangle', 0.45, 0.16), 180);
       } else if (rarity === 'divine') {
         this.playTone(587.33, 'sine', 0.3, 0.1);
         setTimeout(() => this.playTone(880, 'triangle', 0.4, 0.12), 150);
@@ -557,6 +566,16 @@
     }
   };
 
+  function flashVictoryScreen() {
+    if (!DOM.victoryFlash) return;
+    DOM.victoryFlash.classList.remove('flash-active');
+    void DOM.victoryFlash.offsetWidth;
+    DOM.victoryFlash.classList.add('flash-active');
+    setTimeout(() => {
+      if (DOM.victoryFlash) DOM.victoryFlash.classList.remove('flash-active');
+    }, 800);
+  }
+
   // --- Daily Configuration (Wordle-Style Midnight Reset) ---
   const DAILY_CONFIG = {
     // Launch Date: October 22, 2026. Day 1 starts here.
@@ -763,14 +782,15 @@
       return null;
     },
 
-    save(dateKey, gameNumber, targetMember, guessesHistory, isWon) {
+    save(dateKey, gameNumber, targetMember, guessesHistory, isWon, revealedClues) {
       try {
         const data = {
           dateKey,
           gameNumber,
           targetId: targetMember ? targetMember.id : null,
           guesses: guessesHistory,
-          isWon: !!isWon
+          isWon: !!isWon,
+          revealedClues: Array.from(revealedClues || [])
         };
         localStorage.setItem(this.KEY, JSON.stringify(data));
       } catch (e) {}
@@ -1029,6 +1049,113 @@
     }
   };
 
+  // --- Voice Statistics Persistence ---
+  const VoiceStatsManager = {
+    KEY: 'antisimpdle_voice_stats',
+
+    get() {
+      try {
+        const raw = localStorage.getItem(this.KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && typeof parsed.played === 'number') {
+            return parsed;
+          }
+        }
+      } catch (e) {}
+      return {
+        played: 0,
+        won: 0,
+        currentStreak: 0,
+        maxStreak: 0,
+        lastWonDateKey: null,
+        distribution: { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0, '7+': 0 }
+      };
+    },
+
+    recordWin(guessCount, dateKey) {
+      const stats = this.get();
+      if (stats.lastWonDateKey === dateKey) return stats;
+
+      stats.played += 1;
+      stats.won += 1;
+
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yKey = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+
+      if (stats.lastWonDateKey === yKey) {
+        stats.currentStreak += 1;
+      } else {
+        stats.currentStreak = 1;
+      }
+
+      stats.lastWonDateKey = dateKey;
+      if (stats.currentStreak > stats.maxStreak) {
+        stats.maxStreak = stats.currentStreak;
+      }
+
+      const bucket = guessCount >= 7 ? '7+' : String(guessCount);
+      stats.distribution[bucket] = (stats.distribution[bucket] || 0) + 1;
+
+      try {
+        localStorage.setItem(this.KEY, JSON.stringify(stats));
+      } catch (e) {}
+
+      return stats;
+    }
+  };
+
+  // --- Voice Daily Save Persistence ---
+  const VoiceDailyStateManager = {
+    KEY: 'antisimpdle_voice_daily_save',
+
+    load(currentDateKey) {
+      try {
+        const raw = localStorage.getItem(this.KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && parsed.dateKey === currentDateKey) {
+            return parsed;
+          }
+        }
+      } catch (e) {}
+      return null;
+    },
+
+    save(dateKey, gameNumber, voiceId, guesses, foundMemberIds, isWon, revealedClues) {
+      try {
+        const data = {
+          dateKey,
+          gameNumber,
+          voiceId,
+          guesses,
+          foundMemberIds: Array.from(foundMemberIds || []),
+          isWon: !!isWon,
+          revealedClues: Array.from(revealedClues || [])
+        };
+        localStorage.setItem(this.KEY, JSON.stringify(data));
+      } catch (e) {}
+    },
+
+    clear() {
+      try {
+        localStorage.removeItem(this.KEY);
+      } catch (e) {}
+    }
+  };
+
+  // Deterministically selects today's voice puzzle from voices list
+  function getDailyVoice(dayIndex, voices) {
+    if (!voices || voices.length === 0) return null;
+    const N = voices.length;
+    const cycle = Math.floor(dayIndex / N);
+    const cycleSeed = 75431 + cycle * 4513;
+    const perm = getDeterministicPermutation(N, cycleSeed);
+    const voiceIndex = perm[dayIndex % N];
+    return voices[voiceIndex];
+  }
+
   // Deterministically selects today's emoji puzzle from emojis list
   function getDailyEmoji(dayIndex, emojis) {
     if (!emojis || emojis.length === 0) return null;
@@ -1082,6 +1209,8 @@
     practiceGuessedIds: new Set(),
     practiceSolvedIds: new Set(),
     practiceIsWon: false,
+    classicDailyRevealedClues: new Set(),
+    classicPracticeRevealedClues: new Set(),
     selectedDropdownIndex: -1,
     currentMatches: [],
     activeView: 'home', // 'home' | 'classic' | 'quote' | 'emoji' | 'picture'
@@ -1144,6 +1273,27 @@
     pictureCurrentMatches: [],
     pictureSelectedDropdownIndex: -1,
 
+    // Voice Mode state
+    voices: [],
+    voiceTarget: null,
+    voiceDailyTarget: null,
+    voicePracticeTarget: null,
+    voiceGameMode: 'daily', // 'daily' | 'practice'
+    voiceDailyGuesses: [],
+    voiceDailyGuessedIds: new Set(),
+    voiceDailyFoundMemberIds: new Set(),
+    voiceDailyRevealedClues: new Set(),
+    voiceDailyIsWon: false,
+    voicePracticeGuesses: [],
+    voicePracticeGuessedIds: new Set(),
+    voicePracticeFoundMemberIds: new Set(),
+    voicePracticeSolvedIds: new Set(),
+    voicePracticeRevealedClues: new Set(),
+    voicePracticeIsWon: false,
+    voiceCurrentMatches: [],
+    voiceSelectedDropdownIndex: -1,
+    voiceAudioSpeed: 1.0,
+
     lastVictoryMode: 'classic', // 'classic' | 'quote' | 'emoji' | 'picture'
     statsActiveTab: 'classic', // 'classic' | 'quote' | 'emoji' | 'picture'
 
@@ -1162,6 +1312,10 @@
 
   function getActiveHistory() {
     return state.gameMode === 'daily' ? state.guessesHistory : state.practiceHistory;
+  }
+
+  function getActiveClassicRevealedClues() {
+    return state.gameMode === 'daily' ? state.classicDailyRevealedClues : state.classicPracticeRevealedClues;
   }
 
   function getActiveQuoteGuessedIds() {
@@ -1190,6 +1344,22 @@
 
   function getActiveEmojiRevealedClues() {
     return state.emojiGameMode === 'daily' ? state.emojiDailyRevealedClues : state.emojiPracticeRevealedClues;
+  }
+
+  function getActiveVoiceGuessedIds() {
+    return state.voiceGameMode === 'daily' ? state.voiceDailyGuessedIds : state.voicePracticeGuessedIds;
+  }
+
+  function getActiveVoiceHistory() {
+    return state.voiceGameMode === 'daily' ? state.voiceDailyGuesses : state.voicePracticeGuesses;
+  }
+
+  function getActiveVoiceFoundIds() {
+    return state.voiceGameMode === 'daily' ? state.voiceDailyFoundMemberIds : state.voicePracticeFoundMemberIds;
+  }
+
+  function getActiveVoiceRevealedClues() {
+    return state.voiceGameMode === 'daily' ? state.voiceDailyRevealedClues : state.voicePracticeRevealedClues;
   }
 
   function getActivePictureGuessedIds() {
@@ -1361,6 +1531,59 @@
     victoryPictureBox: document.getElementById('victoryPictureBox'),
     statsTabPicture: document.getElementById('statsTabPicture'),
 
+    // Voice Mode Elements
+    playVoiceCard: document.getElementById('playVoiceCard'),
+    voiceCardBadge: document.getElementById('voiceCardBadge'),
+    voiceView: document.getElementById('voiceView'),
+    voiceHeaderTitle: document.getElementById('voiceHeaderTitle'),
+    voiceDailyBadge: document.getElementById('voiceDailyBadge'),
+    voiceDailyNum: document.getElementById('voiceDailyNum'),
+    voiceHeaderHint: document.getElementById('voiceHeaderHint'),
+    voiceCountdownWrap: document.getElementById('voiceCountdownWrap'),
+    voiceCountdown: document.getElementById('voiceCountdown'),
+    voicePracticeToggleBtn: document.getElementById('voicePracticeToggleBtn'),
+    voicePracticeToggleIcon: document.getElementById('voicePracticeToggleIcon'),
+    voicePracticeToggleText: document.getElementById('voicePracticeToggleText'),
+    backToHomeFromVoiceBtn: document.getElementById('backToHomeFromVoiceBtn'),
+
+    alreadySolvedVoiceBanner: document.getElementById('alreadySolvedVoiceBanner'),
+    voicePracticeSolvedBanner: document.getElementById('voicePracticeSolvedBanner'),
+    solvedVoiceCountdownClock: document.getElementById('solvedVoiceCountdownClock'),
+    viewSolvedVoiceSummaryBtn: document.getElementById('viewSolvedVoiceSummaryBtn'),
+    switchVoicePracticeBtn: document.getElementById('switchVoicePracticeBtn'),
+    nextVoicePracticeBtn: document.getElementById('nextVoicePracticeBtn'),
+
+    voiceSpeakersTracker: document.getElementById('voiceSpeakersTracker'),
+    voiceTrackerProgress: document.getElementById('voiceTrackerProgress'),
+    voiceTrackerChips: document.getElementById('voiceTrackerChips'),
+    voiceWaveVisualizer: document.getElementById('voiceWaveVisualizer'),
+    voicePlayBtn: document.getElementById('voicePlayBtn'),
+    voicePlayIcon: document.getElementById('voicePlayIcon'),
+    voiceCurrentTime: document.getElementById('voiceCurrentTime'),
+    voiceDuration: document.getElementById('voiceDuration'),
+    voiceProgressBarWrap: document.getElementById('voiceProgressBarWrap'),
+    voiceProgressBar: document.getElementById('voiceProgressBar'),
+    voiceRestartBtn: document.getElementById('voiceRestartBtn'),
+    voiceSpeedBtn: document.getElementById('voiceSpeedBtn'),
+    voiceSpeedText: document.getElementById('voiceSpeedText'),
+    voiceAudioPlayer: document.getElementById('voiceAudioPlayer'),
+    voiceAuthorReveal: document.getElementById('voiceAuthorReveal'),
+    voiceCluesContainer: document.getElementById('voiceCluesContainer'),
+    voiceCluesCounter: document.getElementById('voiceCluesCounter'),
+    voiceClue1: document.getElementById('voiceClue1'),
+    voiceClue2: document.getElementById('voiceClue2'),
+    voiceClue3: document.getElementById('voiceClue3'),
+
+    voiceMemberInput: document.getElementById('voiceMemberInput'),
+    voiceClearInputBtn: document.getElementById('voiceClearInputBtn'),
+    voiceAutocompleteDropdown: document.getElementById('voiceAutocompleteDropdown'),
+    voiceGuessBtn: document.getElementById('voiceGuessBtn'),
+    voiceGuessCountBadge: document.getElementById('voiceGuessCountBadge'),
+    voiceGuessesList: document.getElementById('voiceGuessesList'),
+    voiceEmptyGuessesState: document.getElementById('voiceEmptyGuessesState'),
+    victoryVoiceBox: document.getElementById('victoryVoiceBox'),
+    statsTabVoice: document.getElementById('statsTabVoice'),
+
     // Cases Mode Elements
     playCasesCard: document.getElementById('playCasesCard'),
     casesCardBadge: document.getElementById('casesCardBadge'),
@@ -1392,6 +1615,7 @@
     collViewAllBtn: document.getElementById('collViewAllBtn'),
     collViewAlbumsBtn: document.getElementById('collViewAlbumsBtn'),
     collViewMilestonesBtn: document.getElementById('collViewMilestonesBtn'),
+    cstatAllItemsCount: document.getElementById('cstatAllItemsCount'),
     cstatAlbumsCount: document.getElementById('cstatAlbumsCount'),
     cstatMilestonesCount: document.getElementById('cstatMilestonesCount'),
     casesAllItemsView: document.getElementById('casesAllItemsView'),
@@ -1468,6 +1692,11 @@
     guessesList: document.getElementById('guessesList'),
     emptyState: document.getElementById('emptyGuessesState'),
     guessCountBadge: document.getElementById('guessCountBadge'),
+    classicCluesContainer: document.getElementById('classicCluesContainer'),
+    classicCluesCounter: document.getElementById('classicCluesCounter'),
+    classicClue1: document.getElementById('classicClue1'),
+    classicClue2: document.getElementById('classicClue2'),
+    classicClue3: document.getElementById('classicClue3'),
     totalMembersBadge: document.getElementById('totalMembersBadge'),
     viewMembersBtn: document.getElementById('viewMembersBtn'),
     membersModal: document.getElementById('membersModal'),
@@ -1530,6 +1759,7 @@
     loadQuotesData();
     loadEmojisData();
     loadPicturesData();
+    loadVoicesData();
     bindEvents();
     updateCasesHomeBadge();
 
@@ -1546,6 +1776,8 @@
       showView('emoji', false);
     } else if (window.location.hash === '#picture') {
       showView('picture', false);
+    } else if (window.location.hash === '#voice') {
+      showView('voice', false);
     } else if (window.location.hash === '#cases') {
       showView('cases', false);
     } else {
@@ -1561,11 +1793,17 @@
     if (viewName !== 'cases' && typeof resetCaseOpeningStage === 'function') {
       resetCaseOpeningStage();
     }
+    if (viewName !== 'voice' && DOM.voiceAudioPlayer && !DOM.voiceAudioPlayer.paused) {
+      DOM.voiceAudioPlayer.pause();
+      if (typeof updateVoicePlayBtnUI === 'function') updateVoicePlayBtnUI(false);
+    }
 
     if (viewName === 'classic') {
       DOM.homeView.style.display = 'none';
       DOM.classicView.style.display = 'flex';
+      renderClassicClues();
       if (DOM.quoteView) DOM.quoteView.style.display = 'none';
+      if (DOM.voiceView) DOM.voiceView.style.display = 'none';
       if (DOM.emojiView) DOM.emojiView.style.display = 'none';
       if (DOM.pictureView) DOM.pictureView.style.display = 'none';
       if (DOM.casesView) DOM.casesView.style.display = 'none';
@@ -1584,6 +1822,19 @@
       renderQuoteClues();
       setTimeout(() => {
         if (DOM.quoteMemberInput && !DOM.quoteMemberInput.disabled) DOM.quoteMemberInput.focus();
+      }, 50);
+    } else if (viewName === 'voice') {
+      DOM.homeView.style.display = 'none';
+      DOM.classicView.style.display = 'none';
+      if (DOM.quoteView) DOM.quoteView.style.display = 'none';
+      if (DOM.voiceView) DOM.voiceView.style.display = 'flex';
+      if (DOM.emojiView) DOM.emojiView.style.display = 'none';
+      if (DOM.pictureView) DOM.pictureView.style.display = 'none';
+      if (DOM.casesView) DOM.casesView.style.display = 'none';
+      window.location.hash = '#voice';
+      renderVoiceClues();
+      setTimeout(() => {
+        if (DOM.voiceMemberInput && !DOM.voiceMemberInput.disabled) DOM.voiceMemberInput.focus();
       }, 50);
     } else if (viewName === 'emoji') {
       DOM.homeView.style.display = 'none';
@@ -1623,10 +1874,11 @@
       DOM.homeView.style.display = 'flex';
       DOM.classicView.style.display = 'none';
       if (DOM.quoteView) DOM.quoteView.style.display = 'none';
+      if (DOM.voiceView) DOM.voiceView.style.display = 'none';
       if (DOM.emojiView) DOM.emojiView.style.display = 'none';
       if (DOM.pictureView) DOM.pictureView.style.display = 'none';
       if (DOM.casesView) DOM.casesView.style.display = 'none';
-      if (window.location.hash === '#classic' || window.location.hash === '#quote' || window.location.hash === '#emoji' || window.location.hash === '#picture' || window.location.hash === '#cases') {
+      if (window.location.hash === '#classic' || window.location.hash === '#quote' || window.location.hash === '#voice' || window.location.hash === '#emoji' || window.location.hash === '#picture' || window.location.hash === '#cases') {
         history.replaceState(null, '', ' ');
       }
     }
@@ -1712,6 +1964,7 @@
         logGuess(member, false);
       });
 
+      state.classicDailyRevealedClues = new Set(Array.isArray(saved.revealedClues) ? saved.revealedClues : []);
       if (state.isWon) {
         setDailySolvedUI(true);
       }
@@ -1720,11 +1973,13 @@
       // New day: clean slate
       state.guessesHistory = [];
       state.guessedIds.clear();
+      state.classicDailyRevealedClues = new Set();
       state.isWon = false;
       renderBoardFromState([]);
       setDailySolvedUI(false);
       console.log(`[Antisimpdle] Starting Fresh Daily #${dayInfo.gameNumber}:`, state.targetMember.name);
     }
+    renderClassicClues();
   }
 
   // --- Midnight Reset & Countdown Timer ---
@@ -1736,10 +1991,12 @@
     if (DOM.classicCountdown) DOM.classicCountdown.textContent = dayInfo.countdownStr;
     if (DOM.quoteCountdown) DOM.quoteCountdown.textContent = dayInfo.countdownStr;
     if (DOM.emojiCountdown) DOM.emojiCountdown.textContent = dayInfo.countdownStr;
+    if (DOM.voiceCountdown) DOM.voiceCountdown.textContent = dayInfo.countdownStr;
     if (DOM.pictureCountdown) DOM.pictureCountdown.textContent = dayInfo.countdownStr;
     if (DOM.solvedCountdownClock) DOM.solvedCountdownClock.textContent = dayInfo.countdownStr;
     if (DOM.solvedQuoteCountdownClock) DOM.solvedQuoteCountdownClock.textContent = dayInfo.countdownStr;
     if (DOM.solvedEmojiCountdownClock) DOM.solvedEmojiCountdownClock.textContent = dayInfo.countdownStr;
+    if (DOM.solvedVoiceCountdownClock) DOM.solvedVoiceCountdownClock.textContent = dayInfo.countdownStr;
     if (DOM.solvedPictureCountdownClock) DOM.solvedPictureCountdownClock.textContent = dayInfo.countdownStr;
     if (DOM.victoryCountdownClock) DOM.victoryCountdownClock.textContent = dayInfo.countdownStr;
     if (DOM.statsCountdownClock) DOM.statsCountdownClock.textContent = dayInfo.countdownStr;
@@ -1786,6 +2043,7 @@
     updateStatsUI(StatsManager.get());
     handleQuoteMidnightRollover(dayInfo);
     handleEmojiMidnightRollover(dayInfo);
+    handleVoiceMidnightRollover(dayInfo);
     handlePictureMidnightRollover(dayInfo);
   }
 
@@ -1859,6 +2117,7 @@
     } else {
       state.targetMember = state.practiceTargetMember;
       renderBoardFromState(state.practiceHistory);
+      renderClassicClues();
       updatePracticeUI();
     }
     SoundFX.playSelect();
@@ -1889,8 +2148,10 @@
     state.practiceGuessedIds.clear();
     state.practiceHistory = [];
     state.practiceIsWon = false;
+    state.classicPracticeRevealedClues.clear();
 
     renderBoardFromState([]);
+    renderClassicClues();
     updatePracticeUI();
 
     if (DOM.alreadySolvedBanner) DOM.alreadySolvedBanner.style.display = 'none';
@@ -1912,6 +2173,7 @@
     state.targetMember = state.dailyTargetMember;
 
     renderBoardFromState(state.guessesHistory);
+    renderClassicClues();
 
     if (DOM.classicHeaderTitle) DOM.classicHeaderTitle.textContent = 'CLASSIC MODE';
     if (DOM.classicDailyBadge) {
@@ -1971,6 +2233,10 @@
   }
 
   function resetGame() {
+    if (state.activeView === 'voice') {
+      resetVoiceGame();
+      return;
+    }
     if (state.activeView === 'picture') {
       resetPictureGame();
       return;
@@ -1993,9 +2259,11 @@
       if (confirm("Reset today's daily guesses and restart from 0?")) {
         state.guessedIds.clear();
         state.guessesHistory = [];
+        state.classicDailyRevealedClues.clear();
         state.isWon = false;
         DailyStateManager.clear();
         renderBoardFromState([]);
+        renderClassicClues();
         setDailySolvedUI(false);
         SoundFX.playTone(320, 'sine', 0.15);
       }
@@ -2009,17 +2277,21 @@
   // --- Statistics Modal ---
   function updateStatsUI(stats) {
     if (DOM.topStatsStreak) {
-      const activeStats = state.activeView === 'picture'
-        ? PictureStatsManager.get()
-        : (state.activeView === 'emoji'
-            ? EmojiStatsManager.get()
-            : (state.activeView === 'quote' ? QuoteStatsManager.get() : StatsManager.get()));
+      const activeStats = state.activeView === 'voice'
+        ? VoiceStatsManager.get()
+        : (state.activeView === 'picture'
+            ? PictureStatsManager.get()
+            : (state.activeView === 'emoji'
+                ? EmojiStatsManager.get()
+                : (state.activeView === 'quote' ? QuoteStatsManager.get() : StatsManager.get())));
       DOM.topStatsStreak.textContent = '🔥 ' + activeStats.currentStreak;
     }
   }
 
   function openStatsModal() {
-    if (state.activeView === 'picture') {
+    if (state.activeView === 'voice') {
+      state.statsActiveTab = 'voice';
+    } else if (state.activeView === 'picture') {
       state.statsActiveTab = 'picture';
     } else if (state.activeView === 'emoji') {
       state.statsActiveTab = 'emoji';
@@ -2041,6 +2313,7 @@
 
   function renderStatsTab() {
     const isQuoteTab = state.statsActiveTab === 'quote';
+    const isVoiceTab = state.statsActiveTab === 'voice';
     const isEmojiTab = state.statsActiveTab === 'emoji';
     const isPictureTab = state.statsActiveTab === 'picture';
 
@@ -2053,12 +2326,19 @@
     if (DOM.statsTabEmoji) {
       DOM.statsTabEmoji.classList.toggle('active', isEmojiTab);
     }
+    if (DOM.statsTabVoice) {
+      DOM.statsTabVoice.classList.toggle('active', isVoiceTab);
+    }
     if (DOM.statsTabPicture) {
       DOM.statsTabPicture.classList.toggle('active', isPictureTab);
     }
 
     let stats, isWon, history;
-    if (isPictureTab) {
+    if (isVoiceTab) {
+      stats = VoiceStatsManager.get();
+      isWon = state.voiceDailyIsWon;
+      history = state.voiceDailyGuesses;
+    } else if (isPictureTab) {
       stats = PictureStatsManager.get();
       isWon = state.pictureDailyIsWon;
       history = state.pictureDailyGuesses;
@@ -2370,6 +2650,20 @@
       });
     }
 
+    if (DOM.playVoiceCard) {
+      DOM.playVoiceCard.addEventListener('click', () => showView('voice'));
+      DOM.playVoiceCard.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          showView('voice');
+        }
+      });
+    }
+
+    if (DOM.backToHomeFromVoiceBtn) {
+      DOM.backToHomeFromVoiceBtn.addEventListener('click', () => showView('home'));
+    }
+
     if (DOM.playPictureCard) {
       DOM.playPictureCard.addEventListener('click', () => showView('picture'));
       DOM.playPictureCard.addEventListener('keydown', (e) => {
@@ -2587,6 +2881,81 @@
       });
     }
 
+    // Voice Game Mode & Audio Player Controls
+    if (DOM.voicePlayBtn) {
+      DOM.voicePlayBtn.addEventListener('click', toggleVoicePlay);
+    }
+    if (DOM.voiceProgressBarWrap) {
+      DOM.voiceProgressBarWrap.addEventListener('click', handleVoiceProgressBarClick);
+    }
+    if (DOM.voiceRestartBtn) {
+      DOM.voiceRestartBtn.addEventListener('click', restartVoiceAudio);
+    }
+    if (DOM.voiceSpeedBtn) {
+      DOM.voiceSpeedBtn.addEventListener('click', cycleVoiceAudioSpeed);
+    }
+    if (DOM.voiceAudioPlayer) {
+      DOM.voiceAudioPlayer.addEventListener('timeupdate', handleVoiceAudioTimeUpdate);
+      DOM.voiceAudioPlayer.addEventListener('loadedmetadata', handleVoiceAudioLoadedMetadata);
+      DOM.voiceAudioPlayer.addEventListener('ended', handleVoiceAudioEnded);
+      DOM.voiceAudioPlayer.addEventListener('pause', () => updateVoicePlayBtnUI(false));
+      DOM.voiceAudioPlayer.addEventListener('play', () => updateVoicePlayBtnUI(true));
+      DOM.voiceAudioPlayer.addEventListener('error', (e) => {
+        console.warn('Voice audio load error:', e);
+        updateVoicePlayBtnUI(false);
+      });
+    }
+
+    if (DOM.voiceMemberInput) {
+      DOM.voiceMemberInput.addEventListener('input', handleVoiceInputChange);
+      DOM.voiceMemberInput.addEventListener('keydown', handleVoiceInputKeydown);
+    }
+    if (DOM.voiceClearInputBtn) {
+      DOM.voiceClearInputBtn.addEventListener('click', () => {
+        if (DOM.voiceMemberInput) {
+          DOM.voiceMemberInput.value = '';
+          DOM.voiceMemberInput.focus();
+        }
+        DOM.voiceClearInputBtn.style.display = 'none';
+        closeVoiceDropdown();
+      });
+    }
+    if (DOM.voiceGuessBtn) {
+      DOM.voiceGuessBtn.addEventListener('click', handleVoiceGuessSubmit);
+    }
+
+    // Voice Practice mode buttons
+    if (DOM.voicePracticeToggleBtn) {
+      DOM.voicePracticeToggleBtn.addEventListener('click', toggleVoicePracticeMode);
+    }
+    if (DOM.switchVoicePracticeBtn) {
+      DOM.switchVoicePracticeBtn.addEventListener('click', switchToVoicePracticeMode);
+    }
+    if (DOM.nextVoicePracticeBtn) {
+      DOM.nextVoicePracticeBtn.addEventListener('click', pickNewVoicePracticeTarget);
+    }
+    if (DOM.viewSolvedVoiceSummaryBtn) {
+      DOM.viewSolvedVoiceSummaryBtn.addEventListener('click', () => {
+        if (state.voiceDailyTarget) {
+          triggerVoiceVictory(state.voiceDailyTarget, state.voiceDailyGuesses.length, false);
+        }
+      });
+    }
+
+    // Voice Clue cards interactive click & keyboard navigation
+    [1, 2, 3].forEach(idx => {
+      const el = document.getElementById(`voiceClue${idx}`);
+      if (el) {
+        el.addEventListener('click', () => handleVoiceClueClick(idx));
+        el.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleVoiceClueClick(idx);
+          }
+        });
+      }
+    });
+
     // Picture Practice mode buttons
     if (DOM.picturePracticeToggleBtn) {
       DOM.picturePracticeToggleBtn.addEventListener('click', togglePicturePracticeMode);
@@ -2604,6 +2973,20 @@
         }
       });
     }
+
+    // Classic Clue cards interactive click & keyboard navigation
+    [1, 2, 3].forEach(idx => {
+      const el = document.getElementById(`classicClue${idx}`);
+      if (el) {
+        el.addEventListener('click', () => handleClassicClueClick(idx));
+        el.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleClassicClueClick(idx);
+          }
+        });
+      }
+    });
 
     // Quote Clue cards interactive click & keyboard navigation
     [1, 2, 3].forEach(idx => {
@@ -2642,6 +3025,9 @@
     }
     if (DOM.statsTabEmoji) {
       DOM.statsTabEmoji.addEventListener('click', () => setStatsActiveTab('emoji'));
+    }
+    if (DOM.statsTabVoice) {
+      DOM.statsTabVoice.addEventListener('click', () => setStatsActiveTab('voice'));
     }
     if (DOM.statsTabPicture) {
       DOM.statsTabPicture.addEventListener('click', () => setStatsActiveTab('picture'));
@@ -2712,7 +3098,11 @@
     }
     if (DOM.statsShareBtn) {
       DOM.statsShareBtn.addEventListener('click', () => {
-        if (state.statsActiveTab === 'picture') {
+        if (state.statsActiveTab === 'voice') {
+          if (state.voiceDailyTarget) {
+            shareVoiceResult(state.voiceDailyTarget, state.voiceDailyGuesses.length, false);
+          }
+        } else if (state.statsActiveTab === 'picture') {
           if (state.pictureDailyTarget) {
             sharePictureResult(state.pictureDailyTarget, state.pictureDailyGuesses.length, false);
           }
@@ -2736,7 +3126,15 @@
     if (DOM.victoryPracticeBtn) {
       DOM.victoryPracticeBtn.addEventListener('click', () => {
         VictoryCelebration.stop();
-        if (state.lastVictoryMode === 'picture') {
+        stopVictoryVoicePlayback();
+        if (DOM.victoryModal) DOM.victoryModal.style.display = 'none';
+        if (state.lastVictoryMode === 'voice') {
+          if (state.voiceGameMode === 'daily') {
+            switchToVoicePracticeMode();
+          } else {
+            pickNewVoicePracticeTarget();
+          }
+        } else if (state.lastVictoryMode === 'picture') {
           if (state.pictureGameMode === 'daily') {
             switchToPicturePracticeMode();
           } else {
@@ -2796,6 +3194,7 @@
 
     if (DOM.closeVictoryBtn) {
       DOM.closeVictoryBtn.addEventListener('click', () => {
+        stopVictoryVoicePlayback();
         if (DOM.victoryModal) DOM.victoryModal.style.display = 'none';
       });
     }
@@ -2810,6 +3209,7 @@
         closeMembersModal();
         closeStatsModal();
         closeUpdateLogModal();
+        stopVictoryVoicePlayback();
         if (DOM.victoryModal) DOM.victoryModal.style.display = 'none';
         if (DOM.casesRevealModal) closeCasesRevealModal();
         if (DOM.casesLightboxModal) closeCasesLightbox();
@@ -2960,10 +3360,16 @@
     renderDropdown(matches, query);
   }
 
-  function findMatches(query, isQuoteMode = null) {
+  function findMatches(query, mode = null) {
     const results = [];
-    const useQuoteMode = isQuoteMode !== null ? isQuoteMode : (state.activeView === 'quote');
-    const activeGuessed = useQuoteMode ? getActiveQuoteGuessedIds() : getActiveGuessedIds();
+    let activeGuessed;
+    if (mode === 'voice' || (mode === null && state.activeView === 'voice')) {
+      activeGuessed = getActiveVoiceGuessedIds();
+    } else if (mode === 'quote' || mode === true || (mode === null && state.activeView === 'quote')) {
+      activeGuessed = getActiveQuoteGuessedIds();
+    } else {
+      activeGuessed = getActiveGuessedIds();
+    }
 
     state.members.forEach(member => {
       const primary = member.name.toLowerCase();
@@ -3212,6 +3618,7 @@
     }
 
     updateGuessCounter();
+    renderClassicClues();
 
     if (DOM.categoryColumnsHeader) {
       DOM.categoryColumnsHeader.style.display = 'grid';
@@ -3230,13 +3637,14 @@
     const isTarget = member.id === target.id;
 
     if (isDaily) {
-      DailyStateManager.save(state.currentDateKey, state.gameNumber, state.dailyTargetMember, state.guessesHistory, isTarget || state.isWon);
+      DailyStateManager.save(state.currentDateKey, state.gameNumber, state.dailyTargetMember, state.guessesHistory, isTarget || state.isWon, state.classicDailyRevealedClues);
     }
 
     // Win condition check
     if (isTarget) {
       if (isDaily) {
         state.isWon = true;
+        renderClassicClues();
         const stats = StatsManager.recordWin(guessNumber, state.currentDateKey);
         updateStatsUI(stats);
         setDailySolvedUI(true);
@@ -3367,6 +3775,154 @@
     }, 2800);
   }
 
+
+  // --- Classic Member Clues System ---
+  function renderClassicClues() {
+    if (!DOM.classicCluesContainer) return;
+    const member = state.targetMember;
+    if (!member) {
+      DOM.classicCluesContainer.style.display = 'none';
+      return;
+    }
+    DOM.classicCluesContainer.style.display = 'block';
+
+    const history = getActiveHistory();
+    const guessCount = history.length;
+    const revealedClues = getActiveClassicRevealedClues();
+    const isWon = state.gameMode === 'daily' ? state.isWon : state.practiceIsWon;
+
+    const cluesConfig = [
+      { index: 1, reqGuesses: 5, icon: '📍', label: 'LOCATION' },
+      { index: 2, reqGuesses: 7, icon: '📅', label: 'JOINED SERVER' },
+      { index: 3, reqGuesses: 10, icon: '🔤', label: 'FIRST LETTER' }
+    ];
+
+    function getClueValue(clueIndex) {
+      if (clueIndex === 1) {
+        return member.categories?.lokacija || 'Unknown';
+      } else if (clueIndex === 2) {
+        return member.categories?.dolazak_na_server || 'Unknown';
+      } else {
+        const letter = (member.name || '').trim().charAt(0).toUpperCase() || '?';
+        return `Starts with '${letter}'`;
+      }
+    }
+
+    let unlockedCount = 0;
+
+    cluesConfig.forEach(cfg => {
+      const card = document.getElementById(`classicClue${cfg.index}`);
+      if (!card) return;
+
+      const isAvailable = guessCount >= cfg.reqGuesses || isWon;
+      const isRevealed = revealedClues.has(cfg.index) || isWon;
+      if (isAvailable) unlockedCount++;
+
+      card.classList.remove('locked', 'available', 'revealed');
+
+      if (isRevealed) {
+        card.classList.add('revealed');
+        const val = getClueValue(cfg.index);
+        card.innerHTML = `
+          <div class="clue-card-content">
+            <div class="clue-header-badge">
+              <span class="clue-icon">${cfg.icon}</span>
+              <span class="clue-tag">${cfg.label}</span>
+            </div>
+            <div class="clue-value-text" title="${escapeHtml(val)}">${escapeHtml(val)}</div>
+          </div>
+        `;
+      } else if (isAvailable) {
+        card.classList.add('available');
+        card.innerHTML = `
+          <div class="clue-card-content">
+            <div class="clue-header-badge">
+              <span class="clue-icon">${cfg.icon}</span>
+              <span class="clue-tag">${cfg.label}</span>
+            </div>
+            <div class="clue-cta-text">
+              <span class="clue-tap-icon">✨</span>
+              <span>CLICK TO REVEAL</span>
+            </div>
+          </div>
+        `;
+      } else {
+        card.classList.add('locked');
+        card.innerHTML = `
+          <div class="clue-card-content">
+            <div class="clue-header-badge">
+              <span class="clue-lock-icon">🔒</span>
+              <span class="clue-tag">${cfg.label}</span>
+            </div>
+            <div class="clue-lock-sub">
+              <span>Unlocks at ${cfg.reqGuesses} guesses</span>
+              <span class="clue-progress-tag">${guessCount}/${cfg.reqGuesses}</span>
+            </div>
+          </div>
+        `;
+      }
+    });
+
+    if (DOM.classicCluesCounter) {
+      DOM.classicCluesCounter.textContent = `${unlockedCount} / 3 Available`;
+    }
+  }
+
+  function handleClassicClueClick(clueIndex) {
+    const member = state.targetMember;
+    if (!member) return;
+
+    const history = getActiveHistory();
+    const guessCount = history.length;
+    const revealedClues = getActiveClassicRevealedClues();
+    const isWon = state.gameMode === 'daily' ? state.isWon : state.practiceIsWon;
+
+    const thresholds = { 1: 5, 2: 7, 3: 10 };
+    const reqGuesses = thresholds[clueIndex];
+
+    const card = document.getElementById(`classicClue${clueIndex}`);
+
+    if (guessCount < reqGuesses && !isWon) {
+      if (card) {
+        card.classList.remove('clue-shake');
+        void card.offsetWidth;
+        card.classList.add('clue-shake');
+        setTimeout(() => card.classList.remove('clue-shake'), 400);
+      }
+      SoundFX.playError();
+      const need = reqGuesses - guessCount;
+      showToast(`🔒 Clue ${clueIndex} unlocks after ${reqGuesses} guesses! (${need} more needed)`);
+      return;
+    }
+
+    if (revealedClues.has(clueIndex)) {
+      SoundFX.playSelect();
+      return;
+    }
+
+    revealedClues.add(clueIndex);
+    SoundFX.playClueReveal();
+
+    if (state.gameMode === 'daily') {
+      DailyStateManager.save(
+        state.currentDateKey,
+        state.gameNumber,
+        state.dailyTargetMember,
+        state.guessesHistory,
+        state.isWon,
+        state.classicDailyRevealedClues
+      );
+    }
+
+    renderClassicClues();
+
+    const updatedCard = document.getElementById(`classicClue${clueIndex}`);
+    if (updatedCard) {
+      updatedCard.classList.add('clue-just-revealed');
+      setTimeout(() => updatedCard.classList.remove('clue-just-revealed'), 700);
+    }
+  }
+
   // --- Share Result Generator (Wordle Style Emojis) ---
   function shareResult(member, tries, isPractice = false) {
     const dayInfo = getLocalDayInfo();
@@ -3418,7 +3974,7 @@
       ? `${window.location.origin}${window.location.pathname}`
       : 'Antisimpdle';
 
-    const shareText = `${title}\n👑 Member: ${member.name}\n🔥 Solved in ${tries} ${tries === 1 ? 'try' : 'tries'}!\n\n${gridEmojis.trim()}\nPlay: ${webUrl}`;
+    const shareText = `${title}\n🔥 Solved in ${tries} ${tries === 1 ? 'try' : 'tries'}!\n\n${gridEmojis.trim()}\n\nPlay: ${webUrl}`;
 
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(shareText)
@@ -3480,9 +4036,11 @@
 
     // 5. Populate and show Victory Modal
     state.lastVictoryMode = 'classic';
+    stopVictoryVoicePlayback();
     if (DOM.victoryQuoteBox) DOM.victoryQuoteBox.style.display = 'none';
     if (DOM.victoryEmojiBox) DOM.victoryEmojiBox.style.display = 'none';
     if (DOM.victoryPictureBox) DOM.victoryPictureBox.style.display = 'none';
+    if (DOM.victoryVoiceBox) DOM.victoryVoiceBox.style.display = 'none';
     if (DOM.victoryMultiMembers) DOM.victoryMultiMembers.style.display = 'none';
     if (DOM.victoryMemberCard) DOM.victoryMemberCard.style.display = 'flex';
     if (DOM.victoryCountdownCard) {
@@ -4024,8 +4582,8 @@
       badgeClass = 'badge-correct';
       badgeText = 'CORRECT! ✓';
     } else if (result === 'speaker-found') {
-      badgeClass = 'badge-found';
-      badgeText = detail ? `SPEAKER FOUND! (${detail}) ✓` : 'SPEAKER FOUND! ✓';
+      badgeClass = 'badge-correct';
+      badgeText = detail ? `CORRECT SPEAKER! (${detail}) ✓` : 'CORRECT! ✓';
     } else if (result === 'already-found') {
       badgeClass = 'badge-already';
       badgeText = 'ALREADY FOUND';
@@ -4612,8 +5170,10 @@
     }
 
     // Solved Quote Box in Victory Modal
+    stopVictoryVoicePlayback();
     if (DOM.victoryEmojiBox) DOM.victoryEmojiBox.style.display = 'none';
     if (DOM.victoryPictureBox) DOM.victoryPictureBox.style.display = 'none';
+    if (DOM.victoryVoiceBox) DOM.victoryVoiceBox.style.display = 'none';
     if (DOM.victoryQuoteBox) {
       DOM.victoryQuoteBox.style.display = 'block';
       if (isConv) {
@@ -4681,7 +5241,7 @@
       ? `${window.location.origin}${window.location.pathname}`
       : 'Antisimpdle';
 
-    const text = `${title}\n${sub}\n🎯 Solved in ${tries} ${tries === 1 ? 'try' : 'tries'}!\n${emojis}\n\nPlay: ${webUrl}`;
+    const text = `${title}\n🎯 Solved in ${tries} ${tries === 1 ? 'try' : 'tries'}!\n${emojis}\n\nPlay: ${webUrl}`;
 
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(() => {
@@ -5625,6 +6185,10 @@
     if (DOM.victoryPictureBox) {
       DOM.victoryPictureBox.style.display = 'none';
     }
+    if (DOM.victoryVoiceBox) {
+      DOM.victoryVoiceBox.style.display = 'none';
+    }
+    stopVictoryVoicePlayback();
 
     // Solved Emojis Box in Victory Modal
     if (DOM.victoryEmojiBox) {
@@ -5674,7 +6238,6 @@
     const title = isPractice 
       ? `😀 ANTISIMPDLE EMOJI #Practice` 
       : `😀 ANTISIMPDLE EMOJI #${dayInfo.gameNumber}`;
-    const sub = `👤 Target: ${target.memberName}`;
 
     const history = isPractice ? state.emojiPracticeGuesses : state.emojiDailyGuesses;
     const inOrder = [...history].reverse();
@@ -5684,7 +6247,7 @@
       ? `${window.location.origin}${window.location.pathname}`
       : 'Antisimpdle';
 
-    const text = `${title}\n${sub}\n🎯 Solved in ${tries} ${tries === 1 ? 'try' : 'tries'}!\n${emojis}\n\nPlay: ${webUrl}`;
+    const text = `${title}\n🎯 Solved in ${tries} ${tries === 1 ? 'try' : 'tries'}!\n${emojis}\n\nPlay: ${webUrl}`;
 
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(() => {
@@ -6416,8 +6979,10 @@
       flashVictoryScreen();
     }
 
+    stopVictoryVoicePlayback();
     if (DOM.victoryQuoteBox) DOM.victoryQuoteBox.style.display = 'none';
     if (DOM.victoryEmojiBox) DOM.victoryEmojiBox.style.display = 'none';
+    if (DOM.victoryVoiceBox) DOM.victoryVoiceBox.style.display = 'none';
 
     // Solved Picture Box
     if (DOM.victoryPictureBox) {
@@ -6515,7 +7080,9 @@
     const title = isPractice 
       ? `🖼️ ANTISIMPDLE PICTURE #Practice` 
       : `🖼️ ANTISIMPDLE PICTURE #${dayInfo.gameNumber}`;
-    const sub = `👥 Member(s): ${picture.requiredMemberNames.join(' & ')}`;
+    const sub = (picture.requiredMemberNames && picture.requiredMemberNames.length > 1)
+      ? `👥 Picture (${picture.requiredMemberNames.length} members)`
+      : `👤 Single Picture`;
 
     const history = isPractice ? state.picturePracticeGuesses : state.pictureDailyGuesses;
     const inOrder = [...history].reverse();
@@ -6525,7 +7092,7 @@
       ? `${window.location.origin}${window.location.pathname}`
       : 'Antisimpdle';
 
-    const text = `${title}\n${sub}\n🎯 Solved in ${tries} ${tries === 1 ? 'try' : 'tries'}!\n${emojis}\n\nPlay: ${webUrl}`;
+    const text = `${title}\n🎯 Solved in ${tries} ${tries === 1 ? 'try' : 'tries'}!\n${emojis}\n\nPlay: ${webUrl}`;
 
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(() => {
@@ -6810,6 +7377,1280 @@
     return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
+
+  // ========================================================
+  // VOICE GAME MODE ENGINE (Audio Voice Clips)
+  // ========================================================
+
+  function loadVoicesData() {
+    if (window.VOICES_DATA && Array.isArray(window.VOICES_DATA)) {
+      setVoices(window.VOICES_DATA);
+      return;
+    }
+
+    fetch('voices.json')
+      .then(res => res.json())
+      .then(data => {
+        setVoices(data);
+      })
+      .catch(err => {
+        console.error('Error fetching voices.json:', err);
+      });
+  }
+
+  function setVoices(data) {
+    state.voices = data;
+    console.log(`[Antisimpdle] Loaded ${state.voices.length} voice audio clips.`);
+    initDailyVoiceGame();
+  }
+
+  function initDailyVoiceGame() {
+    if (!state.voices || state.voices.length === 0) return;
+
+    const dayInfo = getLocalDayInfo();
+    state.currentDateKey = dayInfo.dateKey;
+    state.gameNumber = dayInfo.gameNumber;
+    state.dayIndex = dayInfo.dayIndex;
+
+    state.voiceDailyTarget = getDailyVoice(dayInfo.dayIndex, state.voices);
+
+    if (DOM.voiceDailyNum) DOM.voiceDailyNum.textContent = dayInfo.gameNumber;
+    if (DOM.voiceCardBadge) DOM.voiceCardBadge.textContent = 'DAILY #' + dayInfo.gameNumber;
+
+    // Check saved state for today's daily voice
+    const saved = VoiceDailyStateManager.load(dayInfo.dateKey);
+    if (saved && saved.voiceId === (state.voiceDailyTarget ? state.voiceDailyTarget.id : null)) {
+      state.voiceDailyGuesses = Array.isArray(saved.guesses) ? saved.guesses : [];
+      state.voiceDailyFoundMemberIds = new Set(Array.isArray(saved.foundMemberIds) ? saved.foundMemberIds : []);
+      state.voiceDailyGuessedIds = new Set(state.voiceDailyGuesses.map(g => g.id));
+      state.voiceDailyIsWon = !!saved.isWon;
+      state.voiceDailyRevealedClues = new Set(Array.isArray(saved.revealedClues) ? saved.revealedClues : []);
+
+      if (state.voiceDailyIsWon) {
+        setVoiceDailySolvedUI(true);
+      }
+    } else {
+      state.voiceDailyGuesses = [];
+      state.voiceDailyGuessedIds.clear();
+      state.voiceDailyFoundMemberIds.clear();
+      state.voiceDailyIsWon = false;
+      state.voiceDailyRevealedClues.clear();
+      setVoiceDailySolvedUI(false);
+    }
+
+    if (state.voiceGameMode === 'daily') {
+      state.voiceTarget = state.voiceDailyTarget;
+      renderVoiceDisplay(state.voiceTarget, state.voiceDailyFoundMemberIds, state.voiceDailyIsWon);
+      renderVoiceBoardFromState(state.voiceDailyGuesses);
+      renderVoiceClues();
+      updateVoiceGuessCounter();
+    }
+  }
+
+  function handleVoiceMidnightRollover(dayInfo) {
+    if (!state.voices || state.voices.length === 0) return;
+
+    state.voiceDailyTarget = getDailyVoice(dayInfo.dayIndex, state.voices);
+
+    if (DOM.voiceDailyNum) DOM.voiceDailyNum.textContent = dayInfo.gameNumber;
+    if (DOM.voiceCardBadge) DOM.voiceCardBadge.textContent = 'DAILY #' + dayInfo.gameNumber;
+
+    VoiceDailyStateManager.clear();
+    state.voiceDailyGuesses = [];
+    state.voiceDailyGuessedIds.clear();
+    state.voiceDailyFoundMemberIds.clear();
+    state.voiceDailyIsWon = false;
+    state.voiceDailyRevealedClues.clear();
+
+    if (state.voiceGameMode === 'daily') {
+      state.voiceTarget = state.voiceDailyTarget;
+      renderVoiceDisplay(state.voiceTarget, state.voiceDailyFoundMemberIds, false);
+      renderVoiceBoardFromState([]);
+      renderVoiceClues();
+      setVoiceDailySolvedUI(false);
+      updateVoiceGuessCounter();
+      if (DOM.victoryModal) DOM.victoryModal.style.display = 'none';
+      VictoryCelebration.stop();
+    }
+  }
+
+  // --- Voice Display & Audio Player Renderer ---
+  function renderVoiceDisplay(voice, foundMemberIds, isSolved) {
+    if (!voice) return;
+
+    const isMulti = voice.type === 'multi' && voice.requiredMemberIds.length > 1;
+
+    // 1. Setup audio player source
+    if (DOM.voiceAudioPlayer) {
+      const currentSrc = DOM.voiceAudioPlayer.getAttribute('src') || '';
+      if (!currentSrc.includes(voice.audio) && !currentSrc.endsWith(encodeURI(voice.audio))) {
+        DOM.voiceAudioPlayer.src = voice.audio;
+        DOM.voiceAudioPlayer.playbackRate = state.voiceAudioSpeed || 1.0;
+        if (DOM.voiceCurrentTime) DOM.voiceCurrentTime.textContent = '0:00';
+        if (DOM.voiceDuration) DOM.voiceDuration.textContent = '0:00';
+        if (DOM.voiceProgressBar) DOM.voiceProgressBar.style.width = '0%';
+        updateVoicePlayBtnUI(false);
+      }
+    }
+
+    // 2. Header hint
+    if (DOM.voiceHeaderHint) {
+      DOM.voiceHeaderHint.textContent = isMulti
+        ? `Who is speaking in this audio clip? Guess all ${voice.requiredMemberIds.length} members!`
+        : 'Who is speaking in this audio clip? Guess the member!';
+    }
+
+    // 3. Multi-Speaker Tracker
+    if (DOM.voiceSpeakersTracker) {
+      if (isMulti) {
+        DOM.voiceSpeakersTracker.style.display = 'block';
+        const foundCount = voice.requiredMemberIds.filter(id => foundMemberIds.has(id)).length;
+        const totalCount = voice.requiredMemberIds.length;
+        if (DOM.voiceTrackerProgress) {
+          DOM.voiceTrackerProgress.textContent = `${foundCount} / ${totalCount} FOUND`;
+        }
+
+        if (DOM.voiceTrackerChips) {
+          let chipsHtml = '';
+          voice.requiredMemberIds.forEach((mid, idx) => {
+            const member = state.members.find(m => m.id === mid) || { id: mid, name: voice.requiredMemberNames[idx] || mid };
+            const isFound = foundMemberIds.has(mid);
+            const imgSrc = getMemberImage(member);
+
+            if (isFound) {
+              chipsHtml += `
+                <div class="tracker-chip found" title="${escapeHtml(member.name)} (Found!)">
+                  <div class="tracker-chip-avatar">
+                    <img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(member.name)}" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='inline';" />
+                    <span style="display:none;">👤</span>
+                  </div>
+                  <span class="tracker-chip-name">${escapeHtml(member.name)} ✓</span>
+                </div>
+              `;
+            } else {
+              chipsHtml += `
+                <div class="tracker-chip" title="Speaker ${idx + 1} not yet found">
+                  <div class="tracker-chip-avatar">?</div>
+                  <span class="tracker-chip-name">Speaker ${idx + 1}</span>
+                </div>
+              `;
+            }
+          });
+          DOM.voiceTrackerChips.innerHTML = chipsHtml;
+        }
+      } else {
+        DOM.voiceSpeakersTracker.style.display = 'none';
+      }
+    }
+
+    // 4. Solved Author Reveal Area
+    if (DOM.voiceAuthorReveal) {
+      if (isSolved) {
+        DOM.voiceAuthorReveal.style.display = 'block';
+        if (isMulti) {
+          let membersHtml = '<div style="display:flex; flex-wrap:wrap; justify-content:center; gap:16px;">';
+          voice.requiredMemberIds.forEach((mid, idx) => {
+            const member = state.members.find(m => m.id === mid) || { id: mid, name: voice.requiredMemberNames[idx] || mid };
+            const imgSrc = getMemberImage(member);
+            membersHtml += `
+              <div class="quote-author-revealed">
+                <img src="${escapeHtml(imgSrc)}" class="revealed-avatar" alt="${escapeHtml(member.name)}" onerror="this.style.display='none';" />
+                <div class="revealed-meta">
+                  <span class="revealed-label">SPEAKER #${idx + 1}</span>
+                  <h4 class="revealed-name">${escapeHtml(member.name)}</h4>
+                </div>
+              </div>
+            `;
+          });
+          membersHtml += '</div>';
+          DOM.voiceAuthorReveal.innerHTML = membersHtml;
+        } else {
+          const mid = voice.requiredMemberIds[0];
+          const member = state.members.find(m => m.id === mid) || { id: mid, name: voice.requiredMemberNames[0] || mid };
+          const imgSrc = getMemberImage(member);
+          DOM.voiceAuthorReveal.innerHTML = `
+            <div class="quote-author-revealed">
+              <img src="${escapeHtml(imgSrc)}" class="revealed-avatar" alt="${escapeHtml(member.name)}" onerror="this.style.display='none';" />
+              <div class="revealed-meta">
+                <span class="revealed-label">MEMBER SPEAKING</span>
+                <h4 class="revealed-name">${escapeHtml(member.name)}</h4>
+              </div>
+            </div>
+          `;
+        }
+      } else {
+        DOM.voiceAuthorReveal.style.display = 'none';
+        DOM.voiceAuthorReveal.innerHTML = '';
+      }
+    }
+  }
+
+  // --- Voice Audio Controls ---
+  function updateVoicePlayBtnUI(isPlaying) {
+    if (!DOM.voicePlayBtn) return;
+    if (isPlaying) {
+      DOM.voicePlayBtn.classList.add('is-playing');
+      if (DOM.voicePlayIcon) DOM.voicePlayIcon.textContent = '❚❚';
+      if (DOM.voiceWaveVisualizer) DOM.voiceWaveVisualizer.classList.add('playing');
+    } else {
+      DOM.voicePlayBtn.classList.remove('is-playing');
+      if (DOM.voicePlayIcon) DOM.voicePlayIcon.textContent = '▶';
+      if (DOM.voiceWaveVisualizer) DOM.voiceWaveVisualizer.classList.remove('playing');
+    }
+  }
+
+  function toggleVoicePlay() {
+    const audio = DOM.voiceAudioPlayer;
+    if (!audio) return;
+
+    if (audio.paused) {
+      audio.play().then(() => {
+        updateVoicePlayBtnUI(true);
+      }).catch(err => {
+        console.warn('Voice audio playback prevented:', err);
+      });
+    } else {
+      audio.pause();
+      updateVoicePlayBtnUI(false);
+    }
+  }
+
+  function restartVoiceAudio() {
+    const audio = DOM.voiceAudioPlayer;
+    if (!audio) return;
+    audio.currentTime = 0;
+    audio.play().then(() => {
+      updateVoicePlayBtnUI(true);
+    }).catch(() => {});
+  }
+
+  function cycleVoiceAudioSpeed() {
+    const audio = DOM.voiceAudioPlayer;
+    if (!audio) return;
+
+    const speeds = [1.0, 1.25, 1.5, 0.75];
+    const currentIdx = speeds.indexOf(state.voiceAudioSpeed || 1.0);
+    const nextIdx = (currentIdx + 1) % speeds.length;
+    const newSpeed = speeds[nextIdx];
+
+    state.voiceAudioSpeed = newSpeed;
+    audio.playbackRate = newSpeed;
+
+    if (DOM.voiceSpeedText) {
+      DOM.voiceSpeedText.textContent = `${newSpeed}x`;
+    }
+    showToast(`⚡ Audio speed set to ${newSpeed}x`);
+  }
+
+  function handleVoiceAudioTimeUpdate() {
+    const audio = DOM.voiceAudioPlayer;
+    if (!audio) return;
+
+    const current = audio.currentTime || 0;
+    const duration = audio.duration || 0;
+
+    if (DOM.voiceCurrentTime) {
+      DOM.voiceCurrentTime.textContent = formatTimeSec(current);
+    }
+
+    if (duration > 0 && DOM.voiceProgressBar) {
+      const pct = Math.min(100, Math.max(0, (current / duration) * 100));
+      DOM.voiceProgressBar.style.width = `${pct}%`;
+    }
+  }
+
+  function handleVoiceAudioLoadedMetadata() {
+    const audio = DOM.voiceAudioPlayer;
+    if (!audio) return;
+    if (DOM.voiceDuration) {
+      DOM.voiceDuration.textContent = formatTimeSec(audio.duration || 0);
+    }
+  }
+
+  function handleVoiceAudioEnded() {
+    updateVoicePlayBtnUI(false);
+    if (DOM.voiceProgressBar) DOM.voiceProgressBar.style.width = '0%';
+    if (DOM.voiceCurrentTime) DOM.voiceCurrentTime.textContent = '0:00';
+  }
+
+  function handleVoiceProgressBarClick(e) {
+    const audio = DOM.voiceAudioPlayer;
+    const bar = DOM.voiceProgressBarWrap;
+    if (!audio || !bar || !audio.duration) return;
+
+    const rect = bar.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const pct = Math.max(0, Math.min(1, clickX / rect.width));
+
+    audio.currentTime = pct * audio.duration;
+  }
+
+  function formatTimeSec(sec) {
+    if (isNaN(sec) || !isFinite(sec)) return '0:00';
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  }
+
+  // --- Voice Clues & Hints Logic ---
+  function renderVoiceClues() {
+    if (!DOM.voiceCluesContainer) return;
+    const voice = state.voiceTarget;
+    if (!voice) {
+      DOM.voiceCluesContainer.style.display = 'none';
+      return;
+    }
+    DOM.voiceCluesContainer.style.display = 'block';
+
+    const history = getActiveVoiceHistory();
+    const guessCount = history.length;
+    const revealedClues = getActiveVoiceRevealedClues();
+    const foundIds = getActiveVoiceFoundIds();
+    const isWon = state.voiceGameMode === 'daily' ? state.voiceDailyIsWon : state.voicePracticeIsWon;
+
+    const cluesConfig = [
+      { index: 1, reqGuesses: 5, icon: '📍', label: 'LOCATION' },
+      { index: 2, reqGuesses: 7, icon: '📅', label: 'JOINED SERVER' },
+      { index: 3, reqGuesses: 10, icon: '🔤', label: 'FIRST LETTER' }
+    ];
+
+    const speakerMembers = voice.requiredMemberIds.map(id => {
+      return state.members.find(m => m.id === id) || { 
+        id, 
+        name: id, 
+        categories: { lokacija: '?', dolazak_na_server: '?' } 
+      };
+    });
+
+    function getClueValue(clueIndex) {
+      if (voice.type === 'multi' && voice.requiredMemberIds.length > 1) {
+        return speakerMembers.map((m, idx) => {
+          const speakerTag = foundIds.has(m.id) ? m.name : `Speaker ${idx + 1}`;
+          if (clueIndex === 1) {
+            return `${speakerTag}: ${m.categories?.lokacija || '?'}`;
+          } else if (clueIndex === 2) {
+            return `${speakerTag}: ${m.categories?.dolazak_na_server || '?'}`;
+          } else {
+            const letter = (m.name || '').trim().charAt(0).toUpperCase() || '?';
+            return `${speakerTag}: '${letter}'`;
+          }
+        }).join(' • ');
+      } else {
+        const m = speakerMembers[0] || { categories: {}, name: '' };
+        if (clueIndex === 1) {
+          return m.categories?.lokacija || 'Unknown';
+        } else if (clueIndex === 2) {
+          return m.categories?.dolazak_na_server || 'Unknown';
+        } else {
+          const letter = (m.name || '').trim().charAt(0).toUpperCase() || '?';
+          return `Starts with '${letter}'`;
+        }
+      }
+    }
+
+    let unlockedCount = 0;
+
+    cluesConfig.forEach(cfg => {
+      const card = document.getElementById(`voiceClue${cfg.index}`);
+      if (!card) return;
+
+      const isAvailable = guessCount >= cfg.reqGuesses || isWon;
+      const isRevealed = revealedClues.has(cfg.index) || isWon;
+      if (isAvailable) unlockedCount++;
+
+      card.classList.remove('locked', 'available', 'revealed');
+
+      if (isRevealed) {
+        card.classList.add('revealed');
+        const val = getClueValue(cfg.index);
+        card.innerHTML = `
+          <div class="clue-card-content">
+            <div class="clue-header-badge">
+              <span class="clue-icon">${cfg.icon}</span>
+              <span class="clue-tag">${cfg.label}</span>
+            </div>
+            <div class="clue-value-text" title="${escapeHtml(val)}">${escapeHtml(val)}</div>
+          </div>
+        `;
+      } else if (isAvailable) {
+        card.classList.add('available');
+        card.innerHTML = `
+          <div class="clue-card-content">
+            <div class="clue-header-badge">
+              <span class="clue-icon">${cfg.icon}</span>
+              <span class="clue-tag">${cfg.label}</span>
+            </div>
+            <div class="clue-cta-text">
+              <span class="clue-tap-icon">✨</span>
+              <span>CLICK TO REVEAL</span>
+            </div>
+          </div>
+        `;
+      } else {
+        card.classList.add('locked');
+        card.innerHTML = `
+          <div class="clue-card-content">
+            <div class="clue-header-badge">
+              <span class="clue-lock-icon">🔒</span>
+              <span class="clue-tag">${cfg.label}</span>
+            </div>
+            <div class="clue-lock-sub">
+              <span>Unlocks at ${cfg.reqGuesses} guesses</span>
+              <span class="clue-progress-tag">${guessCount}/${cfg.reqGuesses}</span>
+            </div>
+          </div>
+        `;
+      }
+    });
+
+    if (DOM.voiceCluesCounter) {
+      DOM.voiceCluesCounter.textContent = `${unlockedCount} / 3 Available`;
+    }
+  }
+
+  function handleVoiceClueClick(clueIndex) {
+    const voice = state.voiceTarget;
+    if (!voice) return;
+
+    const history = getActiveVoiceHistory();
+    const guessCount = history.length;
+    const revealedClues = getActiveVoiceRevealedClues();
+    const isWon = state.voiceGameMode === 'daily' ? state.voiceDailyIsWon : state.voicePracticeIsWon;
+
+    const thresholds = { 1: 5, 2: 7, 3: 10 };
+    const reqGuesses = thresholds[clueIndex];
+
+    const card = document.getElementById(`voiceClue${clueIndex}`);
+
+    if (guessCount < reqGuesses && !isWon) {
+      if (card) {
+        card.classList.remove('clue-shake');
+        void card.offsetWidth;
+        card.classList.add('clue-shake');
+        setTimeout(() => card.classList.remove('clue-shake'), 400);
+      }
+      SoundFX.playError();
+      const need = reqGuesses - guessCount;
+      showToast(`🔒 Clue ${clueIndex} unlocks after ${reqGuesses} guesses! (${need} more needed)`);
+      return;
+    }
+
+    if (revealedClues.has(clueIndex)) {
+      return;
+    }
+
+    revealedClues.add(clueIndex);
+    SoundFX.playWin();
+
+    if (state.voiceGameMode === 'daily') {
+      VoiceDailyStateManager.save(
+        state.currentDateKey,
+        state.gameNumber,
+        state.voiceDailyTarget ? state.voiceDailyTarget.id : null,
+        state.voiceDailyGuesses,
+        state.voiceDailyFoundMemberIds,
+        state.voiceDailyIsWon,
+        state.voiceDailyRevealedClues
+      );
+    }
+
+    renderVoiceClues();
+  }
+
+  // --- Voice Guess Board & Cards ---
+  function renderVoiceBoardFromState(history) {
+    if (!DOM.voiceGuessesList) return;
+
+    if (!history || history.length === 0) {
+      DOM.voiceGuessesList.innerHTML = `
+        <div id="voiceEmptyGuessesState" class="loldle-empty-card">
+          <div class="empty-crest">🎤</div>
+          <h4>NO GUESSES YET</h4>
+        </div>
+      `;
+      return;
+    }
+
+    DOM.voiceGuessesList.innerHTML = '';
+    history.forEach(item => {
+      const member = state.members.find(m => m.id === item.id) || {
+        id: item.id,
+        name: item.name,
+        image: item.image,
+        aliases: item.aliases || []
+      };
+      const card = createVoiceGuessCard(member, item.result, item.detail);
+      DOM.voiceGuessesList.appendChild(card);
+    });
+  }
+
+  function createVoiceGuessCard(member, result, detail) {
+    const card = document.createElement('div');
+    card.className = `quote-guess-card status-${result}`;
+    card.setAttribute('data-id', member.id);
+
+    const imgSrc = getMemberImage(member);
+    const aliasStr = member.aliases && member.aliases.length > 0 ? member.aliases.join(', ') : '';
+
+    let badgeClass = 'badge-incorrect';
+    let badgeText = 'INCORRECT ✕';
+
+    if (result === 'correct') {
+      badgeClass = 'badge-correct';
+      badgeText = 'CORRECT! ✓';
+    } else if (result === 'speaker-found') {
+      badgeClass = 'badge-correct';
+      badgeText = detail ? `CORRECT SPEAKER! (${detail}) ✓` : 'CORRECT! ✓';
+    } else if (result === 'already-found') {
+      badgeClass = 'badge-already';
+      badgeText = 'ALREADY FOUND';
+    }
+
+    card.innerHTML = `
+      <div class="quote-guess-left">
+        <div class="quote-guess-avatar">
+          <img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(member.name)}" onerror="this.style.display='none'; if (this.nextElementSibling) this.nextElementSibling.style.display='inline';" />
+          <span style="display:none;">👤</span>
+        </div>
+        <div class="quote-guess-meta">
+          <span class="quote-guess-name">${escapeHtml(member.name)}</span>
+          ${aliasStr ? `<span class="quote-guess-sub">AKA: ${escapeHtml(aliasStr)}</span>` : ''}
+        </div>
+      </div>
+      <div class="quote-guess-right">
+        <span class="quote-guess-badge ${badgeClass}">${badgeText}</span>
+      </div>
+    `;
+
+    return card;
+  }
+
+  function updateVoiceGuessCounter() {
+    const history = getActiveVoiceHistory();
+    const count = history.length;
+    if (DOM.voiceGuessCountBadge) {
+      DOM.voiceGuessCountBadge.textContent = `${count} ${count === 1 ? 'Guess' : 'Guesses'}`;
+    }
+  }
+
+  function setVoiceDailySolvedUI(isSolved) {
+    if (state.voiceGameMode !== 'daily') return;
+
+    if (isSolved) {
+      if (DOM.alreadySolvedVoiceBanner) DOM.alreadySolvedVoiceBanner.style.display = 'flex';
+      if (DOM.voiceMemberInput) {
+        DOM.voiceMemberInput.disabled = true;
+        DOM.voiceMemberInput.placeholder = "👑 Today's voice clip solved! Resets at midnight.";
+      }
+      if (DOM.voiceGuessBtn) DOM.voiceGuessBtn.disabled = true;
+      if (DOM.voiceCardBadge) {
+        DOM.voiceCardBadge.textContent = '✅ SOLVED TODAY';
+        DOM.voiceCardBadge.style.background = 'linear-gradient(135deg, #2ecc71, #27ae60)';
+        DOM.voiceCardBadge.style.color = '#ffffff';
+      }
+    } else {
+      if (DOM.alreadySolvedVoiceBanner) DOM.alreadySolvedVoiceBanner.style.display = 'none';
+      if (DOM.voiceMemberInput) {
+        DOM.voiceMemberInput.disabled = false;
+        DOM.voiceMemberInput.placeholder = 'Guess who is speaking... (e.g. lara, vito, krof, lean)';
+      }
+      if (DOM.voiceGuessBtn) DOM.voiceGuessBtn.disabled = false;
+      if (DOM.voiceCardBadge) {
+        DOM.voiceCardBadge.textContent = 'DAILY #' + state.gameNumber;
+        DOM.voiceCardBadge.style.background = '';
+        DOM.voiceCardBadge.style.color = '';
+      }
+    }
+  }
+
+  // --- Voice Practice Mode Switching ---
+  function toggleVoicePracticeMode() {
+    if (state.voiceGameMode === 'daily') {
+      switchToVoicePracticeMode();
+    } else {
+      returnToVoiceDailyMode();
+    }
+  }
+
+  function switchToVoicePracticeMode() {
+    state.voiceGameMode = 'practice';
+    if (DOM.victoryModal) DOM.victoryModal.style.display = 'none';
+    VictoryCelebration.stop();
+    if (!state.voicePracticeTarget) {
+      pickNewVoicePracticeTarget();
+    } else {
+      updateVoicePracticeUI();
+    }
+    SoundFX.playSelect();
+  }
+
+  function pickNewVoicePracticeTarget() {
+    if (!state.voices || state.voices.length === 0) return;
+
+    let available = state.voices.filter(v => !state.voicePracticeSolvedIds.has(v.id));
+    if (available.length === 0) {
+      state.voicePracticeSolvedIds.clear();
+      available = state.voices;
+    }
+
+    const randIdx = Math.floor(Math.random() * available.length);
+    state.voicePracticeTarget = available[randIdx];
+
+    state.voicePracticeGuesses = [];
+    state.voicePracticeGuessedIds.clear();
+    state.voicePracticeFoundMemberIds.clear();
+    state.voicePracticeSolvedIds.delete(state.voicePracticeTarget.id);
+    state.voicePracticeRevealedClues.clear();
+    state.voicePracticeIsWon = false;
+
+    updateVoicePracticeUI();
+    stopVictoryVoicePlayback();
+    if (DOM.victoryModal) DOM.victoryModal.style.display = 'none';
+    VictoryCelebration.stop();
+  }
+
+  function restartVoicePractice() {
+    state.voicePracticeSolvedIds.clear();
+    pickNewVoicePracticeTarget();
+  }
+
+  function returnToVoiceDailyMode() {
+    state.voiceGameMode = 'daily';
+    state.voiceTarget = state.voiceDailyTarget;
+
+    if (DOM.voicePracticeToggleBtn) {
+      DOM.voicePracticeToggleBtn.classList.remove('active-practice');
+      if (DOM.voicePracticeToggleText) DOM.voicePracticeToggleText.textContent = 'Practice Mode';
+      if (DOM.voicePracticeToggleIcon) DOM.voicePracticeToggleIcon.textContent = '🎲';
+    }
+    if (DOM.voiceDailyBadge) DOM.voiceDailyBadge.style.display = 'inline-block';
+    if (DOM.voiceCountdownWrap) DOM.voiceCountdownWrap.style.display = 'inline-block';
+    if (DOM.voicePracticeSolvedBanner) DOM.voicePracticeSolvedBanner.style.display = 'none';
+
+    setVoiceDailySolvedUI(state.voiceDailyIsWon);
+    renderVoiceDisplay(state.voiceTarget, state.voiceDailyFoundMemberIds, state.voiceDailyIsWon);
+    renderVoiceBoardFromState(state.voiceDailyGuesses);
+    renderVoiceClues();
+    updateVoiceGuessCounter();
+
+    SoundFX.playSelect();
+  }
+
+  function updateVoicePracticeUI() {
+    state.voiceTarget = state.voicePracticeTarget;
+
+    if (DOM.voicePracticeToggleBtn) {
+      DOM.voicePracticeToggleBtn.classList.add('active-practice');
+      if (DOM.voicePracticeToggleText) DOM.voicePracticeToggleText.textContent = 'Return to Daily';
+      if (DOM.voicePracticeToggleIcon) DOM.voicePracticeToggleIcon.textContent = '📅';
+    }
+    if (DOM.voiceDailyBadge) DOM.voiceDailyBadge.style.display = 'none';
+    if (DOM.voiceCountdownWrap) DOM.voiceCountdownWrap.style.display = 'none';
+    if (DOM.alreadySolvedVoiceBanner) DOM.alreadySolvedVoiceBanner.style.display = 'none';
+
+    if (DOM.voiceMemberInput) {
+      DOM.voiceMemberInput.disabled = state.voicePracticeIsWon;
+      DOM.voiceMemberInput.placeholder = state.voicePracticeIsWon 
+        ? '🎉 Practice voice solved! Click NEXT PRACTICE to play again.' 
+        : 'Guess who is speaking in practice mode...';
+    }
+    if (DOM.voiceGuessBtn) DOM.voiceGuessBtn.disabled = state.voicePracticeIsWon;
+    if (DOM.voicePracticeSolvedBanner) {
+      DOM.voicePracticeSolvedBanner.style.display = state.voicePracticeIsWon ? 'flex' : 'none';
+    }
+
+    renderVoiceDisplay(state.voiceTarget, state.voicePracticeFoundMemberIds, state.voicePracticeIsWon);
+    renderVoiceBoardFromState(state.voicePracticeGuesses);
+    renderVoiceClues();
+    updateVoiceGuessCounter();
+  }
+
+  // --- Voice Input & Autocomplete ---
+  function handleVoiceInputChange() {
+    const query = DOM.voiceMemberInput.value.trim().toLowerCase();
+    DOM.voiceClearInputBtn.style.display = query.length > 0 ? 'block' : 'none';
+
+    if (query.length === 0) {
+      closeVoiceDropdown();
+      return;
+    }
+
+    const matches = findMatches(query, 'voice');
+    state.voiceCurrentMatches = matches;
+    state.voiceSelectedDropdownIndex = matches.length > 0 ? 0 : -1;
+    renderVoiceDropdown(matches, query);
+  }
+
+  function renderVoiceDropdown(matches, query) {
+    if (!DOM.voiceAutocompleteDropdown) return;
+
+    if (matches.length === 0) {
+      DOM.voiceAutocompleteDropdown.innerHTML = `
+        <div class="no-match-item">
+          <span>No Discord member found matching "<strong>${escapeHtml(query)}</strong>"</span>
+        </div>
+      `;
+      DOM.voiceAutocompleteDropdown.style.display = 'block';
+      return;
+    }
+
+    const activeGuessed = getActiveVoiceGuessedIds();
+
+    let html = '';
+    matches.forEach((item, idx) => {
+      const { member, matchedAlias } = item;
+      const isGuessed = activeGuessed.has(member.id);
+      const isActive = idx === state.voiceSelectedDropdownIndex ? 'active-item' : '';
+      const guessedClass = isGuessed ? 'already-guessed' : '';
+      const imgSrc = getMemberImage(member);
+      const highlightedName = highlightQuery(member.name, query);
+
+      let aliasesHtml = '';
+      if (member.aliases && member.aliases.length > 0) {
+        const aliasItems = member.aliases.map(a => {
+          if (matchedAlias && a.toLowerCase() === matchedAlias.toLowerCase()) {
+            return `<span class="alias-match-tag">AKA: ${highlightQuery(a, query)}</span>`;
+          }
+          return `<span>${escapeHtml(a)}</span>`;
+        }).join(', ');
+        aliasesHtml = `<div class="item-aliases">${aliasItems}</div>`;
+      }
+
+      const statusBadge = isGuessed 
+        ? `<span class="item-badge" style="opacity:0.6; color:#888;">GUESSED</span>` 
+        : `<span class="item-badge">#${member.index || idx + 1}</span>`;
+
+      html += `
+        <div class="dropdown-item ${isActive} ${guessedClass}" data-index="${idx}" data-id="${member.id}">
+          <div class="item-left">
+            <div class="item-avatar">
+              <img src="${escapeHtml(imgSrc)}" class="item-avatar-img" alt="" onerror="this.style.display='none'; if (this.nextElementSibling) this.nextElementSibling.style.display='inline';" />
+              <span class="item-avatar-fallback" style="display:none;">👤</span>
+            </div>
+            <div class="item-details">
+              <span class="item-primary-name">${highlightedName}</span>
+              ${aliasesHtml}
+            </div>
+          </div>
+          <div class="item-right">${statusBadge}</div>
+        </div>
+      `;
+    });
+
+    DOM.voiceAutocompleteDropdown.innerHTML = html;
+    DOM.voiceAutocompleteDropdown.style.display = 'block';
+
+    DOM.voiceAutocompleteDropdown.querySelectorAll('.dropdown-item').forEach(el => {
+      el.addEventListener('click', () => {
+        const idx = parseInt(el.getAttribute('data-index'), 10);
+        selectVoiceMatchByIndex(idx);
+      });
+      el.addEventListener('mouseenter', () => {
+        const idx = parseInt(el.getAttribute('data-index'), 10);
+        updateActiveVoiceDropdownItem(idx);
+      });
+    });
+  }
+
+  function updateActiveVoiceDropdownItem(index) {
+    state.voiceSelectedDropdownIndex = index;
+    const items = DOM.voiceAutocompleteDropdown.querySelectorAll('.dropdown-item');
+    items.forEach((item, idx) => {
+      if (idx === index) {
+        item.classList.add('active-item');
+        item.scrollIntoView({ block: 'nearest' });
+      } else {
+        item.classList.remove('active-item');
+      }
+    });
+  }
+
+  function selectVoiceMatchByIndex(index) {
+    if (!state.voiceCurrentMatches || !state.voiceCurrentMatches[index]) return;
+    const { member } = state.voiceCurrentMatches[index];
+    DOM.voiceMemberInput.value = member.name;
+    closeVoiceDropdown();
+    handleVoiceGuessSubmit();
+  }
+
+  function closeVoiceDropdown() {
+    if (DOM.voiceAutocompleteDropdown) {
+      DOM.voiceAutocompleteDropdown.style.display = 'none';
+      DOM.voiceAutocompleteDropdown.innerHTML = '';
+    }
+    state.voiceSelectedDropdownIndex = -1;
+    state.voiceCurrentMatches = [];
+  }
+
+  function handleVoiceInputKeydown(e) {
+    const isDropdownVisible = DOM.voiceAutocompleteDropdown && DOM.voiceAutocompleteDropdown.style.display === 'block';
+    if (!isDropdownVisible) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleVoiceGuessSubmit();
+      }
+      return;
+    }
+
+    const items = state.voiceCurrentMatches;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (items.length === 0) return;
+      state.voiceSelectedDropdownIndex = (state.voiceSelectedDropdownIndex + 1) % items.length;
+      updateActiveVoiceDropdownItem(state.voiceSelectedDropdownIndex);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (items.length === 0) return;
+      state.voiceSelectedDropdownIndex = (state.voiceSelectedDropdownIndex - 1 + items.length) % items.length;
+      updateActiveVoiceDropdownItem(state.voiceSelectedDropdownIndex);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (state.voiceSelectedDropdownIndex >= 0 && items[state.voiceSelectedDropdownIndex]) {
+        selectVoiceMatchByIndex(state.voiceSelectedDropdownIndex);
+      } else {
+        handleVoiceGuessSubmit();
+      }
+    } else if (e.key === 'Escape') {
+      closeVoiceDropdown();
+    }
+  }
+
+  function shakeVoiceInput() {
+    if (!DOM.voiceMemberInput) return;
+    DOM.voiceMemberInput.classList.remove('input-shake');
+    void DOM.voiceMemberInput.offsetWidth;
+    DOM.voiceMemberInput.classList.add('input-shake');
+    setTimeout(() => {
+      if (DOM.voiceMemberInput) DOM.voiceMemberInput.classList.remove('input-shake');
+    }, 400);
+    SoundFX.playError();
+  }
+
+  function pulseAlreadyGuessedVoice(id) {
+    const card = DOM.voiceGuessesList.querySelector(`[data-id="${id}"]`);
+    if (card) {
+      card.classList.remove('already-guessed-pulse');
+      void card.offsetWidth;
+      card.classList.add('already-guessed-pulse');
+      setTimeout(() => card.classList.remove('already-guessed-pulse'), 600);
+      card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    showToast('⚠️ Member already guessed in this round!');
+    SoundFX.playError();
+  }
+
+  // --- Voice Guess Submission & Validation ---
+  function handleVoiceGuessSubmit() {
+    const isWon = state.voiceGameMode === 'daily' ? state.voiceDailyIsWon : state.voicePracticeIsWon;
+    if (isWon) {
+      showToast('👑 Voice clip already solved!');
+      return;
+    }
+
+    const val = (DOM.voiceMemberInput.value || '').trim().toLowerCase();
+    if (!val) {
+      shakeVoiceInput();
+      return;
+    }
+
+    const member = state.members.find(m => {
+      return m.name.toLowerCase() === val || (m.aliases || []).some(a => a.toLowerCase() === val) || m.id.toLowerCase() === val;
+    });
+
+    if (!member) {
+      shakeVoiceInput();
+      showToast('Unknown member name. Pick from the dropdown list.');
+      return;
+    }
+
+    const guessedIds = getActiveVoiceGuessedIds();
+    if (guessedIds.has(member.id)) {
+      pulseAlreadyGuessedVoice(member.id);
+      DOM.voiceMemberInput.value = '';
+      closeVoiceDropdown();
+      return;
+    }
+
+    logVoiceGuess(member);
+    DOM.voiceMemberInput.value = '';
+    DOM.voiceClearInputBtn.style.display = 'none';
+    closeVoiceDropdown();
+  }
+
+  function logVoiceGuess(member, explicitResult = null, playSound = true) {
+    const voice = state.voiceTarget;
+    if (!voice) return;
+
+    const isMulti = voice.type === 'multi' && voice.requiredMemberIds.length > 1;
+    const foundIds = getActiveVoiceFoundIds();
+    const guessedIds = getActiveVoiceGuessedIds();
+    const history = getActiveVoiceHistory();
+
+    let result = explicitResult;
+    let detail = '';
+
+    if (!result) {
+      if (isMulti) {
+        if (voice.requiredMemberIds.includes(member.id)) {
+          if (foundIds.has(member.id)) {
+            result = 'already-found';
+          } else {
+            foundIds.add(member.id);
+            result = 'speaker-found';
+            detail = `${foundIds.size}/${voice.requiredMemberIds.length}`;
+          }
+        } else {
+          result = 'incorrect';
+        }
+      } else {
+        const targetId = voice.requiredMemberIds[0];
+        if (member.id === targetId) {
+          result = 'correct';
+          foundIds.add(member.id);
+        } else {
+          result = 'incorrect';
+        }
+      }
+    }
+
+    guessedIds.add(member.id);
+
+    const guessItem = {
+      id: member.id,
+      name: member.name,
+      image: getMemberImage(member),
+      aliases: member.aliases || [],
+      result: result,
+      detail: detail
+    };
+    history.unshift(guessItem);
+
+    // Check if won
+    let isNowWon = false;
+    if (isMulti) {
+      const allFound = voice.requiredMemberIds.every(id => foundIds.has(id));
+      if (allFound) isNowWon = true;
+    } else {
+      if (result === 'correct') isNowWon = true;
+    }
+
+    if (state.voiceGameMode === 'daily') {
+      state.voiceDailyIsWon = isNowWon;
+      VoiceDailyStateManager.save(
+        state.currentDateKey,
+        state.gameNumber,
+        state.voiceDailyTarget.id,
+        state.voiceDailyGuesses,
+        state.voiceDailyFoundMemberIds,
+        state.voiceDailyIsWon,
+        state.voiceDailyRevealedClues
+      );
+    } else {
+      state.voicePracticeIsWon = isNowWon;
+      if (isNowWon) {
+        state.voicePracticeSolvedIds.add(voice.id);
+      }
+    }
+
+    // Play feedback sound
+    if (playSound) {
+      try {
+        if (isNowWon || result === 'correct') {
+          // Will play in victory trigger
+        } else if (result === 'speaker-found') {
+          SoundFX.playGuessSuccess();
+        } else {
+          SoundFX.playError();
+        }
+      } catch (err) {
+        console.warn('SoundFX error:', err);
+      }
+    }
+
+    // Update display & clues
+    renderVoiceDisplay(voice, foundIds, isNowWon);
+    renderVoiceBoardFromState(history);
+    renderVoiceClues();
+    updateVoiceGuessCounter();
+
+    if (isNowWon) {
+      const guessNumber = history.length;
+      triggerVoiceVictory(voice, guessNumber, playSound);
+    }
+  }
+
+  function stopVictoryVoicePlayback() {
+    const vAudio = document.getElementById('victoryVoiceAudio');
+    if (vAudio) {
+      vAudio.pause();
+      vAudio.currentTime = 0;
+    }
+  }
+
+  // --- Voice Victory Celebration ---
+  function triggerVoiceVictory(voice, tries, withFanfare = true) {
+    state.lastVictoryMode = 'voice';
+    const isDaily = state.voiceGameMode === 'daily';
+    const isMulti = voice.type === 'multi' && voice.requiredMemberIds.length > 1;
+
+    // Pause game board audio player if currently playing
+    if (DOM.voiceAudioPlayer) {
+      DOM.voiceAudioPlayer.pause();
+      updateVoicePlayBtnUI(false);
+    }
+
+    if (withFanfare) {
+      SoundFX.playWin();
+      VictoryCelebration.start();
+      flashVictoryScreen();
+    }
+
+    if (DOM.victoryQuoteBox) DOM.victoryQuoteBox.style.display = 'none';
+    if (DOM.victoryEmojiBox) DOM.victoryEmojiBox.style.display = 'none';
+    if (DOM.victoryPictureBox) DOM.victoryPictureBox.style.display = 'none';
+
+    // Solved Voice Box in Victory Modal (custom interactive replay player)
+    if (DOM.victoryVoiceBox) {
+      DOM.victoryVoiceBox.style.display = 'flex';
+      const safeAudioSrc = encodeURI(voice.audio);
+      const cleanTrackName = escapeHtml(voice.filename.replace(/\.[^/.]+$/, ''));
+
+      DOM.victoryVoiceBox.innerHTML = `
+        <div class="victory-voice-header-row">
+          <span>🔊 SOLVED VOICE CLIP</span>
+          <span id="victoryVoiceTime" class="victory-voice-time-digit">0:00 / 0:00</span>
+        </div>
+        <div class="victory-voice-player-row">
+          <button id="victoryVoicePlayBtn" class="voice-play-circle-btn victory-replay-play-btn" aria-label="Play or pause audio" title="Replay Voice Clip">
+            <span id="victoryVoicePlayIcon" class="play-icon">▶</span>
+          </button>
+          <div class="victory-voice-track-info">
+            <span class="victory-voice-filename">${cleanTrackName}</span>
+            <div id="victoryVoiceProgressWrap" class="voice-progress-bar-wrap" role="slider" aria-label="Audio timeline" tabindex="0">
+              <div id="victoryVoiceProgressBar" class="voice-progress-bar" style="width: 0%;"></div>
+            </div>
+          </div>
+        </div>
+        <audio id="victoryVoiceAudio" preload="auto" src="${safeAudioSrc}"></audio>
+      `;
+
+      const audioEl = document.getElementById('victoryVoiceAudio');
+      const playBtn = document.getElementById('victoryVoicePlayBtn');
+      const playIcon = document.getElementById('victoryVoicePlayIcon');
+      const timeEl = document.getElementById('victoryVoiceTime');
+      const barEl = document.getElementById('victoryVoiceProgressBar');
+      const wrapEl = document.getElementById('victoryVoiceProgressWrap');
+
+      if (audioEl && playBtn) {
+        const formatTime = (secs) => {
+          if (isNaN(secs) || secs < 0) return '0:00';
+          const m = Math.floor(secs / 60);
+          const s = Math.floor(secs % 60);
+          return `${m}:${s < 10 ? '0' : ''}${s}`;
+        };
+
+        const updateTimeDisplay = () => {
+          if (!timeEl) return;
+          const cur = formatTime(audioEl.currentTime);
+          const dur = formatTime(audioEl.duration);
+          timeEl.textContent = `${cur} / ${dur}`;
+        };
+
+        playBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (audioEl.paused) {
+            audioEl.play().then(() => {
+              playBtn.classList.add('is-playing');
+              if (playIcon) playIcon.textContent = '❚❚';
+            }).catch(err => {
+              console.warn('Replay playback blocked:', err);
+            });
+          } else {
+            audioEl.pause();
+            playBtn.classList.remove('is-playing');
+            if (playIcon) playIcon.textContent = '▶';
+          }
+        });
+
+        audioEl.addEventListener('timeupdate', () => {
+          if (audioEl.duration && barEl) {
+            const pct = (audioEl.currentTime / audioEl.duration) * 100;
+            barEl.style.width = `${Math.min(100, Math.max(0, pct))}%`;
+          }
+          updateTimeDisplay();
+        });
+
+        audioEl.addEventListener('loadedmetadata', updateTimeDisplay);
+
+        audioEl.addEventListener('ended', () => {
+          playBtn.classList.remove('is-playing');
+          if (playIcon) playIcon.textContent = '▶';
+          if (barEl) barEl.style.width = '0%';
+          audioEl.currentTime = 0;
+          updateTimeDisplay();
+        });
+
+        if (wrapEl) {
+          wrapEl.addEventListener('click', (e) => {
+            if (!audioEl.duration) return;
+            const rect = wrapEl.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const pct = Math.max(0, Math.min(1, clickX / rect.width));
+            audioEl.currentTime = pct * audioEl.duration;
+            if (barEl) barEl.style.width = `${pct * 100}%`;
+          });
+        }
+      }
+    }
+
+    if (DOM.victoryHeading) DOM.victoryHeading.textContent = 'VICTORY!';
+    if (DOM.victorySubtitle) {
+      DOM.victorySubtitle.textContent = isMulti 
+        ? 'You identified all speakers in this voice clip!' 
+        : 'You correctly identified who is speaking!';
+    }
+
+    // Single vs Multi presentation
+    if (DOM.victoryMemberCard && DOM.victoryMultiMembers) {
+      if (isMulti) {
+        DOM.victoryMemberCard.style.display = 'none';
+        DOM.victoryMultiMembers.style.display = 'flex';
+
+        let chipsHtml = '';
+        voice.requiredMemberIds.forEach(mid => {
+          const m = state.members.find(x => x.id === mid) || { id: mid, name: mid };
+          const imgSrc = getMemberImage(m);
+          chipsHtml += `
+            <div class="victory-speaker-chip">
+              <img src="${escapeHtml(imgSrc)}" class="victory-speaker-avatar" alt="${escapeHtml(m.name)}" onerror="this.style.display='none'; if (this.nextElementSibling) this.nextElementSibling.style.display='inline';" />
+              <span class="victory-speaker-fallback" style="display:none;">👤</span>
+              <span class="victory-speaker-name">${escapeHtml(m.name)}</span>
+            </div>
+          `;
+        });
+        DOM.victoryMultiMembers.innerHTML = chipsHtml;
+      } else {
+        DOM.victoryMultiMembers.style.display = 'none';
+        DOM.victoryMemberCard.style.display = 'flex';
+
+        const mid = voice.requiredMemberIds[0];
+        const member = state.members.find(x => x.id === mid) || { id: mid, name: mid };
+        const imgSrc = getMemberImage(member);
+
+        if (DOM.victoryAvatar) {
+          DOM.victoryAvatar.innerHTML = `
+            <img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(member.name)}" class="victory-avatar-img" onerror="this.style.display='none'; if (this.nextElementSibling) this.nextElementSibling.style.display='inline';" />
+            <span class="victory-avatar-fallback" style="display:none;">👑</span>
+          `;
+        }
+        if (DOM.victoryMemberName) DOM.victoryMemberName.textContent = member.name;
+        if (DOM.victoryAliases) {
+          const aliasStr = member.aliases && member.aliases.length > 0 ? member.aliases.join(', ') : 'None';
+          DOM.victoryAliases.textContent = `Aliases: ${aliasStr}`;
+        }
+      }
+    }
+
+    if (DOM.victoryGuessesBadge) {
+      DOM.victoryGuessesBadge.textContent = `${tries} ${tries === 1 ? 'GUESS' : 'GUESSES'}`;
+    }
+
+    // Update Daily Statistics
+    if (isDaily) {
+      const stats = VoiceStatsManager.recordWin(tries, state.currentDateKey);
+      if (DOM.vstatPlayed) DOM.vstatPlayed.textContent = stats.played;
+      if (DOM.vstatWinPct) DOM.vstatWinPct.textContent = Math.round((stats.won / stats.played) * 100) + '%';
+      if (DOM.vstatStreak) DOM.vstatStreak.textContent = '🔥 ' + stats.currentStreak;
+      if (DOM.vstatMaxStreak) DOM.vstatMaxStreak.textContent = '⭐ ' + stats.maxStreak;
+      if (DOM.topStatsStreak) DOM.topStatsStreak.textContent = '🔥 ' + stats.currentStreak;
+    } else {
+      const stats = VoiceStatsManager.get();
+      if (DOM.vstatPlayed) DOM.vstatPlayed.textContent = stats.played;
+      if (DOM.vstatWinPct) DOM.vstatWinPct.textContent = stats.played ? Math.round((stats.won / stats.played) * 100) + '%' : '0%';
+      if (DOM.vstatStreak) DOM.vstatStreak.textContent = '🔥 ' + stats.currentStreak;
+      if (DOM.vstatMaxStreak) DOM.vstatMaxStreak.textContent = '⭐ ' + stats.maxStreak;
+    }
+
+    if (DOM.victoryPracticeBtn) {
+      DOM.victoryPracticeBtn.style.display = 'block';
+      DOM.victoryPracticeBtn.innerHTML = isDaily 
+        ? '<span>🎲 PRACTICE MODE (UNLIMITED)</span>' 
+        : '<span>🔄 NEXT RANDOM VOICE CLIP</span>';
+    }
+
+    if (isDaily) {
+      setVoiceDailySolvedUI(true);
+    } else {
+      if (DOM.voicePracticeSolvedBanner) DOM.voicePracticeSolvedBanner.style.display = 'flex';
+      if (DOM.voiceMemberInput) DOM.voiceMemberInput.disabled = true;
+      if (DOM.voiceGuessBtn) DOM.voiceGuessBtn.disabled = true;
+    }
+
+    if (DOM.victoryModal) DOM.victoryModal.style.display = 'flex';
+  }
+
+  function shareVoiceResult(voice, tries, isPractice = false) {
+    const dayInfo = getLocalDayInfo();
+    const isMulti = voice.type === 'multi' && voice.requiredMemberIds.length > 1;
+    const title = isPractice 
+      ? `🎤 ANTISIMPDLE VOICE #Practice` 
+      : `🎤 ANTISIMPDLE VOICE #${dayInfo.gameNumber}`;
+    const sub = isMulti ? `🎙️ Multi-Voice (${voice.requiredMemberIds.length} members)` : `👤 Single Voice`;
+
+    const history = isPractice ? state.voicePracticeGuesses : state.voiceDailyGuesses;
+    const inOrder = [...history].reverse();
+    const emojis = inOrder.map(g => (g.result === 'correct' || g.result === 'speaker-found') ? '🟩' : '🟥').join('');
+
+    const webUrl = (window.location.origin && !window.location.origin.startsWith('file'))
+      ? `${window.location.origin}${window.location.pathname}`
+      : 'Antisimpdle';
+
+    const text = `${title}
+${sub}
+🎯 Solved in ${tries} ${tries === 1 ? 'try' : 'tries'}!
+${emojis}
+
+Play: ${webUrl}`;
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('📋 Copied voice result to clipboard!');
+        SoundFX.playTone(880, 'sine', 0.12, 0.08);
+      }).catch(() => fallbackCopy(text));
+    } else {
+      fallbackCopy(text);
+    }
+  }
+
+  function resetVoiceGame() {
+    if (state.voiceGameMode === 'daily') {
+      if (state.voiceDailyIsWon) {
+        showToast("👑 You already solved today's voice! Play Practice Mode to guess more.");
+        return;
+      }
+      if (state.voiceDailyGuesses.length === 0) return;
+      if (confirm("Reset today's daily voice guesses and restart from 0?")) {
+        state.voiceDailyGuessedIds.clear();
+        state.voiceDailyFoundMemberIds.clear();
+        state.voiceDailyGuesses = [];
+        state.voiceDailyIsWon = false;
+        state.voiceDailyRevealedClues.clear();
+        VoiceDailyStateManager.clear();
+        renderVoiceDisplay(state.voiceTarget, state.voiceDailyFoundMemberIds, false);
+        renderVoiceBoardFromState([]);
+        renderVoiceClues();
+        setVoiceDailySolvedUI(false);
+        updateVoiceGuessCounter();
+        SoundFX.playTone(320, 'sine', 0.15);
+      }
+    } else {
+      if (confirm('Restart practice mode and reset your solved voice clips?')) {
+        restartVoicePractice();
+      }
+    }
+  }
+
+
   // ==========================================================================
   // CASES & CS:GO LOOTBOX UNBOXING ENGINE
   // ==========================================================================
@@ -7034,8 +8875,8 @@
   };
 
   // Roll item based on exact rarity probabilities:
-  // Normal Open: HELL 0.001%, Divine 0.1%, Rainbow 0.2%, Secret 0.5%, Mythic 1%, Legendary 2%, Epic 5%, Verity 10%, Rare 15%, Uncommon 26%, Common 40.199%
-  // Fast Open: HELL 0.001%, Divine 0.1%, Secret 0.5%, Mythic 1%, Legendary 2%, Epic 5%, Rare 15%, Uncommon 30%, Common 46.399% (Verity & Rainbow = 0%)
+  // Normal Open: HELL 0.001%, Glitch 0.005%, Divine 0.1%, Rainbow 0.2%, Secret 0.5%, Mythic 1%, Legendary 2%, Epic 5%, Verity 10%, Rare 11%, Uncommon 20%, Cruelty 20%, Common 30.194%
+  // Fast Open: HELL 0.001%, Divine 0.1%, Rainbow 0.2%, Secret 0.5%, Mythic 1%, Legendary 2%, Epic 5%, Verity 10%, Rare 15%, Uncommon 26%, Common 40.199% (Cruelty & Glitch: 0%)
   function rollCaseItem(mode = 'normal') {
     const data = window.CASES_DATA;
     if (!data || !data.items || data.items.length === 0) return null;
@@ -7043,7 +8884,7 @@
     const r = Math.random() * 100;
     let chosenRarity = 'common';
 
-    if (mode === 'normal') {
+    if (mode === 'fast') {
       if (r < 0.001) {
         chosenRarity = 'hell';        // 0.001%
       } else if (r < 0.101) {
@@ -7068,31 +8909,47 @@
         chosenRarity = 'common';      // 40.199%
       }
     } else {
-      // Fast mode: Verity & Rainbow CANNOT drop (0%)
       if (r < 0.001) {
         chosenRarity = 'hell';        // 0.001%
-      } else if (r < 0.101) {
+      } else if (r < 0.051) {
+        chosenRarity = 'glitch';      // 0.05%
+      } else if (r < 0.151) {
         chosenRarity = 'divine';      // 0.1%
-      } else if (r < 0.601) {
+      } else if (r < 0.351) {
+        chosenRarity = 'rainbow';     // 0.2%
+      } else if (r < 0.851) {
         chosenRarity = 'secret';      // 0.5%
-      } else if (r < 1.601) {
+      } else if (r < 1.851) {
         chosenRarity = 'mythic';      // 1.0%
-      } else if (r < 3.601) {
+      } else if (r < 3.851) {
         chosenRarity = 'legendary';   // 2.0%
-      } else if (r < 8.601) {
+      } else if (r < 8.851) {
         chosenRarity = 'epic';        // 5.0%
-      } else if (r < 23.601) {
-        chosenRarity = 'rare';        // 15.0%
-      } else if (r < 53.601) {
-        chosenRarity = 'uncommon';    // 30.0%
+      } else if (r < 18.851) {
+        chosenRarity = 'verity';      // 10.0%
+      } else if (r < 29.851) {
+        chosenRarity = 'rare';        // 11.0%
+      } else if (r < 49.851) {
+        chosenRarity = 'uncommon';    // 20.0%
+      } else if (r < 69.851) {
+        chosenRarity = 'cruelty';     // 20.0%
       } else {
-        chosenRarity = 'common';      // 46.399%
+        chosenRarity = 'common';      // 30.149%
       }
     }
 
-    const pool = data.items.filter(item => item.rarity === chosenRarity && (mode === 'normal' || item.exclusiveMode !== 'normal'));
+    const pool = data.items.filter(item => {
+      if (item.rarity !== chosenRarity || item.rarity === 'album' || item.rarity === 'milestone') return false;
+      if (mode === 'fast' && item.exclusiveMode === 'normal') return false;
+      return true;
+    });
+
     if (!pool || pool.length === 0) {
-      const fallbackPool = data.items.filter(item => (mode === 'normal' || item.exclusiveMode !== 'normal') && item.rarity !== 'album');
+      const fallbackPool = data.items.filter(item => {
+        if (item.rarity === 'album' || item.rarity === 'milestone') return false;
+        if (mode === 'fast' && item.exclusiveMode === 'normal') return false;
+        return true;
+      });
       return fallbackPool[Math.floor(Math.random() * fallbackPool.length)];
     }
     return pool[Math.floor(Math.random() * pool.length)];
@@ -7101,22 +8958,21 @@
   // Format rarity drop chance for display based on active odds mode
   function formatRarityChance(r, mode = state.oddsDisplayMode || 'normal') {
     if (!r) return '';
-    if (mode === 'normal') {
+    if (mode === 'fast') {
+      if (r.fastDisplayChance) return r.fastDisplayChance;
+      if (r.exclusiveMode === 'normal') return '0%';
       if (r.key === 'common') return '40%';
       if (r.key === 'uncommon') return '26%';
-      if (r.key === 'verity') return '10%';
-      if (r.key === 'rainbow') return '0.2%';
-      if (r.displayChance) return r.displayChance;
-      return `${r.chance}%`;
+      if (r.key === 'rare') return '15%';
     } else {
-      if (r.key === 'common') return '46%';
-      if (r.key === 'uncommon') return '30%';
-      if (r.key === 'verity') return '0%';
-      if (r.key === 'rainbow') return '0%';
-      if (r.fastDisplayChance) return r.fastDisplayChance;
-      if (r.fastChance != null) return `${r.fastChance}%`;
-      return `${r.chance}%`;
+      if (r.key === 'common') return '30%';
+      if (r.key === 'cruelty') return '20%';
+      if (r.key === 'uncommon') return '20%';
+      if (r.key === 'rare') return '11%';
+      if (r.key === 'glitch') return '0.05%';
     }
+    if (r.displayChance) return r.displayChance;
+    return `${r.chance}%`;
   }
 
   // Render interactive Odds Grid in Cases view (with Normal Open vs Fast Open toggle)
@@ -7138,26 +8994,33 @@
     // Only include rarities that can actually drop from cases (exclude reward-only tiers like Album and Milestone)
     const rarities = window.CASES_DATA.rarities.filter(r => !r.isRewardOnly);
 
-    // Row 1: Common, Uncommon, Rare, Verity, Epic, Legendary (6 items)
-    const row1Rarities = rarities.slice(0, 6);
-    // Row 2: Mythic, Secret, Rainbow, Divine, HELL (5 items)
-    const row2Rarities = rarities.slice(6);
+    // Row 1: Common, Cruelty, Uncommon, Rare, Verity (5 items)
+    const row1Rarities = rarities.slice(0, 5);
+    // Row 2: Epic, Legendary, Mythic, Secret (4 items)
+    const row2Rarities = rarities.slice(5, 9);
+    // Row 3: Rainbow, Divine, Glitch, HELL (4 items)
+    const row3Rarities = rarities.slice(9);
 
     const renderItem = (r) => {
-      const isLockedInFast = mode === 'fast' && (r.key === 'verity' || r.key === 'rainbow');
+      const isLockedInFast = mode === 'fast' && !!r.exclusiveMode;
       const lockedClass = isLockedInFast ? 'odds-item-locked' : '';
       const chanceText = formatRarityChance(r, mode);
       const lockedBadge = isLockedInFast ? `<span class="odds-locked-badge">🔒 NORMAL ONLY</span>` : '';
 
       const isRainbow = r.key === 'rainbow';
+      const isGlitch = r.key === 'glitch';
+      const itemBorder = isGlitch ? '#a855f7' : `${r.color}66`;
+      const itemGlow = isGlitch ? 'rgba(168, 85, 247, 0.7)' : r.glow;
+      const itemTextColor = isGlitch ? '#a855f7' : r.color;
+      const itemDotColor = isGlitch ? '#a855f7' : r.color;
       return `
-        <div class="odds-item ${lockedClass} rarity-${r.key}" data-rarity="${r.key}" title="${escapeHtml(r.name)} (${chanceText})${isLockedInFast ? ' - Normal Open Only' : ''}" style="${isRainbow ? '' : `border-color:${r.color}66; box-shadow:0 0 8px ${r.glow};`}">
+        <div class="odds-item ${lockedClass} rarity-${r.key}" data-rarity="${r.key}" title="${escapeHtml(r.name)} (${chanceText})${isLockedInFast ? ' - Normal Open Only' : ''}" style="${isRainbow ? '' : `border-color:${itemBorder}; box-shadow:0 0 8px ${itemGlow};`}">
           <div class="odds-orb-thumb-wrap">
-            <img src="${escapeHtml(r.orbImage)}" alt="${escapeHtml(r.name)} Orb" class="odds-orb-img" style="${isRainbow ? '' : `filter: drop-shadow(0 0 8px ${r.glow});`}" loading="lazy" />
+            <img src="${escapeHtml(r.orbImage)}" alt="${escapeHtml(r.name)} Orb" class="odds-orb-img" style="${isRainbow ? '' : `filter: drop-shadow(0 0 8px ${itemGlow});`}" loading="lazy" />
           </div>
           <div class="odds-rarity-header">
-            <span class="odds-color-dot" style="${isRainbow ? '' : `background:${r.color}; box-shadow:0 0 8px ${r.glow};`}"></span>
-            <span class="odds-rarity-name" style="${isRainbow ? '' : `color:${r.color};`}">${escapeHtml(r.name)}</span>
+            <span class="odds-color-dot" style="${isRainbow ? '' : `background:${itemDotColor}; box-shadow:0 0 8px ${itemGlow};`}"></span>
+            <span class="odds-rarity-name" style="${isRainbow ? '' : `color:${itemTextColor};`}">${escapeHtml(r.name)}</span>
           </div>
           <span class="odds-chance">${chanceText}</span>
           ${lockedBadge}
@@ -7169,13 +9032,25 @@
     row1Rarities.forEach(r => { html += renderItem(r); });
     html += `</div><div class="odds-row odds-row-2">`;
     row2Rarities.forEach(r => { html += renderItem(r); });
+    html += `</div><div class="odds-row odds-row-3">`;
+    row3Rarities.forEach(r => { html += renderItem(r); });
     html += `</div>`;
 
     DOM.casesOddsGrid.innerHTML = html;
   }
 
+  // Serverless backend API base URL (Vercel)
+  // When running locally on localhost, use relative '' to hit local server.py
+  // When running on Vercel itself, use relative ''
+  // When running on GitHub Pages (antisimp.online or *.github.io), point to Vercel backend!
+  const CASE_API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? ''
+    : (window.location.hostname.includes('vercel.app')
+      ? ''
+      : 'https://antisimpdle.vercel.app');
+
   // ========================================================
-  // CASE VAULT MEDIA MANAGER (WebAssembly + Server-Gated Cryptographic Black Box)
+  // CASE VAULT MEDIA MANAGER (WebAssembly + Vercel Server-Gated API)
   // ========================================================
   const CaseVaultManager = (() => {
     const mediaCache = new Map(); // itemId -> mediaUrl
@@ -7198,12 +9073,12 @@
         return itObj.path;
       }
 
-      // 2. Server-gated items (Verity & Rainbow): check if unlocked in inventory
+      // 2. Server-gated items (Verity & Rainbow): check if unlocked in inventory with token
       if (itObj && itObj.serverGated) {
         const inv = CaseCollectionManager.get();
         const record = inv && inv.unlockedItems ? inv.unlockedItems[itemId] : null;
-        if (record && record.token && window.location.protocol !== 'file:') {
-          const mediaUrl = `/api/media?id=${encodeURIComponent(itemId)}&token=${encodeURIComponent(record.token)}`;
+        if (record && record.token) {
+          const mediaUrl = `${CASE_API_BASE}/api/media?id=${encodeURIComponent(itemId)}&token=${encodeURIComponent(record.token)}`;
           mediaCache.set(itemId, mediaUrl);
           return mediaUrl;
         }
@@ -7213,7 +9088,7 @@
       return null;
     }
 
-    // Decrypts encrypted items through WebAssembly (Divine/HELL) or server API (Verity/Rainbow)
+    // Decrypts encrypted items through WebAssembly (Divine/HELL/Milestones) or Vercel server API (Verity/Rainbow)
     async function getItemMediaUrl(item) {
       if (!item) return null;
       if (mediaCache.has(item.id)) return mediaCache.get(item.id);
@@ -7224,7 +9099,7 @@
         return item.path;
       }
 
-      // 2. Encrypted items (Divine, HELL & Milestones): Decrypt via WebAssembly Black Box
+      // 2. WebAssembly Client-Side Encrypted items (Divine, HELL & Milestones): Decrypt purely in browser memory
       if (item.isEncrypted && item.vaultFile && item.itemCode && window.WasmVault) {
         try {
           if (item.isYouTube || item.mimeType === 'application/json') {
@@ -7247,14 +9122,29 @@
         }
       }
 
-      // 3. Encrypted items (Verity & Rainbow): Server-gated with HMAC token
+      // 3. Server-Gated Encrypted items (Cruelty & Glitch): Decrypt via Vercel Server API
       if (item.serverGated) {
         const inv = CaseCollectionManager.get();
         const record = inv && inv.unlockedItems ? inv.unlockedItems[item.id] : null;
         if (record && record.token && window.location.protocol !== 'file:') {
-          const mediaUrl = `/api/media?id=${encodeURIComponent(item.id)}&token=${encodeURIComponent(record.token)}`;
+          const mediaUrl = `${CASE_API_BASE}/api/media?id=${encodeURIComponent(item.id)}&token=${encodeURIComponent(record.token)}`;
           mediaCache.set(item.id, mediaUrl);
           return mediaUrl;
+        }
+
+        // Local offline / file:// / dev fallback mapping so items always reveal even if tested locally without Vercel
+        const localFallbacks = {
+          'loot_107': 'case opening/cruelty/crna cokolada.png',
+          'loot_108': 'case opening/cruelty/faced with the truth and lies of this world.jpg',
+          'loot_109': 'case opening/cruelty/forggivnes is not free.png',
+          'loot_110': 'case opening/cruelty/good or evil it is all the same.jpg',
+          'loot_111': 'case opening/cruelty/the furry nigger slayer.png',
+          'loot_112': 'case opening/cruelty/why you should treat all women as queens.png',
+          'loot_113': 'case opening/glitch/who did this get here so early.png'
+        };
+        if (localFallbacks[item.id]) {
+          mediaCache.set(item.id, localFallbacks[item.id]);
+          return localFallbacks[item.id];
         }
         return null;
       }
@@ -7291,11 +9181,13 @@
     if (isRevealed) {
       const cachedUrl = CaseVaultManager.getCachedUrl(item.id);
       const vidBadge = item.isVideo ? `<span class="roulette-card-vid-tag">▶ VID</span>` : '';
+      const thumbSrc = item.thumbPath || cachedUrl || '';
+      const isThumbVideo = item.isVideo && !item.thumbPath;
       card.innerHTML = `
         <div class="roulette-card-thumb-wrap">
-          ${item.isVideo 
+          ${isThumbVideo 
             ? `<video src="${cachedUrl ? escapeHtml(cachedUrl) : ''}" data-vault-item="${item.id}" muted playsinline class="roulette-card-thumb" preload="metadata"></video>`
-            : `<img src="${cachedUrl ? escapeHtml(cachedUrl) : ''}" data-vault-item="${item.id}" alt="${escapeHtml(item.name)}" class="roulette-card-thumb" loading="lazy" />`
+            : `<img src="${thumbSrc ? escapeHtml(thumbSrc) : ''}" data-vault-item="${item.id}" alt="${escapeHtml(item.name)}" class="roulette-card-thumb" loading="lazy" />`
           }
           ${vidBadge}
         </div>
@@ -7305,7 +9197,7 @@
         </div>
         <div class="roulette-card-strip" style="background:${item.rarityColor}; box-shadow:0 0 8px ${item.rarityGlow};"></div>
       `;
-      if (!cachedUrl) {
+      if (!cachedUrl && !item.thumbPath) {
         CaseVaultManager.getItemMediaUrl(item).then(url => {
           if (!url) return;
           const el = card.querySelector(`[data-vault-item="${item.id}"]`);
@@ -7424,7 +9316,7 @@
     }
     if (DOM.quickOpenCaseBtn) DOM.quickOpenCaseBtn.disabled = true;
 
-    // QUICK OPEN: Instant unbox with NO animation (Verity & Rainbow CANNOT drop!)
+    // QUICK OPEN: Instant unbox with NO animation
     if (isFast) {
       const winner = rollCaseItem('fast');
       if (!winner) {
@@ -7465,8 +9357,9 @@
     let serverToken = null;
     let serverMediaUrl = null;
 
-    try {
-      const resp = await fetch('/api/open-case', {
+    if (window.location.protocol !== 'file:') {
+      try {
+      const resp = await fetch(`${CASE_API_BASE}/api/open-case`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mode: 'normal' })
@@ -7486,11 +9379,19 @@
           const localItem = window.CASES_DATA.items.find(x => x.id === data.item.id);
           winner = localItem || data.item;
           serverToken = data.token || null;
-          serverMediaUrl = data.mediaUrl || null;
+          // Server media URL is ONLY for server-gated encrypted rarities (Verity & Rainbow)
+          if (winner && winner.serverGated && data.mediaUrl) {
+            serverMediaUrl = data.mediaUrl.startsWith('http')
+              ? data.mediaUrl
+              : `${CASE_API_BASE}${data.mediaUrl.startsWith('/') ? '' : '/'}${data.mediaUrl}`;
+          } else {
+            serverMediaUrl = null;
+          }
         }
       }
     } catch (apiErr) {
       console.warn('[CaseOpening] Server API request failed, fallback to local roll:', apiErr);
+      }
     }
 
     if (!winner) {
@@ -7502,7 +9403,7 @@
       return;
     }
 
-    if (serverMediaUrl) {
+    if (serverMediaUrl && winner.serverGated) {
       CaseVaultManager.setMediaUrl(winner.id, serverMediaUrl);
     }
 
@@ -7778,9 +9679,43 @@
         DOM.casesRevealMediaWrap.innerHTML = `
           <div class="cases-reveal-decrypting" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:${item.rarityColor};">
             <span style="font-size:1.8rem; margin-bottom:8px;">🔒</span>
-            <span style="font-family:var(--font-display); font-weight:700;">Locked Item Asset</span>
+            <span style="font-family:var(--font-display); font-weight:700;">Decrypting Vault Asset...</span>
           </div>
         `;
+        CaseVaultManager.getItemMediaUrl(item).then(url => {
+          if (url && DOM.casesRevealModal && DOM.casesRevealModal.style.display !== 'none' && DOM.casesRevealMediaWrap) {
+            if (item.isYouTube || item.youtubeUrl) {
+              const ytUrl = item.youtubeUrl || url;
+              const embedUrl = item.youtubeEmbedUrl || (ytUrl ? ytUrl.replace('watch?v=', 'embed/') : '');
+              DOM.casesRevealMediaWrap.innerHTML = `
+                <div class="reveal-youtube-player">
+                  <iframe src="${escapeHtml(embedUrl)}" class="lightbox-youtube-iframe" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                  <a href="${escapeHtml(ytUrl)}" target="_blank" rel="noopener noreferrer" class="youtube-external-btn">
+                    <span>▶ Open on YouTube</span>
+                  </a>
+                </div>
+              `;
+            } else if (item.isAudio) {
+              const thumb = item.thumbPath || 'case opening/orbs/orb_secret.png';
+              DOM.casesRevealMediaWrap.innerHTML = `
+                <div class="reveal-audio-player">
+                  <img src="${escapeHtml(thumb)}" alt="${escapeHtml(item.name)}" class="reveal-audio-art" />
+                  <audio src="${escapeHtml(url)}" controls autoplay style="width:90%; margin-top:8px;"></audio>
+                </div>
+              `;
+            } else if (item.isVideo) {
+              DOM.casesRevealMediaWrap.innerHTML = `
+                <video src="${escapeHtml(url)}" autoplay loop controls playsinline></video>
+              `;
+            } else {
+              DOM.casesRevealMediaWrap.innerHTML = `
+                <img src="${escapeHtml(url)}" alt="${escapeHtml(item.name)}" />
+              `;
+            }
+          }
+        }).catch(err => {
+          console.warn('[RevealModal] Failed to decrypt media in background:', err);
+        });
       }
     }
 
@@ -7789,6 +9724,13 @@
       document.body.classList.add('screen-rumble');
       setTimeout(() => document.body.classList.remove('screen-rumble'), 1200);
       showToast('🔥 UNBELIEVABLE! You unboxed a 0.001% HELL item! 🔥');
+    } else if (item.rarity === 'glitch') {
+      flashVictoryScreen();
+      showToast('👾 GLITCH DROP! 0.05% Distorted anomaly unboxed!');
+    } else if (item.rarity === 'cruelty') {
+      VictoryCelebration.start();
+      setTimeout(() => VictoryCelebration.stop(), 3000);
+      showToast('🩸 CRUELTY UNBOXED! 20% Blood-red drop!');
     } else if (item.rarity === 'divine') {
       flashVictoryScreen();
       showToast('🌟 DIVINE DROP! 0.1% Heavenly rarity unboxed!');
@@ -7834,7 +9776,7 @@
     if (!DOM.casesCardBadge) return;
     const inv = CaseCollectionManager.get();
     const data = window.CASES_DATA;
-    const totalItems = (data && data.items) ? data.items.length : 106;
+    const totalItems = (data && data.items) ? data.items.length : 114;
     const unlockedCount = Object.keys(inv.unlockedItems || {}).length;
     DOM.casesCardBadge.textContent = `${unlockedCount}/${totalItems} UNLOCKED`;
     DOM.casesCardBadge.classList.add('badge-cases-gold');
@@ -7847,12 +9789,12 @@
     const data = window.CASES_DATA;
     if (!data || !data.items) return;
 
-    const totalItems = data.items.length; // 106 Total items
+    const totalItems = data.items.length; // 114 Total items
     const droppableCount = data.items.filter(it => it.rarity !== 'album' && it.rarity !== 'milestone').length; // 89
     const unlockedCount = Object.keys(inv.unlockedItems || {}).length;
     const percent = Math.round((unlockedCount / totalItems) * 100);
 
-    const totalAlbums = data.albums ? data.albums.length : 12;
+    const totalAlbums = data.albums ? data.albums.length : 13;
     let completedAlbumsCount = 0;
     if (data.albums) {
       data.albums.forEach(album => {
@@ -7976,7 +9918,7 @@
               </div>
             </div>
           `;
-          if (!cachedUrl && isThumbVideo) {
+          if (!cachedUrl && !item.thumbPath) {
             CaseVaultManager.getItemMediaUrl(item).then(mediaUrl => {
               if (!mediaUrl || !DOM.casesCollectionGrid) return;
               const el = DOM.casesCollectionGrid.querySelector(`[data-vault-item="${item.id}"]`);
@@ -8013,10 +9955,13 @@
             }
           }
 
+          const isGlitchLocked = item.rarity === 'glitch';
+          const cardDisplayName = isGlitchLocked ? '????????' : item.name;
+
           gridHtml += `
             <div class="collection-card locked rarity-${item.rarity} ${isClaimable ? 'pulse' : ''}" 
                  data-item-id="${item.id}" 
-                 data-item-name="${escapeHtml(item.name)}" 
+                 data-item-name="${escapeHtml(cardDisplayName)}" 
                  data-is-album="${isAlbumReward}" 
                  data-album-name="${escapeHtml(item.albumName || '')}"
                  data-is-milestone="${isMilestoneReward}"
@@ -8031,7 +9976,7 @@
                 <span class="collection-locked-badge">${lockedBadgeText}</span>
               </div>
               <div class="collection-card-meta">
-                <span class="collection-card-name" title="${escapeHtml(item.name)}" style="color:#ffffff; font-weight:700;">${escapeHtml(item.name)}</span>
+                <span class="collection-card-name" title="${escapeHtml(cardDisplayName)}" style="color:#ffffff; font-weight:700;">${escapeHtml(cardDisplayName)}</span>
                 <span class="collection-card-rarity" style="color:${item.rarityColor}; font-weight:800; text-shadow:0 0 6px ${item.rarityGlow};">${escapeHtml(item.rarityName.toUpperCase())}</span>
                 ${lockedHint}
               </div>
@@ -8164,12 +10109,14 @@
         if (isUnlocked) {
           const cachedUrl = CaseVaultManager.getCachedUrl(item.id);
           const vidTag = item.isVideo ? `<span class="collection-vid-indicator">▶ VIDEO</span>` : '';
+          const thumbSrc = item.thumbPath || cachedUrl || '';
+          const isThumbVideo = item.isVideo && !item.thumbPath;
           itemsHtml += `
             <div class="album-preview-card unlocked" data-item-id="${item.id}" title="${escapeHtml(item.name)} (${escapeHtml(item.rarityName)}) • Click to view">
               <div class="album-preview-thumb-wrap is-unlocked" style="--rarity-color:${item.rarityColor}; border-color:${item.rarityColor}; box-shadow:0 0 10px ${item.rarityGlow};">
-                ${item.isVideo
+                ${isThumbVideo
                   ? `<video src="${cachedUrl ? escapeHtml(cachedUrl) : ''}" data-vault-item="${item.id}" muted playsinline class="album-preview-thumb" preload="metadata"></video>`
-                  : `<img src="${cachedUrl ? escapeHtml(cachedUrl) : ''}" data-vault-item="${item.id}" alt="${escapeHtml(item.name)}" class="album-preview-thumb" loading="lazy" />`
+                  : `<img src="${thumbSrc ? escapeHtml(thumbSrc) : ''}" data-vault-item="${item.id}" alt="${escapeHtml(item.name)}" class="album-preview-thumb" loading="lazy" />`
                 }
                 ${vidTag}
                 <span class="collection-count-badge">x${count}</span>
@@ -8178,7 +10125,7 @@
               <span class="album-preview-rarity" style="color:${item.rarityColor}; font-weight:800; text-shadow:0 0 4px ${item.rarityGlow};">${escapeHtml(item.rarityName.toUpperCase())}</span>
             </div>
           `;
-          if (!cachedUrl) {
+          if (!cachedUrl && !item.thumbPath) {
             CaseVaultManager.getItemMediaUrl(item).then(mediaUrl => {
               if (!mediaUrl) return;
               const els = document.querySelectorAll(`[data-vault-item="${item.id}"]`);
@@ -8406,12 +10353,14 @@
         if (isUnlocked) {
           const cachedUrl = CaseVaultManager.getCachedUrl(item.id);
           const vidTag = item.isVideo ? `<span class="collection-vid-indicator">▶ VIDEO</span>` : '';
+          const thumbSrc = item.thumbPath || cachedUrl || '';
+          const isThumbVideo = item.isVideo && !item.thumbPath;
           gridHtml += `
             <div class="collection-card unlocked rarity-${item.rarity}" data-item-id="${item.id}" style="border-color:${item.rarityColor}; box-shadow:0 0 12px ${item.rarityGlow};">
               <div class="collection-card-thumb-wrap">
-                ${item.isVideo 
+                ${isThumbVideo 
                   ? `<video src="${cachedUrl ? escapeHtml(cachedUrl) : ''}" data-vault-item="${item.id}" muted playsinline class="collection-card-thumb" preload="metadata"></video>`
-                  : `<img src="${cachedUrl ? escapeHtml(cachedUrl) : ''}" data-vault-item="${item.id}" alt="${escapeHtml(item.name)}" class="collection-card-thumb" loading="lazy" />`
+                  : `<img src="${thumbSrc ? escapeHtml(thumbSrc) : ''}" data-vault-item="${item.id}" alt="${escapeHtml(item.name)}" class="collection-card-thumb" loading="lazy" />`
                 }
                 ${vidTag}
                 <span class="collection-count-badge">x${count}</span>
@@ -8422,7 +10371,7 @@
               </div>
             </div>
           `;
-          if (!cachedUrl) {
+          if (!cachedUrl && !item.thumbPath) {
             CaseVaultManager.getItemMediaUrl(item).then(mediaUrl => {
               if (!mediaUrl) return;
               const els = document.querySelectorAll(`[data-vault-item="${item.id}"]`);
@@ -8437,7 +10386,7 @@
                 <span class="collection-locked-badge">LOCKED</span>
               </div>
               <div class="collection-card-meta">
-                <span class="collection-card-name" title="${escapeHtml(item.name)}" style="color:#ffffff; font-weight:700;">${escapeHtml(item.name)}</span>
+                <span class="collection-card-name" title="${escapeHtml(cardDisplayName)}" style="color:#ffffff; font-weight:700;">${escapeHtml(cardDisplayName)}</span>
                 <span class="collection-card-rarity" style="color:${item.rarityColor}; font-weight:800; text-shadow:0 0 6px ${item.rarityGlow};">${escapeHtml(item.rarityName.toUpperCase())}</span>
               </div>
             </div>
@@ -8645,7 +10594,23 @@
     }
 
     const alreadyClaimed = inv.unlockedItems && !!inv.unlockedItems[rewardItem.id];
+    if (alreadyClaimed) {
+      showToast(`🏆 You already claimed "${rewardItem.name}"!`);
+      if (DOM.casesLightboxModal) {
+        DOM.casesLightboxModal.style.display = 'none';
+        if (DOM.lightboxMediaWrap) DOM.lightboxMediaWrap.innerHTML = '';
+      }
+      openCasesLightbox(rewardItem);
+      return;
+    }
+
     const result = CaseCollectionManager.recordRewardItem(rewardItem);
+
+    // Close lightbox if it was open
+    if (DOM.casesLightboxModal) {
+      DOM.casesLightboxModal.style.display = 'none';
+      if (DOM.lightboxMediaWrap) DOM.lightboxMediaWrap.innerHTML = '';
+    }
 
     if (SoundFX.enabled) {
       SoundFX.playRarityReveal('album');
@@ -8685,7 +10650,23 @@
     }
 
     const alreadyClaimed = inv.unlockedItems && !!inv.unlockedItems[rewardItem.id];
+    if (alreadyClaimed) {
+      showToast(`🏆 You already claimed "${rewardItem.name}"!`);
+      if (DOM.casesLightboxModal) {
+        DOM.casesLightboxModal.style.display = 'none';
+        if (DOM.lightboxMediaWrap) DOM.lightboxMediaWrap.innerHTML = '';
+      }
+      openCasesLightbox(rewardItem);
+      return;
+    }
+
     const result = CaseCollectionManager.recordRewardItem(rewardItem);
+
+    // Close lightbox if it was open
+    if (DOM.casesLightboxModal) {
+      DOM.casesLightboxModal.style.display = 'none';
+      if (DOM.lightboxMediaWrap) DOM.lightboxMediaWrap.innerHTML = '';
+    }
 
     if (SoundFX.enabled) {
       SoundFX.playRarityReveal('milestone');
@@ -8697,7 +10678,7 @@
       renderMilestonesOverview();
     }
 
-    // Decrypt & open reveal modal
+    // Decrypt locally via WebAssembly and open reveal modal
     return CaseVaultManager.getItemMediaUrl(rewardItem).then(mediaUrl => {
       openCasesRevealModal(rewardItem, result, mediaUrl);
       return { rewardItem, result, mediaUrl };
@@ -8807,10 +10788,20 @@
     pickNewPicturePracticeTarget,
     logPictureGuess
   };
+  window.AntisimpdleVoice = {
+    renderVoiceDisplay,
+    renderVoiceBoardFromState,
+    renderVoiceClues,
+    pickNewVoicePracticeTarget,
+    logVoiceGuess,
+    VoiceStatsManager,
+    VoiceDailyStateManager
+  };
   window.AntisimpdleCases = {
     startCaseOpening,
     resetCaseOpeningStage,
     rollCaseItem,
+    renderCasesOddsGrid,
     createRouletteCard,
     updateCasesCollectionUI,
     updateCasesHomeBadge,

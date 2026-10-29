@@ -82,8 +82,8 @@ module.exports = (req, res) => {
     const r = Math.random() * 100;
     let chosenRarity = 'common';
 
-    if (mode === 'normal') {
-      // Normal Open Probabilities:
+    if (mode === 'fast') {
+      // Fast mode probabilities (Cruelty and Glitch cannot drop):
       // HELL 0.001%, Divine 0.1%, Rainbow 0.2%, Secret 0.5%, Mythic 1.0%,
       // Legendary 2.0%, Epic 5.0%, Verity 10.0%, Rare 15.0%, Uncommon 26.0%, Common 40.199%
       if (r < 0.001) {
@@ -110,37 +110,49 @@ module.exports = (req, res) => {
         chosenRarity = 'common';      // 40.199%
       }
     } else {
-      // Fast Open Probabilities (Verity & Rainbow CANNOT drop in fast open):
-      // HELL 0.001%, Divine 0.1%, Secret 0.5%, Mythic 1.0%, Legendary 2.0%,
-      // Epic 5.0%, Rare 15.0%, Uncommon 30.0%, Common 46.399%
+      // Normal mode probabilities:
+      // HELL 0.001%, Glitch 0.05%, Divine 0.1%, Rainbow 0.2%, Secret 0.5%, Mythic 1.0%,
+      // Legendary 2.0%, Epic 5.0%, Verity 10.0%, Rare 11.0%, Uncommon 20.0%, Cruelty 20.0%, Common 30.149%
       if (r < 0.001) {
         chosenRarity = 'hell';        // 0.001%
-      } else if (r < 0.101) {
+      } else if (r < 0.051) {
+        chosenRarity = 'glitch';      // 0.05%
+      } else if (r < 0.151) {
         chosenRarity = 'divine';      // 0.1%
-      } else if (r < 0.601) {
+      } else if (r < 0.351) {
+        chosenRarity = 'rainbow';     // 0.2%
+      } else if (r < 0.851) {
         chosenRarity = 'secret';      // 0.5%
-      } else if (r < 1.601) {
+      } else if (r < 1.851) {
         chosenRarity = 'mythic';      // 1.0%
-      } else if (r < 3.601) {
+      } else if (r < 3.851) {
         chosenRarity = 'legendary';   // 2.0%
-      } else if (r < 8.601) {
+      } else if (r < 8.851) {
         chosenRarity = 'epic';        // 5.0%
-      } else if (r < 23.601) {
-        chosenRarity = 'rare';        // 15.0%
-      } else if (r < 53.601) {
-        chosenRarity = 'uncommon';    // 30.0%
+      } else if (r < 18.851) {
+        chosenRarity = 'verity';      // 10.0%
+      } else if (r < 29.851) {
+        chosenRarity = 'rare';        // 11.0%
+      } else if (r < 49.851) {
+        chosenRarity = 'uncommon';    // 20.0%
+      } else if (r < 69.851) {
+        chosenRarity = 'cruelty';     // 20.0%
       } else {
-        chosenRarity = 'common';      // 46.399%
+        chosenRarity = 'common';      // 30.149%
       }
     }
 
-    // Select random item from matching pool (fast mode never gets normal-exclusive items)
+    // Select random item from matching pool (milestones/albums never drop; fast mode excludes normal-only items)
     const matchingItems = Object.values(vaultData.items).filter(
-      it => it.rarity === chosenRarity && (mode === 'normal' || it.exclusiveMode !== 'normal')
+      it => {
+        if (it.rarity !== chosenRarity || it.rarity === 'album' || it.rarity === 'milestone') return false;
+        if (mode === 'fast' && it.exclusiveMode === 'normal') return false;
+        return true;
+      }
     );
     const winner = matchingItems.length > 0 
       ? matchingItems[Math.floor(Math.random() * matchingItems.length)]
-      : Object.values(vaultData.items).find(it => mode === 'normal' || it.exclusiveMode !== 'normal') || Object.values(vaultData.items)[0];
+      : Object.values(vaultData.items).find(it => it.rarity !== 'album' && it.rarity !== 'milestone' && (mode !== 'fast' || it.exclusiveMode !== 'normal')) || Object.values(vaultData.items)[0];
 
     const isServerGated = !!winner.serverGated;
     const isWasm = winner.rarity === 'divine' || winner.rarity === 'hell';
@@ -150,19 +162,15 @@ module.exports = (req, res) => {
     let mediaUrl = null;
 
     if (isServerGated) {
-      // Verity & Rainbow: Encrypted on server, token required
+      // Cruelty & Glitch: Encrypted on server, token required
       token = crypto.createHmac('sha256', SECRET)
         .update(`${winner.id}:${winner.numId}`)
         .digest('hex');
       mediaUrl = `/api/media?id=${encodeURIComponent(winner.id)}&token=${encodeURIComponent(token)}`;
-    } else if (isWasm) {
-      // Divine & HELL: Client-side WebAssembly decrypts
+    } else {
+      // All other rarities (Divine & HELL via client WASM, Common to Secret via static paths)
       token = null;
       mediaUrl = null;
-    } else {
-      // Static unencrypted
-      token = null;
-      mediaUrl = winner.path || '';
     }
 
     return res.status(200).json({
@@ -180,6 +188,7 @@ module.exports = (req, res) => {
         mimeType: winner.mimeType || null,
         isEncrypted: isEncrypted,
         serverGated: isServerGated,
+        exclusiveMode: winner.exclusiveMode || null,
         vaultFile: winner.vaultFile || null,
         itemCode: winner.itemCode || null,
         path: winner.path || null

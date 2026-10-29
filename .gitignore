@@ -14,14 +14,15 @@ members.txt
 parse_cases.py
 parse_pictures.py
 parse_quotes.py
+parse_voices.py
 kvotes.txt
 vault.wat
 
 # Case Opening Secret Encrypted Media (Keep raw files private - only decrypted via serverless API / WASM)
 case opening/divine/
 case opening/HELL/
-case opening/verity/
-case opening/rainbow/
+case opening/cruelty/
+case opening/glitch/
 case opening/milestones/
 
 # Python cache & virtual environments

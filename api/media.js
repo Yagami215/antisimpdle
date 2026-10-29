@@ -25,7 +25,7 @@ module.exports = (req, res) => {
       return res.status(404).json({ error: 'Item not found' });
     }
 
-    // Only serverGated items (Verity & Rainbow) are processed by this server API
+    // Only serverGated items (Cruelty & Glitch) are processed by this server API
     // Divine, HELL and Milestones are decrypted strictly locally via client WebAssembly
     if (!item.serverGated) {
       return res.status(400).json({ error: 'This item is not server-gated. Decryption is handled strictly locally in the browser.' });

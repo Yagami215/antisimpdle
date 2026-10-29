@@ -4,21 +4,33 @@
     {
       "key": "common",
       "name": "Common",
-      "chance": 40.199,
-      "fastChance": 46.399,
-      "displayChance": "40%",
-      "fastDisplayChance": "46%",
+      "chance": 30.149,
+      "fastChance": 40.199,
+      "displayChance": "30%",
+      "fastDisplayChance": "40%",
       "color": "#9e9e9e",
       "glow": "rgba(158, 158, 158, 0.6)",
       "orbImage": "case opening/orbs/orb_common.png"
     },
     {
+      "key": "cruelty",
+      "name": "Cruelty",
+      "chance": 20.0,
+      "fastChance": 0,
+      "displayChance": "20%",
+      "fastDisplayChance": "0%",
+      "color": "#9d0208",
+      "glow": "rgba(157, 2, 8, 0.85)",
+      "orbImage": "case opening/orbs/orb_cruelty.png",
+      "exclusiveMode": "normal"
+    },
+    {
       "key": "uncommon",
       "name": "Uncommon",
-      "chance": 26.0,
-      "fastChance": 30.0,
-      "displayChance": "26%",
-      "fastDisplayChance": "30%",
+      "chance": 20.0,
+      "fastChance": 26.0,
+      "displayChance": "20%",
+      "fastDisplayChance": "26%",
       "color": "#2ecc71",
       "glow": "rgba(46, 204, 113, 0.7)",
       "orbImage": "case opening/orbs/orb_uncommon.png"
@@ -26,9 +38,9 @@
     {
       "key": "rare",
       "name": "Rare",
-      "chance": 15.0,
+      "chance": 11.0,
       "fastChance": 15.0,
-      "displayChance": "15%",
+      "displayChance": "11%",
       "fastDisplayChance": "15%",
       "color": "#4361ee",
       "glow": "rgba(67, 97, 238, 0.6)",
@@ -38,13 +50,12 @@
       "key": "verity",
       "name": "Verity",
       "chance": 10.0,
-      "fastChance": 0,
+      "fastChance": 10.0,
       "displayChance": "10%",
-      "fastDisplayChance": "0%",
+      "fastDisplayChance": "10%",
       "color": "#ff9f1c",
       "glow": "rgba(255, 159, 28, 0.85)",
-      "orbImage": "case opening/orbs/orb_verity.png",
-      "exclusiveMode": "normal"
+      "orbImage": "case opening/orbs/orb_verity.png"
     },
     {
       "key": "epic",
@@ -94,13 +105,12 @@
       "key": "rainbow",
       "name": "Rainbow",
       "chance": 0.2,
-      "fastChance": 0,
+      "fastChance": 0.2,
       "displayChance": "0.2%",
-      "fastDisplayChance": "0%",
+      "fastDisplayChance": "0.2%",
       "color": "#ff3df7",
       "glow": "rgba(255, 61, 247, 0.9)",
-      "orbImage": "case opening/orbs/orb_rainbow.png",
-      "exclusiveMode": "normal"
+      "orbImage": "case opening/orbs/orb_rainbow.png"
     },
     {
       "key": "divine",
@@ -112,6 +122,18 @@
       "color": "#00f5d4",
       "glow": "rgba(0, 245, 212, 0.9)",
       "orbImage": "case opening/orbs/orb_divine.png"
+    },
+    {
+      "key": "glitch",
+      "name": "Glitch",
+      "chance": 0.05,
+      "fastChance": 0,
+      "displayChance": "0.05%",
+      "fastDisplayChance": "0%",
+      "color": "#a855f7",
+      "glow": "rgba(168, 85, 247, 0.9)",
+      "orbImage": "case opening/orbs/orb_glitch.png",
+      "exclusiveMode": "normal"
     },
     {
       "key": "hell",
@@ -267,6 +289,20 @@
       ],
       "rewardItemId": "loot_98",
       "rewardItemName": "Kola Prime"
+    },
+    {
+      "id": "the_psalm_of_king",
+      "name": "The Psalm Of King",
+      "icon": "👑",
+      "reward": "What He Really Wanted All This Time",
+      "itemIds": [
+        "loot_108",
+        "loot_109",
+        "loot_110",
+        "loot_45"
+      ],
+      "rewardItemId": "loot_114",
+      "rewardItemName": "What He Really Wanted All This Time"
     },
     {
       "id": "kuhinja",
@@ -972,12 +1008,8 @@
       "rarityGlow": "rgba(255, 159, 28, 0.85)",
       "orbImage": "case opening/orbs/orb_verity.png",
       "isVideo": false,
-      "mimeType": "image/jpeg",
-      "path": null,
-      "isEncrypted": true,
-      "serverGated": true,
-      "exclusiveMode": "normal",
-      "vaultFile": "case opening/vault/loot_45.enc"
+      "path": "case opening/verity/if only the cards were played right.jpg",
+      "isEncrypted": false
     },
     {
       "id": "loot_46",
@@ -988,12 +1020,8 @@
       "rarityGlow": "rgba(255, 159, 28, 0.85)",
       "orbImage": "case opening/orbs/orb_verity.png",
       "isVideo": false,
-      "mimeType": "image/jpeg",
-      "path": null,
-      "isEncrypted": true,
-      "serverGated": true,
-      "exclusiveMode": "normal",
-      "vaultFile": "case opening/vault/loot_46.enc"
+      "path": "case opening/verity/long forgoten friendship.jfif",
+      "isEncrypted": false
     },
     {
       "id": "loot_47",
@@ -1004,12 +1032,8 @@
       "rarityGlow": "rgba(255, 159, 28, 0.85)",
       "orbImage": "case opening/orbs/orb_verity.png",
       "isVideo": false,
-      "mimeType": "image/jpeg",
-      "path": null,
-      "isEncrypted": true,
-      "serverGated": true,
-      "exclusiveMode": "normal",
-      "vaultFile": "case opening/vault/loot_47.enc"
+      "path": "case opening/verity/sta djeca u roblox vide na svoj sudnji dan.jfif",
+      "isEncrypted": false
     },
     {
       "id": "loot_48",
@@ -1020,12 +1044,8 @@
       "rarityGlow": "rgba(255, 159, 28, 0.85)",
       "orbImage": "case opening/orbs/orb_verity.png",
       "isVideo": false,
-      "mimeType": "image/png",
-      "path": null,
-      "isEncrypted": true,
-      "serverGated": true,
-      "exclusiveMode": "normal",
-      "vaultFile": "case opening/vault/loot_48.enc"
+      "path": "case opening/verity/the coruption of the pure soul leaves the traces of ember that some consider hope.png",
+      "isEncrypted": false
     },
     {
       "id": "loot_49",
@@ -1036,12 +1056,8 @@
       "rarityGlow": "rgba(255, 159, 28, 0.85)",
       "orbImage": "case opening/orbs/orb_verity.png",
       "isVideo": false,
-      "mimeType": "image/jpeg",
-      "path": null,
-      "isEncrypted": true,
-      "serverGated": true,
-      "exclusiveMode": "normal",
-      "vaultFile": "case opening/vault/loot_49.enc"
+      "path": "case opening/verity/the king who rules by iron fist.jfif",
+      "isEncrypted": false
     },
     {
       "id": "loot_50",
@@ -1283,6 +1299,7 @@
       "rarityGlow": "rgba(255, 183, 3, 0.8)",
       "orbImage": "case opening/orbs/orb_legendary.png",
       "isVideo": true,
+      "thumbPath": "case opening/legendary/krof i chomnk u teretani.jpg",
       "path": "case opening/legendary/krof i chomnk u teretani.mov",
       "isEncrypted": false
     },
@@ -1508,12 +1525,8 @@
       "rarityGlow": "rgba(255, 61, 247, 0.9)",
       "orbImage": "case opening/orbs/orb_rainbow.png",
       "isVideo": false,
-      "mimeType": "image/png",
-      "path": null,
-      "isEncrypted": true,
-      "serverGated": true,
-      "exclusiveMode": "normal",
-      "vaultFile": "case opening/vault/loot_87.enc"
+      "path": "case opening/rainbow/fillip nudes.png",
+      "isEncrypted": false
     },
     {
       "id": "loot_88",
@@ -1849,6 +1862,133 @@
       "milestoneTargetId": "loot_85",
       "milestoneTargetName": "Nikola Ahegao",
       "milestoneThreshold": 100
+    },
+    {
+      "id": "loot_107",
+      "name": "Crna Čokolada",
+      "rarity": "cruelty",
+      "rarityName": "Cruelty",
+      "rarityColor": "#9d0208",
+      "rarityGlow": "rgba(157, 2, 8, 0.85)",
+      "orbImage": "case opening/orbs/orb_cruelty.png",
+      "isVideo": false,
+      "mimeType": "image/png",
+      "path": null,
+      "isEncrypted": true,
+      "serverGated": true,
+      "exclusiveMode": "normal",
+      "vaultFile": "case opening/vault/loot_107.enc"
+    },
+    {
+      "id": "loot_108",
+      "name": "Faced With The Truth And Lies Of This World",
+      "rarity": "cruelty",
+      "rarityName": "Cruelty",
+      "rarityColor": "#9d0208",
+      "rarityGlow": "rgba(157, 2, 8, 0.85)",
+      "orbImage": "case opening/orbs/orb_cruelty.png",
+      "isVideo": false,
+      "mimeType": "image/jpeg",
+      "path": null,
+      "isEncrypted": true,
+      "serverGated": true,
+      "exclusiveMode": "normal",
+      "vaultFile": "case opening/vault/loot_108.enc"
+    },
+    {
+      "id": "loot_109",
+      "name": "Forggivnes Is Not Free",
+      "rarity": "cruelty",
+      "rarityName": "Cruelty",
+      "rarityColor": "#9d0208",
+      "rarityGlow": "rgba(157, 2, 8, 0.85)",
+      "orbImage": "case opening/orbs/orb_cruelty.png",
+      "isVideo": false,
+      "mimeType": "image/png",
+      "path": null,
+      "isEncrypted": true,
+      "serverGated": true,
+      "exclusiveMode": "normal",
+      "vaultFile": "case opening/vault/loot_109.enc"
+    },
+    {
+      "id": "loot_110",
+      "name": "Good Or Evil It Is All The Same",
+      "rarity": "cruelty",
+      "rarityName": "Cruelty",
+      "rarityColor": "#9d0208",
+      "rarityGlow": "rgba(157, 2, 8, 0.85)",
+      "orbImage": "case opening/orbs/orb_cruelty.png",
+      "isVideo": false,
+      "mimeType": "image/jpeg",
+      "path": null,
+      "isEncrypted": true,
+      "serverGated": true,
+      "exclusiveMode": "normal",
+      "vaultFile": "case opening/vault/loot_110.enc"
+    },
+    {
+      "id": "loot_111",
+      "name": "The Furry Nigger Slayer",
+      "rarity": "cruelty",
+      "rarityName": "Cruelty",
+      "rarityColor": "#9d0208",
+      "rarityGlow": "rgba(157, 2, 8, 0.85)",
+      "orbImage": "case opening/orbs/orb_cruelty.png",
+      "isVideo": false,
+      "mimeType": "image/png",
+      "path": null,
+      "isEncrypted": true,
+      "serverGated": true,
+      "exclusiveMode": "normal",
+      "vaultFile": "case opening/vault/loot_111.enc"
+    },
+    {
+      "id": "loot_112",
+      "name": "Why You Should Treat All Women As Queens",
+      "rarity": "cruelty",
+      "rarityName": "Cruelty",
+      "rarityColor": "#9d0208",
+      "rarityGlow": "rgba(157, 2, 8, 0.85)",
+      "orbImage": "case opening/orbs/orb_cruelty.png",
+      "isVideo": false,
+      "mimeType": "image/png",
+      "path": null,
+      "isEncrypted": true,
+      "serverGated": true,
+      "exclusiveMode": "normal",
+      "vaultFile": "case opening/vault/loot_112.enc"
+    },
+    {
+      "id": "loot_113",
+      "name": "who did this get here so early?",
+      "rarity": "glitch",
+      "rarityName": "Glitch",
+      "rarityColor": "#a855f7",
+      "rarityGlow": "rgba(168, 85, 247, 0.9)",
+      "orbImage": "case opening/orbs/orb_glitch.png",
+      "isVideo": false,
+      "mimeType": "image/png",
+      "path": null,
+      "isEncrypted": true,
+      "serverGated": true,
+      "exclusiveMode": "normal",
+      "vaultFile": "case opening/vault/loot_113.enc"
+    },
+    {
+      "id": "loot_114",
+      "name": "What He Really Wanted All This Time",
+      "rarity": "album",
+      "rarityName": "Album",
+      "rarityColor": "#00e5ff",
+      "rarityGlow": "rgba(0, 229, 255, 0.85)",
+      "orbImage": "case opening/orbs/orb_secret.png",
+      "isVideo": false,
+      "path": "case opening/album/what he really wanted all this time(13).jpg",
+      "isEncrypted": false,
+      "rewardNumber": 13,
+      "albumId": "the_psalm_of_king",
+      "albumName": "The Psalm Of King"
     }
   ]
 }
