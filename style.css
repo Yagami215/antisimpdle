@@ -6287,6 +6287,21 @@ kbd {
   color: #ffffff;
 }
 
+.tag-voice {
+  background: #ff1744;
+  color: #ffffff;
+}
+
+.tag-classic {
+  background: #3b82f6;
+  color: #ffffff;
+}
+
+.tag-share {
+  background: #10b981;
+  color: #ffffff;
+}
+
 /* ========================================================
    VOICE MODE STYLES (Matching Core Fantasy Theme)
    ======================================================== */

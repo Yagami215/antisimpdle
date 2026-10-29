@@ -228,7 +228,7 @@ window.MEMBERS_DATA = [
         "folder": "members/spoon",
         "categories": {
             "spol": "Muško",
-            "lokacija": "Rijeka",
+            "lokacija": "Split",
             "status": "Na serveru",
             "dolazak_na_server": "2026",
             "kilaza": "100+ kg",
